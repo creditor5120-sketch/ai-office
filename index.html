@@ -88,7 +88,7 @@ async function sendTask() {
       throw new Error(data.error || '서버 연결 오류');
     }
 
-    responseBox.textContent = data.reply || '응답 내용이 없어.';
+    responseBox.innerHTML = renderMarkdown(data.reply || '응답 내용이 없어.');
 
   } catch (error) {
     responseBox.textContent = '오류가 발생했어: ' + error.message;
