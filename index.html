@@ -5,68 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MY AI OFFICE</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #101827;
-  color: white;
-  text-align: center;
-  padding: 30px;
-}
-h1 { color: #60a5fa; }
-.office {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  max-width: 600px;
-  margin: 30px auto;
-}
-.employee {
-  background: #243247;
-  padding: 25px;
-  border-radius: 15px;
-}
-.employee h2 { font-size: 20px; }
-.employee p { color: #cbd5e1; }
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#fff;font-family:Arial,sans-serif}
+header{padding:25px;background:#172438}
+h1{margin:0;color:#60a5fa}
+main{max-width:900px;margin:auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:#243247;padding:20px;border-radius:14px}
+.employees{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:20px}
+button{background:#2563eb;color:white;border:0;padding:12px;border-radius:8px;cursor:pointer}
+input,textarea{width:100%;padding:13px;margin:8px 0;border-radius:8px;border:0}
+#result{margin-top:15px;color:#93c5fd}
 </style>
 </head>
 <body>
-
+<header>
 <h1>MY AI OFFICE</h1>
 <p>나만의 AI 업무실</p>
-
-<div class="office">
-  <div class="employee">
-    <h2>👔 대표 AI</h2>
-    <p>업무 총괄 및 관리</p>
-  </div>
-
-  <div class="employee">
-    <h2>⚖️ 법무 AI</h2>
-    <p>계약 및 법률 검토</p>
-  </div>
-
-  <div class="employee">
-    <h2>📊 IR AI</h2>
-    <p>공시 및 투자자 대응</p>
-  </div>
-
-  <div class="employee">
-    <h2>🏢 총무 AI</h2>
-    <p>자산 및 시설 관리</p>
-  </div>
+</header>
+<main>
+<h2>업무 현황</h2>
+<div class="stats">
+<div class="card">전체 업무<br><h2>0</h2></div>
+<div class="card">진행 중<br><h2>0</h2></div>
+<div class="card">완료<br><h2>0</h2></div>
 </div>
-
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>MY AI OFFICE</title>
-</head>
-<body>
-<h1>MY AI OFFICE</h1>
-<p>나만의 AI 업무실</p>
+<h2>AI 직원</h2>
+<div class="employees">
+<div class="card">⚖️<h3>법무 AI</h3>계약·법률·지식재산</div>
+<div class="card">📊<h3>IR AI</h3>공시·투자자 대응</div>
+<div class="card">🏢<h3>총무 AI</h3>자산·구매·시설</div>
+<div class="card">👔<h3>대표 AI</h3>업무 총괄·관리</div>
+</div>
+<h2>업무 지시</h2>
+<input id="task" placeholder="업무 제목을 입력하세요">
+<textarea id="detail" placeholder="업무 내용을 입력하세요"></textarea>
+<button onclick="addTask()">업무 등록</button>
+<div id="result"></div>
+</main>
+<script>
+function addTask(){
+const task=document.getElementById('task').value;
+if(!task){alert('업무 제목을 입력하세요');return;}
+document.getElementById('result').innerText='등록된 업무: '+task;
+}
+</script>
 </body>
 </html>
