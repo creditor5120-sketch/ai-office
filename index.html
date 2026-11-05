@@ -394,9 +394,56 @@ document.getElementById('downloadPdf').addEventListener('click', () => {
     printWindow.print();
   };
 });
+
+  // 마지막 업무 결과 자동 복원
+(function restoreLastResult() {
+  const saved = localStorage.getItem('myAIOfficeLastResult');
+
+  if (!saved) return;
+
+  try {
+    const data = JSON.parse(saved);
+
+    const responseBox = document.getElementById('response');
+    const deliverableCard = document.getElementById('deliverableCard');
+    const deliverableContent = document.getElementById('deliverableContent');
+    const copyDeliverable = document.getElementById('copyDeliverable');
+
+    if (data.reply && responseBox) {
+      responseBox.innerHTML = `
+        <div class="report-content">
+          ${renderMarkdown(data.reply)}
+        </div>
+      `;
+    }
+
+    const deliverables = Array.isArray(data.deliverables)
+      ? data.deliverables
+      : [];
+
+    const deliverableText = deliverables
+      .map((item, index) => {
+        const title = item.title || `결과물 ${index + 1}`;
+        return `# ${title}\n\n${item.content || ''}`;
+      })
+      .join('\n\n---\n\n');
+
+    if (deliverableText.trim() && deliverableCard) {
+      deliverableCard.style.display = 'block';
+      deliverableContent.innerHTML = renderMarkdown(deliverableText);
+
+      copyDeliverable.onclick = async () => {
+        await navigator.clipboard.writeText(deliverableText);
+        copyDeliverable.textContent = '복사 완료';
+      };
+    }
+
+  } catch (error) {
+    console.error('저장된 업무 결과 복원 실패:', error);
+  }
+})();
+  
 </script>
 </body>
 </html>
 
-</body>
-</html>
