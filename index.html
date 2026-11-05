@@ -219,9 +219,11 @@ async function sendTask() {
       );
     }
 
-    responseBox.innerHTML = renderMarkdown(
-      data.reply || '응답 내용이 없어.'
-    );
+    responseBox.innerHTML = `
+  <div class="report-content">
+    ${renderMarkdown(data.reply || '응답 내용이 없어.')}
+  </div>
+`;
 
   } catch (error) {
 
