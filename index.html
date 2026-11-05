@@ -239,7 +239,7 @@ async function sendTask() {
 const fullReply = data.reply || '응답 내용이 없어.';
 
 // 11번 항목의 실제 결과물 전문을 분리
-const marker = /(?:^|\n)#{0,6}\s*11\.\s*실제 작성된 결과물 전문[\s\S]*/i;
+const marker = /(?:^|\n)#{0,6}\s*(?:실제 작성 결과물|11\.\s*실제 작성된 결과물 전문)[\s\S]*/i;
 const match = fullReply.match(marker);
 
 const reportText = match
