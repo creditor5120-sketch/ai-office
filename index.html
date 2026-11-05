@@ -290,5 +290,102 @@ sendButton.addEventListener('click', sendTask);
 
 </script>
 
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+<script>
+document.getElementById('downloadWord').addEventListener('click', async () => {
+  const content = document.getElementById('deliverableContent');
+  const text = content.innerText.trim();
+
+  if (!text) {
+    alert('다운로드할 결과물이 없어.');
+    return;
+  }
+
+  if (!window.docx) {
+    alert('Word 변환 라이브러리를 불러오지 못했어. 인터넷 연결을 확인해 줘.');
+    return;
+  }
+
+  const { Document, Paragraph, TextRun, Packer } = window.docx;
+
+  const paragraphs = text.split('\n').map(line =>
+    new Paragraph({
+      children: [new TextRun(line)]
+    })
+  );
+
+  const doc = new Document({
+    sections: [{
+      children: paragraphs
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'MY_AI_OFFICE_결과물.docx';
+  link.click();
+
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('downloadPdf').addEventListener('click', () => {
+  const content = document.getElementById('deliverableContent');
+
+  if (!content.innerText.trim()) {
+    alert('다운로드할 결과물이 없어.');
+    return;
+  }
+
+  const printWindow = window.open('', '_blank');
+
+  if (!printWindow) {
+    alert('팝업이 차단됐어. 팝업을 허용해 줘.');
+    return;
+  }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <title>MY AI OFFICE 결과물</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.7;
+          padding: 35px;
+          color: #222;
+        }
+        h1, h2, h3 {
+          page-break-after: avoid;
+        }
+        p {
+          margin: 6px 0;
+        }
+        @page {
+          size: A4;
+          margin: 20mm;
+        }
+      </style>
+    </head>
+    <body>
+      ${content.innerHTML}
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  printWindow.onload = () => {
+    printWindow.print();
+  };
+});
+</script>
+</body>
+</html>
+
 </body>
 </html>
