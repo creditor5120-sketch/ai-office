@@ -238,29 +238,32 @@ async function sendTask() {
     
 const fullReply = data.reply || '응답 내용이 없어.';
 
-// 11번 항목의 실제 결과물 전문을 분리
-const marker = /(?:^|\n)#{0,6}\s*(?:실제 작성 결과물|11\.\s*실제 작성된 결과물 전문)[\s\S]*/i;
-const match = fullReply.match(marker);
-
-const reportText = match
-  ? fullReply.replace(marker, '').trim()
-  : fullReply;
-
-const deliverableText = match
-  ? match[0].replace(/^\n+/, '').trim()
-  : '';
-
+// 본부장 최종 보고서 표시
 responseBox.innerHTML = `
   <div class="report-content">
-    ${renderMarkdown(reportText)}
+    ${renderMarkdown(fullReply)}
   </div>
 `;
 
+// Worker에서 별도로 전달한 실제 결과물 가져오기
 const deliverableCard = document.getElementById('deliverableCard');
 const deliverableContent = document.getElementById('deliverableContent');
 const copyDeliverable = document.getElementById('copyDeliverable');
 
-if (deliverableText) {
+const deliverables = Array.isArray(data.deliverables)
+  ? data.deliverables
+  : [];
+
+// 결과물 통합
+const deliverableText = deliverables
+  .map((item, index) => {
+    const title = item.title || `결과물 ${index + 1}`;
+    return `# ${title}\n\n${item.content || ''}`;
+  })
+  .join('\n\n---\n\n');
+
+// 결과물 카드 표시
+if (deliverableText.trim()) {
   deliverableCard.style.display = 'block';
   deliverableContent.innerHTML = renderMarkdown(deliverableText);
 
