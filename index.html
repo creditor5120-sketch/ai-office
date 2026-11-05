@@ -110,10 +110,26 @@ textarea {
   </button>
 </div>
 
+
 <div class="card">
   <h3>업무 처리 결과</h3>
-  <p id="response">아직 접수된 업무가 없어.</p>
+  <div id="response" class="report-content">
+    아직 접수된 업무가 없어.
+  </div>
 </div>
+
+<div class="card" id="deliverableCard" style="display:none;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+    <h3>실제 작성 결과물</h3>
+    <button id="copyDeliverable" type="button">
+      전체 복사
+    </button>
+<button id="downloadWord" type="button">Word 다운로드</button>
+<button id="downloadPdf" type="button">PDF 다운로드</button>
+  </div>
+  <div id="deliverableContent" class="report-content"></div>
+</div>
+
 
 <script type="module">
 
@@ -219,11 +235,43 @@ async function sendTask() {
       );
     }
 
-    responseBox.innerHTML = `
+    
+const fullReply = data.reply || '응답 내용이 없어.';
+
+// 11번 항목의 실제 결과물 전문을 분리
+const marker = /(?:^|\n)#{0,6}\s*11\.\s*실제 작성된 결과물 전문[\s\S]*/i;
+const match = fullReply.match(marker);
+
+const reportText = match
+  ? fullReply.replace(marker, '').trim()
+  : fullReply;
+
+const deliverableText = match
+  ? match[0].replace(/^\n+/, '').trim()
+  : '';
+
+responseBox.innerHTML = `
   <div class="report-content">
-    ${renderMarkdown(data.reply || '응답 내용이 없어.')}
+    ${renderMarkdown(reportText)}
   </div>
 `;
+
+const deliverableCard = document.getElementById('deliverableCard');
+const deliverableContent = document.getElementById('deliverableContent');
+const copyDeliverable = document.getElementById('copyDeliverable');
+
+if (deliverableText) {
+  deliverableCard.style.display = 'block';
+  deliverableContent.innerHTML = renderMarkdown(deliverableText);
+
+  copyDeliverable.onclick = async () => {
+    await navigator.clipboard.writeText(deliverableText);
+    copyDeliverable.textContent = '복사 완료';
+  };
+} else {
+  deliverableCard.style.display = 'none';
+  deliverableContent.innerHTML = '';
+}
 
   } catch (error) {
 
