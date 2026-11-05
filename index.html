@@ -275,7 +275,15 @@ if (deliverableText.trim()) {
   deliverableCard.style.display = 'none';
   deliverableContent.innerHTML = '';
 }
-
+// 마지막 업무 결과 자동 저장
+localStorage.setItem(
+  'myAIOfficeLastResult',
+  JSON.stringify({
+    reply: fullReply,
+    deliverables: deliverables,
+    savedAt: new Date().toISOString()
+  })
+);    
   } catch (error) {
 
     responseBox.textContent =
