@@ -6,6 +6,100 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SW AI OFFICE</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
+
+/* 공통 화면 크기 및 레이아웃 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 28px);
+  font-family: 'NanumSquare', sans-serif;
+}
+
+.card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+textarea {
+  min-height: 150px;
+  resize: vertical;
+  font-size: 16px;
+}
+
+button {
+  min-height: 44px;
+  font-size: 15px;
+  touch-action: manipulation;
+}
+
+#response,
+#deliverableContent {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 결과물 도구 버튼 */
+#deliverableCard > div:first-child {
+  flex-wrap: wrap;
+}
+
+#deliverableCard > div:first-child button {
+  width: auto;
+  flex: 0 1 auto;
+}
+
+/* 아이패드 및 태블릿 */
+@media (max-width: 1024px) {
+  body {
+    padding: 18px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+}
+
+/* 스마트폰 및 좁은 화면 */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 25px;
+  }
+
+  .card {
+    padding: 14px;
+    margin: 10px 0;
+  }
+
+  .card h2 {
+    font-size: 20px;
+  }
+
+  .card h3 {
+    font-size: 17px;
+  }
+
+  #deliverableCard > div:first-child {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  #deliverableCard > div:first-child button {
+    width: 100%;
+  }
+
+  textarea {
+    min-height: 130px;
+  }
+}
  
 <style>
 html,
