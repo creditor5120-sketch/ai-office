@@ -212,7 +212,8 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
-// 업무 지시async function sendTask(reusePending = false) {
+// 업무 지시
+async function sendTask(reusePending = false) {
    let pending = null;
 
   if (reusePending) {
