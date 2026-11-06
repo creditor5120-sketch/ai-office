@@ -116,6 +116,13 @@ textarea {
   <button id="sendButton">
     본부장에게 업무 지시
   </button>
+ <button
+  id="retryTaskButton"
+  type="button"
+  style="display:none; background:#059669;"
+>
+  보존된 업무 재처리
+</button>
 </div>
 
 
@@ -152,6 +159,9 @@ const headOfOffice = employeeDirectory.find(
 const responseBox = document.getElementById('response');
 const sendButton = document.getElementById('sendButton');
 const requestBox = document.getElementById('request');
+const retryTaskButton = document.getElementById('retryTaskButton');
+ // 업무 중복 실행 방지 잠금
+let isTaskRunning = false;
 // Gemini API 오류로 중단된 업무 지시 복원
 const PENDING_TASK_KEY = 'swAIOfficePendingTask';
 
@@ -161,6 +171,7 @@ try {
   );
 
   if (savedTask && savedTask.task) {
+   retryTaskButton.style.display = 'block';
     requestBox.value = savedTask.task;
 
     responseBox.textContent =
@@ -196,38 +207,43 @@ function renderMarkdown(text) {
 
 // 업무 지시
 async function sendTask() {
+   if (isTaskRunning) {
+    responseBox.textContent = '이미 업무를 처리하고 있습니다. 중복 실행은 차단했습니다.';
+    return;
+  }
 
   const task = requestBox.value.trim();
 
   if (!task) {
-    alert('업무 지시 내용을 입력해.');
+    alert('업무 지시 내용을 입력해주세요.');
     return;
   }
 
   if (!headOfOffice) {
     responseBox.textContent =
-      '본부장 정보를 찾을 수 없어. 직원 데이터 설정을 확인해야 해.';
+      '본부장 정보를 찾을 수 없습니다. 직원 데이터 설정을 확인해 주세요.';
     return;
   }
-
-// 본부장 AI 호출 전에 업무 지시 원문을 먼저 영구 보존
-localStorage.setItem(
-  PENDING_TASK_KEY,
-  JSON.stringify({
-    task: task,
-    status: 'WAITING_FOR_PROCESSING',
-    savedAt: new Date().toISOString()
-  })
-);
- 
+  // 업무 중복 실행 방지
+  isTaskRunning = true;
   sendButton.disabled = true;
-  sendButton.textContent = '본부장이 업무를 분석하고 있어...';
-
-  responseBox.textContent =
+  retryTaskButton.disabled = true;
+ 
+   responseBox.textContent =
     '업무 접수 및 부서 배분 준비 중...';
 
   try {
-
+   
+    // 본부장 AI 호출 전에 업무 지시 원문 보존
+    localStorage.setItem(
+      PENDING_TASK_KEY,
+      JSON.stringify({
+        task: task,
+        status: 'WAITING_FOR_PROCESSING',
+        savedAt: new Date().toISOString()
+      })
+    );
+  
     const response = await fetch(
       'https://ai-office-api.creditor5120.workers.dev/',
       {
@@ -322,13 +338,20 @@ localStorage.setItem(
 );    
    // 결과 저장이 완료된 경우에만 미처리 업무 기록 삭제
 localStorage.removeItem(PENDING_TASK_KEY);
+   retryTaskButton.style.display = 'none';
 
    } catch (error) {
 
   // 오류가 발생해도 원래 업무 지시는 보존
-  const savedTask = JSON.parse(
+  let savedTask = null;
+
+try {
+  savedTask = JSON.parse(
     localStorage.getItem(PENDING_TASK_KEY) || 'null'
   );
+} catch (storageError) {
+  console.error('보존된 업무 복원 실패:', storageError);
+}
 
   if (savedTask) {
 
@@ -348,6 +371,7 @@ localStorage.removeItem(PENDING_TASK_KEY);
       PENDING_TASK_KEY,
       JSON.stringify(savedTask)
     );
+   retryTaskButton.style.display = 'block';
 
     responseBox.textContent = isQuotaError
       ? 'Gemini API 사용량 한도로 처리가 중단됐어. 업무 지시는 보존했어. 사용량 한도가 복구된 후 다시 처리할 수 있어.'
@@ -362,16 +386,31 @@ localStorage.removeItem(PENDING_TASK_KEY);
 
 }
    
-  finally {
-
-    sendButton.disabled = false;
-    sendButton.textContent = '본부장에게 업무 지시';
-
-  }
+finally {
+  isTaskRunning = false;
+  sendButton.disabled = false;
+  retryTaskButton.disabled = false;
+  sendButton.textContent = '본부장에게 업무 지시';
 }
-
+}
+ 
 sendButton.addEventListener('click', sendTask);
+// 보존된 업무 재처리
+retryTaskButton.addEventListener('click', () => {
+  const savedTask = JSON.parse(
+    localStorage.getItem(PENDING_TASK_KEY) || 'null'
+  );
 
+  if (!savedTask || !savedTask.task) {
+    responseBox.textContent = '재처리할 업무가 없어.';
+    retryTaskButton.style.display = 'none';
+    return;
+  }
+
+  requestBox.value = savedTask.task;
+  sendTask();
+});
+ 
 </script>
 
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
