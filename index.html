@@ -171,6 +171,13 @@ try {
   );
 
   if (savedTask && savedTask.task) {
+   savedTask.taskId = savedTask.taskId || crypto.randomUUID();
+savedTask.idempotencyKey = savedTask.idempotencyKey || savedTask.taskId;
+
+localStorage.setItem(
+  PENDING_TASK_KEY,
+  JSON.stringify(savedTask)
+);
    retryTaskButton.style.display = 'block';
     requestBox.value = savedTask.task;
 
@@ -205,8 +212,21 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
-// 업무 지시
-async function sendTask() {
+// 업무 지시async function sendTask(reusePending = false) {
+   let pending = null;
+
+  if (reusePending) {
+    try {
+      pending = JSON.parse(
+        localStorage.getItem(PENDING_TASK_KEY) || 'null'
+      );
+    } catch (error) {
+      pending = null;
+    }
+  }
+
+  const taskId = pending?.taskId || crypto.randomUUID();
+  const idempotencyKey = pending?.idempotencyKey || taskId;
    if (isTaskRunning) {
     responseBox.textContent = '이미 업무를 처리하고 있습니다. 중복 실행은 차단했습니다.';
     return;
@@ -236,14 +256,16 @@ async function sendTask() {
    
     // 본부장 AI 호출 전에 업무 지시 원문 보존
     localStorage.setItem(
-      PENDING_TASK_KEY,
-      JSON.stringify({
-        task: task,
-        status: 'WAITING_FOR_PROCESSING',
-        savedAt: new Date().toISOString()
-      })
-    );
-  
+  PENDING_TASK_KEY,
+  JSON.stringify({
+    task: task,
+    taskId: taskId,
+    idempotencyKey: idempotencyKey,
+    status: 'WAITING_FOR_PROCESSING',
+    savedAt: new Date().toISOString()
+  })
+);
+   
     const response = await fetch(
       'https://ai-office-api.creditor5120.workers.dev/',
       {
@@ -256,6 +278,8 @@ async function sendTask() {
         body: JSON.stringify({
 
           task,
+           taskId,
+           idempotencyKey,
 
           employee: headOfOffice.name,
           employeeId: headOfOffice.id,
@@ -408,7 +432,7 @@ retryTaskButton.addEventListener('click', () => {
   }
 
   requestBox.value = savedTask.task;
-  sendTask();
+  sendTask(true);
 });
  
 </script>
