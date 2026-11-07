@@ -101,7 +101,6 @@ button {
     min-height: 130px;
   }
 }
-</style>
 
 html,
 body,
@@ -188,7 +187,7 @@ textarea {
 <body>
 
 <h1>SW AI OFFICE</h1>
-<p>나만의 AI 업무실</p>
+<p>수웅의 AI 업무실</p>
 
 <div class="card">
   <h2>AI 본부장 업무실</h2>
@@ -224,7 +223,7 @@ textarea {
 <div class="card">
   <h3>업무 처리 결과</h3>
   <div id="response" class="report-content">
-    아직 접수된 업무가 없어.
+    아직 접수된 업무가 없습니다.
   </div>
 </div>
 
@@ -408,7 +407,7 @@ async function sendTask(reusePending = false) {
     }
 
     
-const fullReply = data.reply || '응답 내용이 없어.';
+const fullReply = data.reply || '응답 내용이 없습니다.';
 
 // 본부장 최종 보고서 표시
 responseBox.innerHTML = `
@@ -522,7 +521,7 @@ retryTaskButton.addEventListener('click', () => {
   );
 
   if (!savedTask || !savedTask.task) {
-    responseBox.textContent = '재처리할 업무가 없어.';
+    responseBox.textContent = '재처리할 업무가 없습니다.';
     retryTaskButton.style.display = 'none';
     return;
   }
@@ -541,7 +540,7 @@ document.getElementById('downloadWord').addEventListener('click', async () => {
   const text = content.innerText.trim();
 
   if (!text) {
-    alert('다운로드할 결과물이 없어.');
+    alert('다운로드할 결과물이 없습니다.');
     return;
   }
 
@@ -579,7 +578,7 @@ document.getElementById('downloadPdf').addEventListener('click', () => {
   const content = document.getElementById('deliverableContent');
 
   if (!content.innerText.trim()) {
-    alert('다운로드할 결과물이 없어.');
+    alert('다운로드할 결과물이 없습니다.');
     return;
   }
 
@@ -677,4 +676,3 @@ document.getElementById('downloadPdf').addEventListener('click', () => {
 </script>
 </body>
 </html>
-
