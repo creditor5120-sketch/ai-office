@@ -238,7 +238,14 @@ textarea {
   <div id="deliverableContent" class="report-content"></div>
 </div>
 
-
+<div class="card" id="taskHistoryCard">
+  <h3>최근 업무 기록</h3>
+  <p class="small">최근 완료된 업무 최대 10건을 보관합니다.</p>
+  <div id="taskHistoryList">
+    <p class="small">아직 저장된 업무 기록이 없습니다.</p>
+  </div>
+</div>
+  
 <script type="module">
 
 import employeeDirectory from './employees.js';
@@ -258,6 +265,127 @@ let isTaskRunning = false;
 // Gemini API 오류로 중단된 업무 지시 복원
 const PENDING_TASK_KEY = 'swAIOfficePendingTask';
 
+// 최근 업무 기록 관리
+const TASK_HISTORY_KEY = 'swAIOfficeTaskHistory';
+const TASK_HISTORY_LIMIT = 10;
+
+function loadTaskHistory() {
+  try {
+    const history = JSON.parse(
+      localStorage.getItem(TASK_HISTORY_KEY) || '[]'
+    );
+    return Array.isArray(history) ? history : [];
+  } catch (error) {
+    console.error('업무 기록 불러오기 실패:', error);
+    return [];
+  }
+}
+
+function saveTaskHistory(task, taskId, reply, deliverables) {
+  const history = loadTaskHistory();
+
+  const record = {
+    taskId,
+    task,
+    reply,
+    deliverables,
+    savedAt: new Date().toISOString()
+  };
+
+  const updated = [
+    record,
+    ...history.filter(item => item.taskId !== taskId)
+  ].slice(0, TASK_HISTORY_LIMIT);
+
+  localStorage.setItem(
+    TASK_HISTORY_KEY,
+    JSON.stringify(updated)
+  );
+}
+
+function renderTaskHistory() {
+  const list = document.getElementById('taskHistoryList');
+  if (!list) return;
+
+  const history = loadTaskHistory();
+  list.innerHTML = '';
+
+  if (history.length === 0) {
+    list.textContent = '아직 저장된 업무 기록이 없습니다.';
+    return;
+  }
+
+  history.forEach((item, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.style.textAlign = 'left';
+    button.style.marginBottom = '8px';
+
+    const date = new Date(item.savedAt).toLocaleString('ko-KR');
+    const task = String(item.task || '업무 내용 없음');
+
+    button.textContent =
+      `${date}\n${task.slice(0, 100)}`;
+
+    button.addEventListener('click', () => {
+      restoreTaskHistory(index);
+    });
+
+    list.appendChild(button);
+  });
+}
+
+function restoreTaskHistory(index) {
+  const history = loadTaskHistory();
+  const item = history[index];
+
+  if (!item) return;
+
+  responseBox.innerHTML = renderMarkdown(item.reply || '');
+
+  const deliverables = Array.isArray(item.deliverables)
+    ? item.deliverables
+    : [];
+
+  const deliverableText = deliverables
+    .map((entry, i) => {
+      const title = entry.title || `결과물 ${i + 1}`;
+      return `# ${title}\n\n${entry.content || ''}`;
+    })
+    .join('\n\n---\n\n');
+
+  const card = document.getElementById('deliverableCard');
+  const content = document.getElementById('deliverableContent');
+  const copyButton = document.getElementById('copyDeliverable');
+
+  if (deliverableText.trim()) {
+    card.style.display = 'block';
+    content.innerHTML = renderMarkdown(deliverableText);
+
+    copyButton.onclick = async () => {
+      await navigator.clipboard.writeText(deliverableText);
+      copyButton.textContent = '복사 완료';
+    };
+  } else {
+    card.style.display = 'none';
+    content.innerHTML = '';
+  }
+
+  localStorage.setItem(
+    'myAIOfficeLastResult',
+    JSON.stringify({
+      reply: item.reply,
+      deliverables,
+      savedAt: item.savedAt
+    })
+  );
+
+saveTaskHistory(task, taskId, fullReply, deliverables);
+renderTaskHistory();
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+  
 try {
   const savedTask = JSON.parse(
     localStorage.getItem(PENDING_TASK_KEY) || 'null'
@@ -511,7 +639,8 @@ finally {
   sendButton.textContent = '본부장에게 업무 지시';
 }
 }
- 
+
+renderTaskHistory();  
 sendButton.addEventListener('click', sendTask);
 // 보존된 업무 재처리
 retryTaskButton.addEventListener('click', () => {
