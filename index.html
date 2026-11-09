@@ -657,7 +657,7 @@ const fullReply = data.reply || '응답 내용이 없습니다.';
 // 본부장 최종 보고서 표시
 responseBox.innerHTML = `
   <div class="report-content">
-    ${renderMarkdown(fullReply)}
+    ${renderResponseContent(fullReply)}
   </div>
 `;
 // Worker에서 별도로 전달한 실제 결과물 가져오기
