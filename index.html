@@ -544,8 +544,9 @@ function renderResponseContent(text) {
 
   // 일반 문장 속에 들어 있는 JSON도 찾아서 분리
   const parts = [];
-  let textStart = 0;
-  let i = 0;
+const seenJson = new Set();
+let textStart = 0;
+let i = 0;
 
   while (i < raw.length) {
     if (raw[i] !== '{' && raw[i] !== '[') {
@@ -608,15 +609,21 @@ function renderResponseContent(text) {
       parts.push(renderMarkdown(raw.slice(textStart, start)));
     }
 
-    parts.push(`
-      <div class="structured-report">
-        <h3>검수 결과</h3>
-        ${renderValue(parsed)}
-      </div>
-    `);
+    const jsonKey = JSON.stringify(parsed);
 
-    textStart = end;
-    i = end;
+if (!seenJson.has(jsonKey)) {
+  parts.push(`
+    <div class="structured-report">
+      <h3>검수 결과</h3>
+      ${renderValue(parsed)}
+    </div>
+  `);
+
+  seenJson.add(jsonKey);
+}
+
+textStart = end;
+i = end;
   }
 
   if (textStart < raw.length) {
