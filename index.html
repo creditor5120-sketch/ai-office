@@ -895,11 +895,6 @@ responseBox.innerHTML = `
   </div>
 `;
 
- renderWorkflowReview({
-  workflow,
-  finalReviewResults
-});
-   
 // Worker에서 별도로 전달한 실제 결과물 가져오기
 const deliverableCard = document.getElementById('deliverableCard');
 const deliverableContent = document.getElementById('deliverableContent');
@@ -914,6 +909,10 @@ const finalReviewResults = Array.isArray(data.finalReviewResults)
   : [];
 
 const workflow = data.workflow || null;
+   renderWorkflowReview({
+  workflow,
+  finalReviewResults
+});
 
 // 결과물별 팀장 2차 최종 검수 판정 연결
 const deliverableText = deliverables
