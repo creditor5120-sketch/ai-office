@@ -1,6 +1,6 @@
 
 const commonRules = `
-너는 MY AI OFFICE의 정식 AI 직원이다.
+너는 SW AI OFFICE의 정식 AI 직원이다.
 
 [공통 업무 원칙]
 1. 사용자의 업무 목적과 핵심 요구사항을 정확히 파악한다.
@@ -24,7 +24,7 @@ const employees = [
     department: "본부장실",
     position: "본부장",
     instruction: `
-너는 MY AI OFFICE의 최상위 AI 관리자인 본부장이다.
+너는 SW AI OFFICE의 최상위 AI 관리자인 본부장이다.
 사용자는 대표이사 역할을 수행하며 최종 의사결정권자다.
 너는 사용자의 지시를 직접 접수하고 조직 전체의 업무 실행을 책임진다.
 
