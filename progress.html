@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SW AI OFFICE | 개발 진행 현황</title>
+<style>
+body{margin:0;background:#101827;color:#eef2ff;font-family:Arial,sans-serif;padding:28px 18px}
+main{max-width:850px;margin:auto}
+h1{font-size:26px;margin-bottom:5px}
+.sub{color:#9ca9bd}
+.panel{background:#1c293d;border:1px solid #34445d;border-radius:14px;padding:20px;margin-top:18px}
+.big{font-size:48px;font-weight:bold;color:#65d6a5}
+.bar{height:10px;background:#34445d;border-radius:10px;overflow:hidden;margin-top:12px}
+.fill{height:100%;background:#36bd88;width:65%}
+.item{margin:18px 0}
+.row{display:flex;justify-content:space-between;gap:10px}
+small{color:#aab6c8}
+.tag{color:#65d6a5}
+li{margin:12px 0;line-height:1.5}
+footer{color:#8290a5;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+<h1>SW AI OFFICE</h1>
+<div class="sub">개발 진행 현황 대시보드</div>
+
+<section class="panel">
+<small>전체 개발 진행률 · 잠정치</small>
+<div class="big">65%</div>
+<div class="bar"><div class="fill"></div></div>
+</section>
+
+<section class="panel">
+<h2>6개 개발 분야</h2>
+<div class="item"><div class="row"><b>조직 및 AI 직원 관리</b><span class="tag">기본 구축</span></div></div>
+<div class="item"><div class="row"><b>업무 수행 및 협업 엔진</b><span>연결 테스트 중</span></div></div>
+<div class="item"><div class="row"><b>검수·승인 및 업무 이력</b><span class="tag">기본 구축</span></div></div>
+<div class="item"><div class="row"><b>데이터 및 지식 관리</b><span>보완 필요</span></div></div>
+<div class="item"><div class="row"><b>사용자 인터페이스 및 사무실</b><span class="tag">기본 구축</span></div></div>
+<div class="item"><div class="row"><b>시스템 운영 및 안정화</b><span>진행 중</span></div></div>
+</section>
+
+<section class="panel">
+<h2>현재까지 확인된 성과</h2>
+<ul>
+<li>Cloudflare 스테이징 Worker 연결 정상</li>
+<li>D1 데이터베이스 연결 및 필수 테이블 확인</li>
+<li>Gemini 무료 API PC 직접 호출 성공</li>
+<li>본부장 업무 분석 단계까지 테스트 진입</li>
+</ul>
+</section>
+
+<section class="panel">
+<h2>현재 진행 과제</h2>
+<ol>
+<li>Gemini 무료 API의 Cloudflare 호출 오류 해결</li>
+<li>본부장 업무 분석 및 직원 배정 검증</li>
+<li>전문 직원 업무 수행 및 부서 간 협업 검증</li>
+<li>검수·수정·대표 보고 및 승인 검증</li>
+<li>백업·복구와 전체 운영 안정화</li>
+</ol>
+</section>
+
+<footer>SW AI OFFICE · 마지막 업데이트: 2026.11.09<br>※ 진행률은 잠정치이며 실제 기능 검증에 따라 갱신됩니다.</footer>
+</main>
+</body>
+</html>
