@@ -756,6 +756,17 @@ i = end;
       `;
     }
    renderWorkflowReview(data);
+   const workflow = data.workflow || null;
+
+const workflowSummary = workflow
+  ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
+
+${workflow.resultStatusReason || ''}
+
+${workflow.reviewGate?.finalReleaseAllowed === true
+  ? '최종 승인 게이트: 통과'
+  : '최종 승인 게이트: 미통과 — 최종 승인·배포 전 사용 금지'}`
+  : '## 전체 업무 판정: 서버 판정 정보 없음';
 
     const deliverables = Array.isArray(data.deliverables)
       ? data.deliverables
