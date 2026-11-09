@@ -451,22 +451,48 @@ localStorage.setItem(
  
 // Markdown 출력 처리
 function renderMarkdown(text) {
-  // JSON 검수 결과를 사람이 읽기 쉬운 형태로 표시
-function renderResponseContent(text) {
-  const raw = String(text || '').trim();
+  const escaped = String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
-  const candidate = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '')
-    .trim();
+  const normalized = escaped.replace(
+    /\\(?=(?:#{1,6}\s|\*\*|__|[-*]\s|---))/g,
+    ''
+  );
+
+  return normalized
+    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.*)$/gm, '<h1>$1</h1>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+// JSON 검수 결과를 읽기 쉬운 보고서로 표시
+function renderResponseContent(text) {
+  const raw = String(text || '');
 
   const labels = {
     judgment: '최종 판정',
     revisionChecks: '검수 및 수정 확인',
-    reason: '판정 사유',
-    findings: '확인 사항',
+    completedChanges: '완료된 수정 사항',
+    unresolvedIssues: '미해결 사항',
+    newRisks: '신규 위험',
+    verificationNeeded: '추가 검증 필요 사항',
+    summary: '종합 의견',
+    issueRegister: '지적사항 관리',
+    consistencyConflicts: '판정 정합성 문제',
+    missingEvidence: '누락된 증거',
+    issueId: '지적사항 번호',
+    issue: '지적 내용',
+    result: '반영 결과',
     status: '처리 상태',
-    revision: '수정 요구사항'
+    detail: '상세 설명',
+    evidenceQuote: '확인 근거',
+    evidenceLocation: '근거 위치',
+    reason: '판정 사유'
   };
 
   function escapeHtml(value) {
@@ -483,13 +509,16 @@ function renderResponseContent(text) {
 
     if (Array.isArray(value)) {
       return `
-        <div class="structured-list">
-          ${value.map((item, index) => `
-            <div class="structured-item">
-              ${renderValue(item, String(index + 1))}
-            </div>
-          `).join('')}
-        </div>
+        <section>
+          <strong>${escapeHtml(label)}</strong>
+          <div class="structured-list">
+            ${value.map(item => `
+              <div class="structured-item">
+                ${renderValue(item)}
+              </div>
+            `).join('')}
+          </div>
+        </section>
       `;
     }
 
@@ -510,47 +539,93 @@ function renderResponseContent(text) {
       return `<div>${renderMarkdown(value)}</div>`;
     }
 
-    return `<div>${escapeHtml(value)}</div>`;
+    return `<div>${escapeHtml(value ?? '')}</div>`;
   }
 
-  if (candidate.startsWith('{') || candidate.startsWith('[')) {
-    try {
-      const parsed = JSON.parse(candidate);
+  // 일반 문장 속에 들어 있는 JSON도 찾아서 분리
+  const parts = [];
+  let textStart = 0;
+  let i = 0;
 
-      return `
-        <div class="structured-report">
-          <h3>검수 결과</h3>
-          ${renderValue(parsed)}
-        </div>
-      `;
-    } catch (error) {
-      // JSON이 아닌 일반 문장은 기존 Markdown 방식으로 표시
+  while (i < raw.length) {
+    if (raw[i] !== '{' && raw[i] !== '[') {
+      i++;
+      continue;
     }
+
+    const start = i;
+    const stack = [];
+    let inString = false;
+    let escaped = false;
+    let end = -1;
+
+    for (let j = i; j < raw.length; j++) {
+      const ch = raw[j];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+      } else if (ch === '{' || ch === '[') {
+        stack.push(ch);
+      } else if (ch === '}' || ch === ']') {
+        const expected = ch === '}' ? '{' : '[';
+
+        if (stack.pop() !== expected) break;
+
+        if (stack.length === 0) {
+          end = j + 1;
+          break;
+        }
+      }
+    }
+
+    if (end === -1) {
+      i = start + 1;
+      continue;
+    }
+
+    const candidate = raw.slice(start, end);
+    let parsed;
+
+    try {
+      parsed = JSON.parse(candidate);
+    } catch (error) {
+      i = start + 1;
+      continue;
+    }
+
+    if (start > textStart) {
+      parts.push(renderMarkdown(raw.slice(textStart, start)));
+    }
+
+    parts.push(`
+      <div class="structured-report">
+        <h3>검수 결과</h3>
+        ${renderValue(parsed)}
+      </div>
+    `);
+
+    textStart = end;
+    i = end;
   }
 
-  return renderMarkdown(raw);
+  if (textStart < raw.length) {
+    parts.push(renderMarkdown(raw.slice(textStart)));
+  }
+
+  return parts.length ? parts.join('') : renderMarkdown(raw);
 }
-
-  const escaped = String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // AI 응답의 Markdown 앞에 붙은 불필요한 역슬래시 제거
-  const normalized = escaped.replace(
-    /\\(?=(?:#{1,6}\s|\*\*|__|[-*]\s|---))/g,
-    ''
-  );
-
-  return normalized
-    .replace(/^### (.*)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.*)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.*)$/gm, '<h1>$1</h1>')
-    .replace(/^---$/gm, '<hr>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>');
-}
-
+ 
 // 업무 지시
 async function sendTask(reusePending = false) {
    let pending = null;
