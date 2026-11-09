@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SW AI OFFICE</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
-
+ 
 <style>
 /* 공통 화면 크기 및 레이아웃 */
 * {
@@ -181,6 +181,45 @@ textarea {
   color: #93c5fd;
   font-size: 15px;
 }
+  /* 검수 결과를 읽기 쉽게 표시 */
+.structured-report {
+  padding: 16px;
+  line-height: 1.7;
+}
+
+.structured-report h3 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.structured-object {
+  display: grid;
+  gap: 12px;
+}
+
+.structured-object section {
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+}
+
+.structured-object strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #60a5fa;
+}
+
+.structured-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.structured-item {
+  padding: 8px 12px;
+  border-left: 3px solid #60a5fa;
+  background: rgba(255,255,255,0.04);
+}
 </style>
 </head>
 
@@ -341,7 +380,7 @@ function restoreTaskHistory(index) {
 
   if (!item) return;
 
-  responseBox.innerHTML = renderMarkdown(item.reply || '');
+  responseBox.innerHTML = renderResponseContent(item.reply || '');
 
   const deliverables = Array.isArray(item.deliverables)
     ? item.deliverables
@@ -379,10 +418,10 @@ function restoreTaskHistory(index) {
       savedAt: item.savedAt
     })
   );
-
+// 업무 완료 결과를 최근 업무 기록에 저장
 saveTaskHistory(task, taskId, fullReply, deliverables);
 renderTaskHistory();
-  
+ 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
   
@@ -412,6 +451,85 @@ localStorage.setItem(
  
 // Markdown 출력 처리
 function renderMarkdown(text) {
+  // JSON 검수 결과를 사람이 읽기 쉬운 형태로 표시
+function renderResponseContent(text) {
+  const raw = String(text || '').trim();
+
+  const candidate = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+
+  const labels = {
+    judgment: '최종 판정',
+    revisionChecks: '검수 및 수정 확인',
+    reason: '판정 사유',
+    findings: '확인 사항',
+    status: '처리 상태',
+    revision: '수정 요구사항'
+  };
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderValue(value, key = '') {
+    const label = labels[key] || key;
+
+    if (Array.isArray(value)) {
+      return `
+        <div class="structured-list">
+          ${value.map((item, index) => `
+            <div class="structured-item">
+              ${renderValue(item, String(index + 1))}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (value && typeof value === 'object') {
+      return `
+        <div class="structured-object">
+          ${Object.entries(value).map(([childKey, childValue]) => `
+            <section>
+              <strong>${escapeHtml(labels[childKey] || childKey)}</strong>
+              ${renderValue(childValue, childKey)}
+            </section>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (typeof value === 'string') {
+      return `<div>${renderMarkdown(value)}</div>`;
+    }
+
+    return `<div>${escapeHtml(value)}</div>`;
+  }
+
+  if (candidate.startsWith('{') || candidate.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(candidate);
+
+      return `
+        <div class="structured-report">
+          <h3>검수 결과</h3>
+          ${renderValue(parsed)}
+        </div>
+      `;
+    } catch (error) {
+      // JSON이 아닌 일반 문장은 기존 Markdown 방식으로 표시
+    }
+  }
+
+  return renderMarkdown(raw);
+}
 
   const escaped = String(text)
     .replace(/&/g, '&amp;')
@@ -542,7 +660,6 @@ responseBox.innerHTML = `
     ${renderMarkdown(fullReply)}
   </div>
 `;
-
 // Worker에서 별도로 전달한 실제 결과물 가져오기
 const deliverableCard = document.getElementById('deliverableCard');
 const deliverableContent = document.getElementById('deliverableContent');
@@ -770,7 +887,7 @@ document.getElementById('downloadPdf').addEventListener('click', () => {
     if (data.reply && responseBox) {
       responseBox.innerHTML = `
         <div class="report-content">
-          ${renderMarkdown(data.reply)}
+          ${renderResponseContent(data.reply)}
         </div>
       `;
     }
