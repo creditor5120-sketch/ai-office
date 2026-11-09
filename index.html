@@ -418,9 +418,6 @@ function restoreTaskHistory(index) {
       savedAt: item.savedAt
     })
   );
-// 업무 완료 결과를 최근 업무 기록에 저장
-saveTaskHistory(task, taskId, fullReply, deliverables);
-renderTaskHistory();
  
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -687,6 +684,9 @@ async function sendTask(reusePending = false) {
     savedAt: new Date().toISOString()
   })
 );
+   // 완료된 업무를 최근 업무 기록에 저장
+saveTaskHistory(task, taskId, fullReply, deliverables);
+renderTaskHistory();
    
     const response = await fetch(
       'https://ai-office-api.creditor5120.workers.dev/',
