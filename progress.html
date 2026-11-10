@@ -5,8 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SW AI OFFICE | 개발 진행 현황</title>
+
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -23,17 +26,17 @@ body {
 }
 
 header {
-  margin-bottom: 28px;
+  margin-bottom: 25px;
 }
 
 h1 {
-  margin: 0 0 8px;
+  margin: 0 0 5px;
   color: #60a5fa;
-  font-size: 28px;
+  font-size: 29px;
 }
 
 .subtitle {
-  color: #9ca3af;
+  color: #94a3b8;
   font-size: 14px;
 }
 
@@ -46,38 +49,107 @@ h1 {
 }
 
 h2 {
-  font-size: 19px;
-  margin: 0 0 16px;
+  margin: 0 0 17px;
   color: #f8fafc;
+  font-size: 19px;
 }
 
 h3 {
-  font-size: 16px;
-  margin: 0 0 8px;
+  margin: 5px 0;
   color: #bfdbfe;
+  font-size: 16px;
 }
 
-.notice {
+p {
+  margin: 6px 0;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.overall {
   background: #172554;
   border: 1px solid #1e40af;
-  padding: 16px;
-  border-radius: 10px;
-  color: #dbeafe;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.overall-number {
+  color: #60a5fa;
+  font-size: 48px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.progress-track {
+  width: 100%;
+  height: 12px;
+  background: #334155;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 9px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 20px;
+}
+
+.progress-number {
+  color: #93c5fd;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.info-item {
+  background: #0f172a;
+  padding: 15px;
+  border-radius: 9px;
+}
+
+.info-label {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.info-value {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.area {
+  padding: 17px 0;
+  border-bottom: 1px solid #334155;
+}
+
+.area:last-child {
+  border-bottom: none;
+}
+
+.area-description {
+  color: #cbd5e1;
+  font-size: 14px;
 }
 
 .status {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 20px;
   background: #334155;
   color: #e2e8f0;
   font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.status.testing {
-  background: #713f12;
-  color: #fde68a;
 }
 
 .status.basic {
@@ -85,67 +157,32 @@ h3 {
   color: #bbf7d0;
 }
 
+.status.testing {
+  background: #713f12;
+  color: #fde68a;
+}
+
 .status.pending {
   background: #3f3f46;
   color: #e4e4e7;
 }
 
-.area {
-  padding: 16px 0;
-  border-bottom: 1px solid #334155;
+.task-list {
+  padding-left: 21px;
 }
 
-.area:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-.area p {
-  margin: 4px 0 0;
+.task-list li {
+  margin: 9px 0;
   color: #cbd5e1;
   font-size: 14px;
-}
-
-ul {
-  padding-left: 20px;
-  margin: 8px 0 0;
-}
-
-li {
-  margin: 7px 0;
-  color: #cbd5e1;
-  font-size: 14px;
-}
-
-.info {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.info-item {
-  background: #0f172a;
-  padding: 14px;
-  border-radius: 9px;
-}
-
-.info-label {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.info-value {
-  font-size: 15px;
-  margin-top: 5px;
-  font-weight: bold;
 }
 
 button {
-  border: 0;
+  border: none;
   border-radius: 8px;
   background: #2563eb;
   color: white;
-  padding: 10px 16px;
+  padding: 10px 17px;
   cursor: pointer;
   font-size: 13px;
 }
@@ -160,7 +197,7 @@ button:hover {
 }
 
 .commit:last-child {
-  border-bottom: 0;
+  border-bottom: none;
 }
 
 .commit a {
@@ -180,165 +217,252 @@ button:hover {
   margin-top: 4px;
 }
 
-.muted {
-  color: #94a3b8;
-  font-size: 13px;
-}
-
 footer {
   text-align: center;
+  padding: 22px 0;
   color: #64748b;
   font-size: 12px;
-  padding: 20px 0;
 }
 
 @media (max-width: 600px) {
-  body { padding: 20px 12px; }
-  h1 { font-size: 23px; }
-  .card { padding: 17px; }
-  .info { grid-template-columns: 1fr; }
+  body {
+    padding: 18px 11px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 17px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overall-number {
+    font-size: 40px;
+  }
 }
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
 <header>
   <h1>SW AI OFFICE</h1>
-  <div class="subtitle">통합 개발 진행 현황 및 운영 관리</div>
+  <div class="subtitle">
+    통합 개발 진행 현황 및 프로젝트 관리
+  </div>
 </header>
+
+<!-- 전체 개발 현황 -->
 
 <section class="card">
   <h2>전체 개발 현황</h2>
-  <div class="notice">
-    <strong>현재 전체 개발률 산정 보류</strong>
-    <p>
-      실제 기능 구현 여부와 통합 테스트 및 검수 결과를 확인한 후
-      개발률을 산정합니다.
-    </p>
+
+  <div class="overall">
+    <div>전체 개발 진행률</div>
+
+    <div class="overall-number">44%</div>
+
+    <div class="progress-track">
+      <div class="progress-fill" style="width:44%"></div>
+    </div>
+
     <p class="muted">
-      GitHub 코드 반영만으로 기능 개발이 완료된 것으로 판단하지 않습니다.
+      2026년 11월 10일 기준 잠정 관리 수치
     </p>
   </div>
-</section>
 
-<section class="card">
-  <h2>개발 관리 기준</h2>
-  <div class="info">
+  <div class="info-grid">
     <div class="info-item">
       <div class="info-label">개발 관리 분야</div>
       <div class="info-value">6개 분야</div>
     </div>
+
     <div class="info-item">
-      <div class="info-label">핵심 개발 목표</div>
-      <div class="info-value">실제 업무 수행 체계 완성</div>
+      <div class="info-label">1차 개발 목표</div>
+      <div class="info-value">핵심 업무 흐름 완성</div>
     </div>
+
     <div class="info-item">
       <div class="info-label">최근 GitHub 업데이트</div>
       <div class="info-value" id="lastUpdate">조회 중...</div>
     </div>
+
     <div class="info-item">
-      <div class="info-label">커밋 조회 상태</div>
+      <div class="info-label">GitHub 연결 상태</div>
       <div class="info-value" id="apiStatus">조회 중...</div>
     </div>
   </div>
+
+  <p class="muted">
+    ※ 전체 진행률은 6개 분야별 잠정 수치의 단순 평균입니다.
+    실제 기능 검수 결과에 따라 변경됩니다.
+  </p>
 </section>
 
+<!-- 6개 개발 분야 -->
+
 <section class="card">
-  <h2>6개 개발 분야</h2>
+  <h2>6개 개발 분야별 진행률</h2>
 
   <div class="area">
     <span class="status basic">기본 구축</span>
     <h3>1. 조직 및 AI 직원 관리</h3>
-    <p>AI 조직 구성, 직원별 역할과 권한, 대표 접근 및 관리 체계</p>
+    <div class="progress-number">55%</div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:55%"></div>
+    </div>
+    <p class="area-description">
+      조직 구성, 대표·본부장·팀장·전문 직원 역할 설정,
+      직원별 권한과 접근 통제
+    </p>
   </div>
 
   <div class="area">
     <span class="status testing">연결 테스트 중</span>
     <h3>2. 업무 수행 및 협업 엔진</h3>
-    <p>대표 업무지시 → 본부장 분석 및 배정 → 전문 직원 수행 및 협업</p>
+    <div class="progress-number">40%</div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:40%"></div>
+    </div>
+    <p class="area-description">
+      대표 업무지시, 본부장 분석 및 배정,
+      전문 직원의 실제 업무 수행과 팀 간 협업
+    </p>
   </div>
 
   <div class="area">
-    <span class="status basic">기본 구축</span>
+    <span class="status basic">기반 구축</span>
     <h3>3. 검수·승인 및 업무 이력</h3>
-    <p>팀장 검수, 수정 요청, 대표 보고 및 승인 이력 관리</p>
+    <div class="progress-number">35%</div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:35%"></div>
+    </div>
+    <p class="area-description">
+      팀장 검수, 수정 및 재작업,
+      본부장 보고, 대표 승인과 단계별 이력 기록
+    </p>
   </div>
 
   <div class="area">
     <span class="status pending">보완 필요</span>
     <h3>4. 데이터 및 지식 관리</h3>
-    <p>문서와 첨부파일 저장, 검색, 업무 지식 활용 및 이력 관리</p>
+    <div class="progress-number">25%</div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:25%"></div>
+    </div>
+    <p class="area-description">
+      문서 및 첨부파일 저장, 검색,
+      업무 자료 축적과 지식 활용
+    </p>
   </div>
 
   <div class="area">
     <span class="status basic">기본 구축</span>
     <h3>5. 사용자 인터페이스 및 사무실</h3>
-    <p>가상 사무실, AI 직원 화면, 업무 지시 및 결과 확인 인터페이스</p>
+    <div class="progress-number">75%</div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:75%"></div>
+    </div>
+    <p class="area-description">
+      가상 사무실, AI 직원 화면,
+      직원과의 대화 및 업무 결과 확인 인터페이스
+    </p>
   </div>
 
   <div class="area">
     <span class="status testing">진행 중</span>
     <h3>6. 시스템 운영 및 안정화</h3>
-    <p>서버 오류 관리, 백업 및 복구, 시스템 안정성 검증</p>
+    <div class="progress-number">35%</div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width:35%"></div>
+    </div>
+    <p class="area-description">
+      Cloudflare Worker, D1 데이터베이스,
+      오류 로그, 백업 및 복구, 시스템 안정성
+    </p>
   </div>
+
 </section>
 
+<!-- 핵심 업무 흐름 -->
+
 <section class="card">
-  <h2>핵심 업무 흐름 검증</h2>
-  <ol>
+  <h2>1차 개발 핵심 목표</h2>
+
+  <p class="muted">
+    AI 가상 회사가 실제로 업무를 수행하는 전체 흐름을 완성합니다.
+  </p>
+
+  <ol class="task-list">
     <li>대표가 업무를 지시한다.</li>
     <li>본부장이 업무를 분석하고 담당 팀과 직원을 배정한다.</li>
     <li>전문 직원이 실제 업무를 수행하고 필요한 경우 협업한다.</li>
     <li>팀장이 결과물을 검수하고 오류가 있으면 수정한다.</li>
-    <li>본부장이 최종 결과를 정리하여 대표에게 보고한다.</li>
-    <li>대표가 최종 승인한다.</li>
+    <li>본부장이 최종 결과를 취합하여 대표에게 보고한다.</li>
+    <li>대표가 최종 결과를 확인하고 승인한다.</li>
   </ol>
-  <p class="muted">
-    위 단계 전체가 실제로 작동하는지 확인하는 것을 1차 개발 목표로 합니다.
-  </p>
 </section>
 
+<!-- 현재 주요 과제 -->
+
 <section class="card">
-  <h2>현재 주요 확인 과제</h2>
-  <ul>
+  <h2>현재 주요 개발 과제</h2>
+
+  <ul class="task-list">
     <li>Gemini 무료 API의 Cloudflare 호출 오류 해결</li>
     <li>본부장 업무 분석 및 직원 배정 검증</li>
-    <li>전문 직원의 실제 업무 수행 및 팀 간 협업 검증</li>
+    <li>전문 직원의 실제 업무 수행 검증</li>
+    <li>직원 간 협업 및 결과 취합 검증</li>
     <li>검수·수정·대표 보고·승인 흐름 검증</li>
-    <li>데이터 백업 및 복구 가능 여부 검증</li>
+    <li>문서와 첨부파일 저장 및 검색 기능 확인</li>
+    <li>정기 백업과 복구 가능 여부 검증</li>
     <li>AI 및 서버 오류 로그 관리 확인</li>
   </ul>
 </section>
 
-<section class="card">
-  <h2>GitHub 최근 업데이트</h2>
-  <p class="muted">
-    저장소의 최근 커밋을 조회합니다. 커밋은 코드 변경 이력이며,
-    실제 기능 완료 여부를 의미하지 않습니다.
-  </p>
-  <button onclick="loadCommits()">새로고침</button>
-  <div id="commitList" style="margin-top:15px;">
-    커밋 정보를 불러오는 중입니다.
-  </div>
-</section>
+<!-- 개발률 산정 기준 -->
 
 <section class="card">
-  <h2>개발률 산정 원칙</h2>
-  <ul>
-    <li>코드 작성만으로 완료 처리하지 않습니다.</li>
-    <li>개별 기능의 실제 작동 테스트가 필요합니다.</li>
-    <li>다른 기능과의 연결 및 통합 테스트를 확인합니다.</li>
-    <li>오류 수정 및 재검증까지 완료해야 합니다.</li>
-    <li>최종 검수 결과를 반영하여 개발률을 산정합니다.</li>
+  <h2>개발률 산정 및 관리 원칙</h2>
+
+  <ul class="task-list">
+    <li>코드 작성만으로 개발 완료 처리하지 않습니다.</li>
+    <li>개별 기능의 실제 작동 여부를 확인합니다.</li>
+    <li>다른 기능과 연결되는 통합 테스트를 실시합니다.</li>
+    <li>오류 수정 및 재검증 결과를 반영합니다.</li>
+    <li>미검증 기능은 완료로 처리하지 않습니다.</li>
+    <li>기존 6개 개발 분야를 유지하고 신규 기능 확장은 당분간 중단합니다.</li>
   </ul>
 </section>
 
+<!-- GitHub 최근 커밋 -->
+
+<section class="card">
+  <h2>GitHub 최근 업데이트</h2>
+
+  <p class="muted">
+    저장소의 최근 코드 변경 이력을 자동으로 조회합니다.
+    코드 변경이 실제 기능 완료를 의미하지는 않습니다.
+  </p>
+
+  <button onclick="loadCommits()">새로고침</button>
+
+  <div id="commitList" style="margin-top:15px;">
+    GitHub 정보를 불러오는 중입니다.
+  </div>
+</section>
+
 <footer>
-  SW AI OFFICE Development Management
+  SW AI OFFICE
   <br>
-  GitHub 저장소 기준 업데이트 정보 제공
+  Development Management System
 </footer>
 
 </div>
@@ -364,9 +488,12 @@ function formatDate(value) {
 
   const date = new Date(value);
 
-  if (isNaN(date.getTime())) return "정보 없음";
+  if (isNaN(date.getTime())) {
+    return "정보 없음";
+  }
 
   return date.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -380,7 +507,7 @@ async function loadCommits() {
   const status = document.getElementById("apiStatus");
   const lastUpdate = document.getElementById("lastUpdate");
 
-  list.innerHTML = "GitHub 정보를 조회하고 있습니다.";
+  list.textContent = "GitHub 정보를 조회하고 있습니다.";
   status.textContent = "조회 중...";
 
   try {
@@ -392,13 +519,13 @@ async function loadCommits() {
     });
 
     if (!response.ok) {
-      throw new Error("GitHub API 응답 오류: " + response.status);
+      throw new Error("GitHub API 오류: " + response.status);
     }
 
     const commits = await response.json();
 
     if (!Array.isArray(commits) || commits.length === 0) {
-      throw new Error("조회된 커밋이 없습니다.");
+      throw new Error("커밋 정보가 없습니다.");
     }
 
     lastUpdate.textContent =
@@ -407,23 +534,22 @@ async function loadCommits() {
     status.textContent = "정상 연결";
 
     list.innerHTML = commits.map(function(item) {
-      const message =
-        item.commit.message.split("\n")[0];
-
-      const date =
-        item.commit.committer.date;
-
+      const message = item.commit.message.split("\n")[0];
+      const date = item.commit.committer.date;
       const url = item.html_url;
+      const sha = item.sha.substring(0, 7);
 
       return `
         <div class="commit">
-          <a href="${escapeHTML(url)}" target="_blank"
+          <a href="${escapeHTML(url)}"
+             target="_blank"
              rel="noopener noreferrer">
             ${escapeHTML(message)}
           </a>
+
           <div class="commit-date">
             ${escapeHTML(formatDate(date))}
-            · ${escapeHTML(item.sha.substring(0, 7))}
+            · ${escapeHTML(sha)}
           </div>
         </div>
       `;
@@ -435,12 +561,12 @@ async function loadCommits() {
 
     list.textContent =
       "GitHub 정보를 불러오지 못했습니다. " +
-      error.message +
-      " 잠시 후 다시 시도해 주세요.";
+      error.message;
   }
 }
 
 loadCommits();
+
 setInterval(loadCommits, 5 * 60 * 1000);
 </script>
 
