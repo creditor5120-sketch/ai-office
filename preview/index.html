@@ -283,6 +283,23 @@ textarea {
     부서 간 협업과 진행 상황을 관리하고 결과물을 검수한 후 사용자에게 보고합니다.
   </p>
 
+    <label for="officeAccessToken" class="small"
+    style="display:block; margin:12px 0 6px;">
+    스테이징 인증 토큰
+  </label>
+
+  <input
+    id="officeAccessToken"
+    type="password"
+    autocomplete="off"
+    placeholder="PowerShell에서 생성한 토큰 입력"
+    style="width:100%; padding:12px; border-radius:8px; box-sizing:border-box;"
+  >
+
+  <p class="small">
+    인증 토큰은 현재 브라우저 탭에서만 보관합니다.
+  </p>
+
   <textarea
     id="request"
     placeholder="본부장에게 업무를 지시하세요."
@@ -341,7 +358,23 @@ const headOfOffice = employeeDirectory.find(
 const responseBox = document.getElementById('response');
 const sendButton = document.getElementById('sendButton');
 const requestBox = document.getElementById('request');
+const accessTokenBox = document.getElementById('officeAccessToken');
 const retryTaskButton = document.getElementById('retryTaskButton');
+
+// 인증 토큰은 현재 브라우저 탭 세션에만 보관
+try {
+  accessTokenBox.value =
+    sessionStorage.getItem('swAIOfficeStagingToken') || '';
+
+  accessTokenBox.addEventListener('input', () => {
+    sessionStorage.setItem(
+      'swAIOfficeStagingToken',
+      accessTokenBox.value.trim()
+    );
+  });
+} catch (error) {
+  console.warn('세션 토큰 저장을 사용할 수 없습니다.', error);
+}
  // 업무 중복 실행 방지 잠금
 let isTaskRunning = false;
 // Gemini API 오류로 중단된 업무 지시 복원
@@ -941,11 +974,20 @@ async function sendTask(reusePending = false) {
     return;
   }
 
-  if (!headOfOffice) {
+    if (!headOfOffice) {
     responseBox.textContent =
       '본부장 정보를 찾을 수 없습니다. 직원 데이터 설정을 확인해 주세요.';
     return;
   }
+
+  // 스테이징 인증 토큰 확인
+  const accessToken = accessTokenBox.value.trim();
+  if (!accessToken) {
+    responseBox.textContent = '스테이징 인증 토큰을 입력해 주세요.';
+    accessTokenBox.focus();
+    return;
+  }
+
   // 업무 중복 실행 방지
   isTaskRunning = true;
   sendButton.disabled = true;
@@ -974,8 +1016,9 @@ async function sendTask(reusePending = false) {
         method: 'POST',
 
         headers: {
-          'Content-Type': 'application/json'
-        },
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${accessToken}`
+},
 
         body: JSON.stringify({
 
