@@ -220,6 +220,49 @@ textarea {
   border-left: 3px solid #60a5fa;
   background: rgba(255,255,255,0.04);
 }
+/* 대표 보고 화면 간소화 */
+.executive-report {
+  padding: 16px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.executive-report h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.executive-summary {
+  padding: 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.executive-status {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.executive-details {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding-top: 12px;
+}
+
+.executive-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #60a5fa;
+  padding: 8px 0;
+}
+
+.executive-details-content {
+  padding: 10px 0;
+  overflow-wrap: anywhere;
+}
+
 </style>
 </head>
 
@@ -309,11 +352,11 @@ const TASK_HISTORY_KEY = 'swAIOfficeTaskHistory';
 const TASK_HISTORY_LIMIT = 10;
 
 // 업무 진행 및 최종 검수 결과 표시
+// 업무 진행 및 최종 검수 결과 표시
 function renderWorkflowReview(data) {
   const oldPanel = document.getElementById('workflowReviewPanel');
 
   if (oldPanel) oldPanel.remove();
-
   if (!data) return;
 
   const workflow = data.workflow || {};
@@ -321,10 +364,7 @@ function renderWorkflowReview(data) {
     ? data.finalReviewResults
     : [];
 
-  if (
-    !Object.keys(workflow).length &&
-    reviews.length === 0
-  ) return;
+  if (!Object.keys(workflow).length && reviews.length === 0) return;
 
   const panel = document.createElement('div');
   panel.id = 'workflowReviewPanel';
@@ -372,8 +412,7 @@ function renderWorkflowReview(data) {
     const section = document.createElement('section');
 
     const heading = document.createElement('strong');
-    heading.textContent =
-      review.name || `최종 검수 ${index + 1}`;
+    heading.textContent = review.name || `최종 검수 ${index + 1}`;
 
     section.appendChild(heading);
 
@@ -400,7 +439,83 @@ function renderWorkflowReview(data) {
   });
 
   responseBox.appendChild(panel);
-} 
+}
+
+// 신규 업무·과거 이력·자동 복원에 공통으로 사용하는 대표 보고 화면
+function renderExecutiveReport(reply, data) {
+  const workflow = data?.workflow || null;
+
+  const finalReviewResults = Array.isArray(data?.finalReviewResults)
+    ? data.finalReviewResults
+    : [];
+
+  const executiveStatus =
+    workflow?.resultStatus || workflow?.status || '판정 정보 없음';
+
+  const executiveReason =
+    workflow?.resultStatusReason || '판정 사유가 제공되지 않았습니다.';
+
+  responseBox.innerHTML = '';
+
+  const report = document.createElement('div');
+  report.className = 'executive-report';
+
+  const title = document.createElement('h3');
+  title.textContent = '대표 보고';
+
+  const summary = document.createElement('div');
+  summary.className = 'executive-summary';
+
+  const status = document.createElement('div');
+  status.className = 'executive-status';
+  status.textContent = `전체 업무 판정: ${executiveStatus}`;
+
+  const reason = document.createElement('div');
+  reason.textContent = executiveReason;
+
+  const reviewCount = document.createElement('div');
+  reviewCount.textContent =
+    `최종 검수 결과: ${finalReviewResults.length}건`;
+
+  summary.append(status, reason, reviewCount);
+  report.append(title, summary);
+
+  const details = document.createElement('details');
+  details.className = 'executive-details';
+
+  const detailsTitle = document.createElement('summary');
+  detailsTitle.textContent = '본부장 상세 보고서 보기';
+
+  const content = document.createElement('div');
+  content.className = 'executive-details-content report-content';
+  content.innerHTML = renderResponseContent(reply || '');
+
+  details.append(detailsTitle, content);
+  report.appendChild(details);
+
+  responseBox.appendChild(report);
+
+  renderWorkflowReview({
+    workflow,
+    finalReviewResults
+  });
+
+  const workflowPanel =
+    document.getElementById('workflowReviewPanel');
+
+  if (workflowPanel) {
+    const workflowDetails = document.createElement('details');
+    workflowDetails.className = 'executive-details';
+
+    const workflowTitle = document.createElement('summary');
+    workflowTitle.textContent =
+      '업무 진행 및 최종 검수 상세 보기';
+
+    responseBox.insertBefore(workflowDetails, workflowPanel);
+    workflowDetails.append(workflowTitle, workflowPanel);
+  }
+}
+
 function loadTaskHistory() {
   try {
     const history = JSON.parse(
@@ -482,9 +597,10 @@ function restoreTaskHistory(index) {
 
   if (!item) return;
 
-  responseBox.innerHTML = renderResponseContent(item.reply || '');
- renderWorkflowReview(item);
+  // 공통 대표 보고 화면으로 복원
+  renderExecutiveReport(item.reply || '', item);
 
+  // 기존 결과물 복원 기능 유지
   const deliverables = Array.isArray(item.deliverables)
     ? item.deliverables
     : [];
@@ -513,17 +629,18 @@ function restoreTaskHistory(index) {
     content.innerHTML = '';
   }
 
+  // 마지막 업무 결과 저장
   localStorage.setItem(
     'myAIOfficeLastResult',
     JSON.stringify({
-  reply: item.reply,
-  deliverables,
-  workflow: item.workflow || {},
-  finalReviewResults: item.finalReviewResults || [],
-  savedAt: item.savedAt
-})
+      reply: item.reply,
+      deliverables,
+      workflow: item.workflow || {},
+      finalReviewResults: item.finalReviewResults || [],
+      savedAt: item.savedAt
+    })
   );
- 
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
   
@@ -748,26 +865,22 @@ i = end;
     const deliverableContent = document.getElementById('deliverableContent');
     const copyDeliverable = document.getElementById('copyDeliverable');
 
-    if (data.reply) {
-      responseBox.innerHTML = `
-        <div class="report-content">
-          ${renderResponseContent(data.reply)}
-        </div>
-      `;
-    }
-   renderWorkflowReview(data);
-   const workflow = data.workflow || null;
+    // 공통 대표 보고 화면으로 복원
+    renderExecutiveReport(data.reply || '', data);
 
-const workflowSummary = workflow
-  ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
+    const workflow = data.workflow || null;
+
+    const workflowSummary = workflow
+      ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
 
 ${workflow.resultStatusReason || ''}
 
 ${workflow.reviewGate?.finalReleaseAllowed === true
   ? '최종 승인 게이트: 통과'
   : '최종 승인 게이트: 미통과 — 최종 승인·배포 전 사용 금지'}`
-  : '## 전체 업무 판정: 서버 판정 정보 없음';
+      : '## 전체 업무 판정: 서버 판정 정보 없음';
 
+    // 저장된 결과물 복원
     const deliverables = Array.isArray(data.deliverables)
       ? data.deliverables
       : [];
@@ -781,14 +894,18 @@ ${workflow.reviewGate?.finalReleaseAllowed === true
 
     if (deliverableText.trim()) {
       deliverableCard.style.display = 'block';
+
       deliverableContent.innerHTML = renderMarkdown(
-  workflowSummary + '\n\n---\n\n' + deliverableText
-);
+        workflowSummary + '\n\n---\n\n' + deliverableText
+      );
 
       copyDeliverable.onclick = async () => {
         await navigator.clipboard.writeText(deliverableText);
         copyDeliverable.textContent = '복사 완료';
       };
+    } else {
+      deliverableCard.style.display = 'none';
+      deliverableContent.innerHTML = '';
     }
 
   } catch (error) {
@@ -899,14 +1016,7 @@ async function sendTask(reusePending = false) {
     
 const fullReply = data.reply || '응답 내용이 없습니다.';
 
-// 본부장 최종 보고서 표시
-responseBox.innerHTML = `
-  <div class="report-content">
-    ${renderResponseContent(fullReply)}
-  </div>
-`;
-
-// Worker에서 별도로 전달한 실제 결과물 가져오기
+// Worker에서 전달한 실제 결과물 및 검수 데이터
 const deliverableCard = document.getElementById('deliverableCard');
 const deliverableContent = document.getElementById('deliverableContent');
 const copyDeliverable = document.getElementById('copyDeliverable');
@@ -920,7 +1030,9 @@ const finalReviewResults = Array.isArray(data.finalReviewResults)
   : [];
 
 const workflow = data.workflow || null;
-   renderWorkflowReview({
+
+// 신규 업무도 공통 대표 보고 화면으로 출력
+renderExecutiveReport(fullReply, {
   workflow,
   finalReviewResults
 });
