@@ -1169,7 +1169,7 @@ finally {
 }
 
 renderTaskHistory();  
-sendButton.addEventListener('click', sendTask);
+sendButton.addEventListener('click', () => sendTask(false));
 // 보존된 업무 재처리
 retryTaskButton.addEventListener('click', () => {
   const savedTask = JSON.parse(
