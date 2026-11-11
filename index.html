@@ -898,10 +898,11 @@ savedAt: new Date().toISOString()
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        data.error || '서버 연결 오류'
-      );
-    }
+  const apiError = new Error(data.error || '서버 연결 오류');
+  apiError.code = data.errorCode || '';
+  apiError.status = data.status || '';
+  throw apiError;
+}
 
     
 const fullReply = data.reply || '응답 내용이 없습니다.';
@@ -1025,6 +1026,11 @@ try {
   if (savedTask) {
 
     const isQuotaError =
+  error.status === 'WAITING_FOR_API_QUOTA' ||
+  error.code === 'API_QUOTA' ||
+  /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(
+    error.message
+  );
       /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(
         error.message
       );
