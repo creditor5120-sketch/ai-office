@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SW AI OFFICE - Staging 테스트</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:20px;max-width:960px;margin-inline:auto;background:#101827;color:#fff;font-family:Arial,sans-serif}h1{color:#60a5fa}.card{background:#243247;padding:20px;margin:14px 0;border-radius:12px}label{display:block;margin:12px 0 6px;font-weight:700}input,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #64748b;font:inherit}textarea{min-height:140px}button{width:100%;min-height:46px;margin-top:12px;padding:12px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-size:16px;cursor:pointer}button:disabled{opacity:.55}.small{color:#cbd5e1;font-size:14px;line-height:1.6}#result{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
+</style>
+</head>
+<body>
+<h1>SW AI OFFICE</h1>
+<div class="card">
+<h2>staging 전용 업무 테스트</h2>
+<p class="small">이 페이지는 staging Worker만 호출합니다. 운영 Worker 주소는 사용하지 않습니다. 인증 토큰은 요청에만 사용하고 브라우저 저장소에 저장하지 않습니다.</p>
+<label for="token">staging 인증 토큰</label>
+<input id="token" type="password" autocomplete="off" placeholder="Cloudflare의 OFFICE_ACCESS_TOKEN 값">
+<label for="task">테스트 업무 지시</label>
+<textarea id="task" placeholder="예: 계약 검토 업무를 적절한 전문 직원에게 배정하고 팀장 검수 및 본부장 보고까지 진행해. 실제 외부 실행은 하지 마."></textarea>
+<button id="send" type="button">staging에 업무 지시 보내기</button>
+</div>
+<div class="card"><h3>staging 응답</h3><div id="result">아직 테스트를 실행하지 않았습니다.</div></div>
+<script type="module">
+import employeeDirectory from './employees.js';
+const STAGING_ENDPOINT='https://sweet-bush-c87eai-office-api-v51-staging.creditor5120.workers.dev/';
+const $=id=>document.getElementById(id);
+$('send').addEventListener('click',async()=>{
+ const token=$('token').value.trim(),task=$('task').value.trim();
+ if(!token){$('result').textContent='staging 인증 토큰을 입력해 주세요.';return;}
+ if(!task){$('result').textContent='테스트 업무 지시를 입력해 주세요.';return;}
+ if(!Array.isArray(employeeDirectory)||!employeeDirectory.some(e=>e.id==='COO')){$('result').textContent='employees.js에서 본부장(COO) 데이터를 찾지 못했습니다.';return;}
+ const button=$('send');button.disabled=true;$('result').textContent='staging Worker에 요청 중입니다.';
+ const taskId=crypto.randomUUID();
+ try{
+  const response=await fetch(STAGING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({task,taskId,idempotencyKey:taskId,employees:employeeDirectory})});
+  const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={responseText:raw};}
+  $('result').textContent='HTTP '+response.status+'\n\n'+JSON.stringify(data,null,2);
+ }catch(error){$('result').textContent='요청 실패: '+error.message+'\n\n인증 또는 CORS 오류 여부를 확인해 주세요.';}
+ finally{$('token').value='';button.disabled=false;}
+});
+</script>
+</body>
+</html>
