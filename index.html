@@ -1031,9 +1031,7 @@ try {
   /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(
     error.message
   );
-      /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(
-        error.message
-      );
+
 
     savedTask.status = isQuotaError
       ? 'WAITING_FOR_API_QUOTA'
