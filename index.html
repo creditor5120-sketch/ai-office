@@ -98,7 +98,7 @@ main{max-width:1500px;margin:auto;padding:22px}.screen[hidden]{display:none}.int
       <dt>이름</dt><dd id="profileEmployeeName"></dd>
       <dt>ID</dt><dd id="profileId"></dd>
       <dt>직무</dt><dd id="profileRole"></dd>
-      <dt>현재 진행 중인 업무</dt><dd id="profileTask">현재 진행 중인 업무 없음</dd>
+      <dt>현재 진행 중인 업무</dt><dd id="profileTask">업무 배정 정보 미연결</dd>
     </dl>
     <div class="modal-actions"><button class="action" id="chatButton" disabled title="개별 대화 기능은 아직 연결되지 않았습니다">직원과 대화하기 · 연결 대기</button><button class="action close" id="closeProfile">닫기</button></div>
     <p class="muted">업무 데이터 미연결 상태에서는 진행 중인 업무를 임의로 만들지 않습니다.</p>
@@ -132,7 +132,7 @@ function openProfile(employee){
  byId('profileEmployeeName').textContent=employee.name;
  byId('profileId').textContent=employee.id;
  byId('profileRole').textContent=employee.position;
- byId('profileTask').textContent='현재 진행 중인 업무 없음';
+ byId('profileTask').textContent='업무 배정 정보 미연결';
  byId('profileBackdrop').classList.add('open');
  byId('closeProfile').focus();
 }
