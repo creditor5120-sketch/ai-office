@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SW AI OFFICE | 가상 사무실</title>
+<style>
+:root{--ink:#182338;--muted:#65738a;--glass:#c9e6ee;--floor:#e9e3d5;--line:#c7c0b2;--blue:#3769a8;--green:#4f9478;--gold:#c99a4d}
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3fb;font-family:'NanumSquare',Arial,sans-serif}
+header{height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#172338;border-bottom:1px solid #34435b;position:sticky;top:0;z-index:5}
+.brand{font-weight:900;letter-spacing:1.5px;color:#9cc7ff;font-size:20px}.brand small{display:block;font-size:10px;letter-spacing:2px;color:#8292a9;margin-top:3px}
+.headright{display:flex;align-items:center;gap:18px;color:#c7d3e5;font-size:13px}.live{color:#8be0b0}.live:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#59d28b;margin-right:7px;box-shadow:0 0 10px #59d28b}
+main{max-width:1600px;margin:auto;padding:18px 22px 28px}.intro{display:flex;justify-content:space-between;align-items:end;margin:3px 0 14px}.intro h1{font-size:23px;margin:0 0 5px}.intro p{margin:0;color:#aab8cb;font-size:13px}.stats{display:flex;gap:8px}.stat{background:#1d2b41;border:1px solid #33445f;padding:9px 13px;border-radius:10px;font-size:12px;color:#aab8cb}.stat b{color:white;font-size:17px;margin-right:4px}
+.office-shell{background:#d5d0c4;border:8px solid #29374b;border-radius:15px;box-shadow:0 18px 55px #0008;overflow:hidden;position:relative}
+.office-top{height:34px;background:#33445c;color:#e8f0fa;display:flex;align-items:center;justify-content:space-between;padding:0 13px;font-size:11px;letter-spacing:1px}
+.floor{padding:13px;background:#d8d2c5;background-image:linear-gradient(90deg,#c8c1b4 1px,transparent 1px),linear-gradient(#c8c1b4 1px,transparent 1px);background-size:22px 22px}
+.plan{display:grid;grid-template-columns:1.05fr 1.05fr 1.45fr 1fr;grid-template-rows:245px 245px;gap:10px;min-height:500px}
+.room{position:relative;border:3px solid #887f70;background:#eee9de;box-shadow:inset 0 0 0 2px #fff9;overflow:hidden;color:#263246}
+.room:before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#ffffff26,transparent 45%)}
+.room-label{position:absolute;top:8px;left:10px;z-index:2;font-size:12px;font-weight:900;letter-spacing:.4px;color:#43536b;background:#fffD;padding:5px 8px;border:1px solid #c9c2b5;border-radius:4px}
+.ceo{grid-column:1;grid-row:1;background:#d9e5e5}.coo{grid-column:2;grid-row:1;background:#dbe5df}.meeting{grid-column:3;grid-row:1;background:#d5e7e9}.itroom{grid-column:4;grid-row:1;background:#dce4e8}.openarea{grid-column:1/4;grid-row:2;background:#e9e3d7}.cafe{grid-column:4;grid-row:2;background:#e6ddcc}
+.glass{border-color:#6d9ba5;background-image:linear-gradient(90deg,transparent 48%,#ffffff7a 49%,#ffffff7a 51%,transparent 52%);background-size:34px 100%}
+.window{position:absolute;right:0;top:0;width:34%;height:8px;background:#8bb8c4;border-left:4px solid #739ba5}
+.furniture{position:absolute;background:#8a674e;border:3px solid #654b3b;box-shadow:inset 0 -5px #0002;border-radius:3px}
+.desk{height:34px;width:92px}.desk:after{content:'';position:absolute;left:7px;right:7px;bottom:-9px;height:6px;background:#654b3b}
+.monitor{position:absolute;width:23px;height:16px;background:#34495c;border:3px solid #718594;left:34px;top:-14px;border-radius:2px}
+.sofa{position:absolute;width:80px;height:28px;background:#648b91;border:4px solid #456d75;border-radius:6px;bottom:22px;left:14px}
+.table{position:absolute;width:110px;height:46px;border-radius:50%;background:#b88a5d;border:4px solid #896344;left:50%;top:50%;transform:translate(-50%,-50%)}
+.meet-table{width:190px;height:66px;top:55%}
+.chair{position:absolute;width:22px;height:22px;border-radius:5px;background:#60778a;border:3px solid #43596c}
+.plant{position:absolute;width:18px;height:18px;background:#4c8b66;border-radius:50% 50% 35% 35%;box-shadow:-9px 4px #5c9a6f,8px 5px #397954}
+.avatar{position:absolute;z-index:3;width:30px;height:39px;cursor:pointer;transition:left 1.2s ease,top 1.2s ease;filter:drop-shadow(2px 3px 0 #0003)}
+.avatar .hair{position:absolute;left:6px;top:0;width:19px;height:10px;background:var(--hair,#40352e);border:2px solid #302a29}
+.avatar .head{position:absolute;left:7px;top:7px;width:17px;height:15px;background:var(--skin,#efc59e);border:2px solid #9e735e}
+.avatar .body{position:absolute;left:4px;top:21px;width:23px;height:14px;background:var(--shirt,#527ba8);border:2px solid #354c67}
+.avatar .legs{position:absolute;left:7px;top:34px;width:7px;height:5px;background:#34435b;box-shadow:10px 0 #34435b}
+.avatar .name{position:absolute;top:42px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:900;color:#1e2b3d;background:#fffE;border:1px solid #b8b1a5;border-radius:3px;padding:2px 5px}
+.avatar .bubble{display:none;position:absolute;bottom:46px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#20324a;color:white;font-size:10px;padding:4px 7px;border-radius:5px}
+.avatar.working .bubble{display:block}.avatar.selected{z-index:4;filter:drop-shadow(0 0 5px #ffc75e) drop-shadow(2px 3px 0 #0003)}
+.avatar.selected .name{background:#ffe2a1}
+.seat{position:absolute;width:42px;height:20px;background:#b9a58a;border:2px solid #887760;border-radius:3px}
+.seat:after{content:'';position:absolute;left:13px;top:18px;width:12px;height:7px;background:#60778a;border-radius:2px}
+.smalltable{position:absolute;width:54px;height:28px;background:#ba9368;border:3px solid #8b6949;border-radius:3px}
+.coffee{position:absolute;width:70px;height:42px;background:#a77d55;border:4px solid #79573c;border-radius:5px}
+.plantpot{position:absolute;width:16px;height:16px;background:#4e8b63;border-radius:50%;border-bottom:5px solid #9b6e4d}
+.caption{position:absolute;bottom:8px;right:9px;font-size:10px;color:#65738a}
+.bottom{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:13px}
+.panel{background:#1c2a40;border:1px solid #34445e;border-radius:11px;padding:13px 15px;min-height:88px}.panel h3{font-size:13px;margin:0 0 9px;color:#cfe0f5}
+.activity{display:flex;gap:9px;align-items:center;font-size:12px;color:#c2cee0;margin:5px 0}.dot{width:7px;height:7px;border-radius:50%;background:#70c99a;flex:none}.teamchips{display:flex;gap:6px;flex-wrap:wrap}.chip{font-size:11px;padding:6px 9px;background:#2b3d57;border-radius:6px;color:#cbd8e9}
+#profile{position:fixed;right:20px;bottom:20px;width:min(330px,calc(100vw - 40px));background:#19283d;border:1px solid #60748e;border-radius:13px;box-shadow:0 15px 40px #0009;padding:16px;z-index:10;display:none}
+#profile.show{display:block}.profiletop{display:flex;justify-content:space-between;align-items:center}.profiletop button{background:transparent;border:0;color:#b9c9df;font-size:20px;cursor:pointer}.profile-role{color:#93b9e9;font-size:12px;margin:6px 0 12px}.profile-state{padding:9px;background:#263a53;border-radius:7px;font-size:12px;line-height:1.6}
+footer{color:#718199;text-align:center;font-size:10px;padding:13px}
+@media(max-width:900px){main{padding:12px}.plan{grid-template-columns:1fr 1fr;grid-template-rows:220px 220px 220px;min-height:0}.ceo{grid-column:1;grid-row:1}.coo{grid-column:2;grid-row:1}.meeting{grid-column:1;grid-row:2}.itroom{grid-column:2;grid-row:2}.openarea{grid-column:1;grid-row:3}.cafe{grid-column:2;grid-row:3}.bottom{grid-template-columns:1fr}.intro{align-items:start;gap:10px;flex-direction:column}}
+@media(max-width:560px){header{padding:0 13px}.headright{gap:8px;font-size:11px}.plan{grid-template-columns:1fr;grid-template-rows:190px 190px 190px 190px 240px 190px}.ceo,.coo,.meeting,.itroom,.openarea,.cafe{grid-column:1}.ceo{grid-row:1}.coo{grid-row:2}.meeting{grid-row:3}.itroom{grid-row:4}.openarea{grid-row:5}.cafe{grid-row:6}.stats{width:100%}.stat{flex:1}.floor{padding:7px}}
+</style>
+</head>
+<body>
+<header><div class="brand">SW AI OFFICE<small>VIRTUAL COMPANY · MAIN FLOOR</small></div><div class="headright"><span class="live">사무실 가동 중</span><span id="clock">--:--</span><span>1층</span></div></header>
+<main>
+<div class="intro"><div><h1>SW AI OFFICE 가상 사무실</h1><p>대표실 · 본부장실 · 회의실 · 팀 업무공간 · 카페테리아</p></div><div class="stats"><div class="stat"><b id="present">8</b>출근</div><div class="stat"><b id="working">5</b>업무 중</div><div class="stat"><b id="meetingCount">1</b>회의</div></div></div>
+<section class="office-shell">
+<div class="office-top"><span>SW AI OFFICE · FLOOR PLAN</span><span>직원을 클릭하면 프로필과 현재 업무를 볼 수 있습니다</span></div>
+<div class="floor"><div class="plan" id="plan">
+<div class="room ceo glass" id="room-ceo"><span class="room-label">대표이사실 · 피터</span><div class="window"></div><div class="sofa"></div><div class="table"></div><div class="chair" style="left:49%;top:32%"></div><div class="chair" style="left:67%;top:53%"></div><div class="chair" style="left:43%;top:69%"></div><div class="furniture desk" style="right:12px;top:38px"><i class="monitor"></i></div><div class="caption">CEO OFFICE</div></div>
+<div class="room coo glass" id="room-coo"><span class="room-label">본부장실 · 알렉스</span><div class="window"></div><div class="table meet-table"></div><div class="chair" style="left:38%;top:28%"></div><div class="chair" style="left:67%;top:28%"></div><div class="chair" style="left:38%;top:70%"></div><div class="chair" style="left:67%;top:70%"></div><div class="plant" style="right:14px;bottom:14px"></div><div class="caption">COO OFFICE</div></div>
+<div class="room meeting glass" id="room-meeting"><span class="room-label">대회의실</span><div class="window"></div><div class="table meet-table"></div><div class="chair" style="left:23%;top:32%"></div><div class="chair" style="left:43%;top:32%"></div><div class="chair" style="left:63%;top:32%"></div><div class="chair" style="left:83%;top:32%"></div><div class="chair" style="left:23%;top:70%"></div><div class="chair" style="left:43%;top:70%"></div><div class="chair" style="left:63%;top:70%"></div><div class="chair" style="left:83%;top:70%"></div><div class="caption">MEETING ROOM</div></div>
+<div class="room itroom glass" id="room-it"><span class="room-label">기술·IT팀 유리실</span><div class="window"></div><div class="furniture desk" style="left:22px;top:78px"><i class="monitor"></i></div><div class="furniture desk" style="right:20px;top:78px"><i class="monitor"></i></div><div class="seat" style="left:38px;top:125px"></div><div class="seat" style="right:36px;top:125px"></div><div class="caption">TECH & IT</div></div>
+<div class="room openarea" id="room-open"><span class="room-label">팀 업무공간 · 오픈 오피스</span><div class="window"></div>
+<div class="smalltable" style="left:7%;top:64px"></div><div class="smalltable" style="left:27%;top:64px"></div><div class="smalltable" style="left:47%;top:64px"></div><div class="smalltable" style="left:67%;top:64px"></div><div class="smalltable" style="left:7%;top:155px"></div><div class="smalltable" style="left:27%;top:155px"></div><div class="smalltable" style="left:47%;top:155px"></div><div class="smalltable" style="left:67%;top:155px"></div>
+<div class="seat" style="left:9%;top:92px"></div><div class="seat" style="left:29%;top:92px"></div><div class="seat" style="left:49%;top:92px"></div><div class="seat" style="left:69%;top:92px"></div><div class="seat" style="left:9%;top:183px"></div><div class="seat" style="left:29%;top:183px"></div><div class="seat" style="left:49%;top:183px"></div><div class="seat" style="left:69%;top:183px"></div>
+<div class="plant" style="right:15px;top:60px"></div><div class="plant" style="right:15px;bottom:20px"></div><div class="caption">MANAGEMENT · LEGAL · IR · GENERAL AFFAIRS · STRATEGY</div></div>
+<div class="room cafe" id="room-cafe"><span class="room-label">카페테리아 · 휴게공간</span><div class="coffee" style="left:16px;top:66px"></div><div class="table" style="width:64px;height:40px;left:72%;top:50%"></div><div class="chair" style="left:53%;top:37%"></div><div class="chair" style="left:83%;top:37%"></div><div class="chair" style="left:53%;top:70%"></div><div class="chair" style="left:83%;top:70%"></div><div class="plant" style="right:13px;top:17px"></div><div class="caption">CAFETERIA</div></div>
+</div></div></section>
+<div class="bottom"><section class="panel"><h3>실시간 사무실 상황</h3><div id="activity"><div class="activity"><i class="dot"></i>직원들이 각자 업무 공간에서 업무를 시작했습니다.</div></div></section><section class="panel"><h3>조직 현황</h3><div class="teamchips"><span class="chip">경영관리팀</span><span class="chip">법무팀</span><span class="chip">IR팀</span><span class="chip">총무팀</span><span class="chip">전략기획팀</span><span class="chip">기술·IT팀</span></div></section></div>
+<footer>SW AI OFFICE · 가상 사무실 시각화 · 직원의 이동과 활동은 화면 내 시뮬레이션입니다.</footer>
+</main>
+<aside id="profile"><div class="profiletop"><strong id="pname">직원 프로필</strong><button id="close" aria-label="닫기">×</button></div><div class="profile-role" id="prole"></div><div class="profile-state" id="pstate"></div></aside>
+<script>
+const staff=[
+{id:'peter',name:'피터',role:'대표이사',room:'ceo',x:63,y:57,skin:'#edbd96',hair:'#342c2b',shirt:'#273f62',task:'경영 현안 검토 및 최종 의사결정',state:'대표 업무 대기'},
+{id:'alex',name:'알렉스',role:'본부장',room:'coo',x:52,y:54,skin:'#d9a77f',hair:'#3a302c',shirt:'#486d9b',task:'조직 업무 배정 및 진행 관리',state:'조직 운영 총괄'},
+{id:'dennis',name:'데니스',role:'경영관리팀장',room:'open',x:8,y:39,skin:'#f0c49b',hair:'#514035',shirt:'#638b78',task:'경영 실적과 예산 현황 점검',state:'업무 중'},
+{id:'rex',name:'렉스',role:'법무팀장',room:'open',x:29,y:39,skin:'#d7a17d',hair:'#292d36',shirt:'#6c719e',task:'계약 및 법률 리스크 검토',state:'업무 중'},
+{id:'ryan',name:'라이언',role:'IR팀장',room:'open',x:49,y:39,skin:'#efc49d',hair:'#6a4934',shirt:'#527eaa',task:'IR 자료 및 시장 동향 검토',state:'업무 중'},
+{id:'aiden',name:'에이든',role:'총무팀장',room:'open',x:69,y:39,skin:'#d9aa86',hair:'#43332d',shirt:'#b07b51',task:'자산·시설·구매 현황 관리',state:'업무 중'},
+{id:'eric',name:'에릭',role:'전략기획팀장',room:'open',x:18,y:79,skin:'#edc29d',hair:'#3c302a',shirt:'#557c87',task:'사업 전략 및 해외시장 조사',state:'업무 중'},
+{id:'theo',name:'테오',role:'기술·IT팀장',room:'it',x:48,y:49,skin:'#d5a17b',hair:'#292b30',shirt:'#497b9b',task:'시스템 상태와 AI 개발 점검',state:'시스템 점검 중'}
+];
+const activities=['업무 자료를 검토하고 있습니다.','팀 업무 현황을 정리하고 있습니다.','본부장에게 진행 상황을 공유하고 있습니다.','관련 자료를 확인하고 있습니다.','회의 준비를 하고 있습니다.','잠시 카페테리아에서 휴식 중입니다.'];
+const plan=document.getElementById('plan');let selected=null;let moveIndex=0;
+function makeAvatar(s){const a=document.createElement('div');a.className='avatar working';a.id='avatar-'+s.id;a.style.setProperty('--skin',s.skin);a.style.setProperty('--hair',s.hair);a.style.setProperty('--shirt',s.shirt);a.innerHTML='<span class="hair"></span><span class="head"></span><span class="body"></span><span class="legs"></span><span class="name">'+s.name+'</span><span class="bubble">업무 중</span>';a.addEventListener('click',()=>showProfile(s));document.getElementById('room-'+s.room).appendChild(a);place(a,s.x,s.y);return a}
+function place(el,x,y){el.style.left=x+'%';el.style.top=y+'%'}
+const nodes={};staff.forEach(s=>nodes[s.id]=makeAvatar(s));
+function showProfile(s){selected=s.id;staff.forEach(p=>nodes[p.id].classList.toggle('selected',p.id===s.id));document.getElementById('pname').textContent=s.name;document.getElementById('prole').textContent=s.role;document.getElementById('pstate').innerHTML='<b>현재 상태</b><br>'+s.state+'<br><br><b>담당 업무</b><br>'+s.task;document.getElementById('profile').classList.add('show')}
+document.getElementById('close').onclick=()=>document.getElementById('profile').classList.remove('show');
+function clock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}clock();setInterval(clock,10000);
+function log(msg){const box=document.getElementById('activity');const row=document.createElement('div');row.className='activity';row.innerHTML='<i class="dot"></i>'+msg;box.prepend(row);while(box.children.length>4)box.lastChild.remove()}
+setInterval(()=>{const s=staff[(moveIndex%6)+2];const a=nodes[s.id];const toCafe=moveIndex%3===2;if(toCafe){s.state='휴식 중';s.task='카페테리아에서 잠시 휴식';a.querySelector('.bubble').textContent='휴식 중';document.getElementById('room-cafe').appendChild(a);place(a,moveIndex%2?26:72,47);log(s.name+'이(가) 카페테리아에서 잠시 휴식합니다.')}else{const room=s.id==='theo'?'it':'open';s.state='업무 중';s.task=activities[moveIndex%activities.length];a.querySelector('.bubble').textContent='업무 중';document.getElementById('room-'+room).appendChild(a);place(a,s.x+(moveIndex%2?2:-2),s.y);log(s.name+' — '+s.task)}moveIndex++;document.getElementById('working').textContent=5+(moveIndex%3);},8500);
+log('알렉스 본부장이 출근하여 조직 운영을 시작했습니다.');log('각 팀장이 업무 공간에서 담당 업무를 진행하고 있습니다.');
+</script>
+</body></html>
