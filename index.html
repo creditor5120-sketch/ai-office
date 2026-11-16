@@ -362,8 +362,8 @@ function syncEmployeeStates(data, taskId) {
     const judgment = value.judgment ? '검수 판정: ' + String(value.judgment) : '';
     const detail = value.detail ?? value.description ?? value.task ??
       value.instruction ?? value.currentTask ??
-      (resultExcerpt ? '수행 결과: ' + resultExcerpt : '') ??
-      (reviewExcerpt ? '검수 내용: ' + reviewExcerpt : '') ??
+      (resultExcerpt ? '수행 결과: ' + resultExcerpt : null) ??
+      (reviewExcerpt ? '검수 내용: ' + reviewExcerpt : null) ??
       judgment ??
       (role === '팀장' ? '팀장 검수 및 협업' : stage);
 
