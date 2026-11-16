@@ -67,8 +67,8 @@ function syncEmployeeStates(data,taskId){
   if(!value||typeof value!=='object'||depth>9||visited.has(value))return;
   visited.add(value);
   if(Array.isArray(value)){value.forEach(item=>walk(item,depth+1));return;}
-  const id= value.employeeId??value.assigneeId??value.assignedEmployeeId??value.workerId??value.staffId;
-  const name=value.employeeName??value.assigneeName??value.staffName??(typeof value.employee==='string'?value.employee:null)??(typeof value.assignee==='string'?value.assignee:null);
+  const id= value.employeeId??value.assigneeId??value.assignedEmployeeId??value.workerId??value.staffId??(employeeById.has(String(value.id??''))?value.id:null);
+  const name=value.employeeName??value.assigneeName??value.staffName??value.title??(typeof value.employee==='string'?value.employee:null)??(typeof value.assignee==='string'?value.assignee:null);
   const employee=(id!=null&&employeeById.get(String(id)))||(name&&employeeByName.get(String(name)));
   if(employee){
    const rawStatus=value.status??value.state??value.currentStatus??value.taskStatus??value.stageStatus??stage;
