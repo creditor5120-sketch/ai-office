@@ -46,13 +46,16 @@ function restorePending(){
 }
 restorePending();
 $('send').addEventListener('click',async()=>{
- const token=$('token').value.trim(),task=$('task').value.trim();
+ const token=$('token').value.trim();
  if(!token){$('result').textContent='staging 인증 토큰을 입력해 주세요.';return;}
+ let pending=null;try{pending=JSON.parse(localStorage.getItem(pendingKey)||'null');}catch{}
+ const typedTask=$('task').value.trim();
+ const task=(pending&&pending.taskId&&pending.task)?pending.task:typedTask;
  if(!task){$('result').textContent='테스트 업무 지시를 입력해 주세요.';return;}
  if(!Array.isArray(employeeDirectory)||!employeeDirectory.some(e=>e.id==='COO')){$('result').textContent='employees.js에서 본부장(COO) 데이터를 찾지 못했습니다.';return;}
  const button=$('send');button.disabled=true;
- let pending=null;try{pending=JSON.parse(localStorage.getItem(pendingKey)||'null');}catch{}
  const taskId=pending&&pending.taskId?pending.taskId:crypto.randomUUID();
+ $('task').value=task;
  localStorage.setItem(pendingKey,JSON.stringify({task,taskId}));
  $('resumeTaskId').value=taskId;
  setHeadState('업무 중','스테이징 업무를 처리하고 있습니다.');
