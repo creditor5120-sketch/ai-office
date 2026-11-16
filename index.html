@@ -350,10 +350,22 @@ function syncEmployeeStates(data, taskId) {
   const seen = new Set();
   const visited = new Set();
 
+  // 2차 최종 검수 결과를 전문 직원의 최종 상태에 우선 반영한다.
+  const finalReviews = new Map(
+    (Array.isArray(data.finalReviewResults) ? data.finalReviewResults : [])
+      .filter(item => item && item.id != null)
+      .map(item => [String(item.id), item])
+  );
+
   function applyEmployee(employee, value, role = '담당') {
     if (!employee) return;
-    const rawStatus = value.status ?? value.state ?? value.currentStatus ??
-      value.taskStatus ?? value.stageStatus ?? stage;
+    const finalReview = finalReviews.get(String(employee.id));
+    const reviewNeedsWork = finalReview &&
+      (finalReview.judgment !== '승인' || finalReview.status !== 'completed');
+    const rawStatus = reviewNeedsWork
+      ? '보완 필요'
+      : value.status ?? value.state ?? value.currentStatus ??
+        value.taskStatus ?? value.stageStatus ?? stage;
     const employeeOutput = typeof value.result === 'string'
       ? value.result
       : typeof value.content === 'string' ? value.content : '';
@@ -366,6 +378,7 @@ function syncEmployeeStates(data, taskId) {
       value.instruction ?? value.currentTask ??
       (resultExcerpt ? '수행 결과: ' + resultExcerpt : null) ??
       (reviewExcerpt ? '검수 내용: ' + reviewExcerpt : null) ??
+      (reviewNeedsWork ? '2차 검수 판정: ' + finalReview.judgment + ' · ' + String(finalReview.details?.summary || finalReview.review || '수정 및 재검수 필요').slice(0, 300) : null) ??
       judgment ??
       (role === '팀장' ? '팀장 검수 및 협업' : stage);
 
