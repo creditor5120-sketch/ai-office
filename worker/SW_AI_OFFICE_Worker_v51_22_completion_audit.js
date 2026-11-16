@@ -2666,6 +2666,8 @@ return json(successPayload);
     status: nextStatus,
     currentStage,
     resumeRequired: resumable || nextStatus === "WAITING_FOR_API_QUOTA",
+    modelUnavailableResumable,
+    resumeDelayMs: modelUnavailableResumable ? 30000 : 1200,
     cachedAiCallCount: cachedAiCalls.size,
     error: yielded
       ? "이번 요청의 AI 호출 단위를 마쳤습니다. 같은 taskId와 idempotencyKey로 이어서 처리합니다."
