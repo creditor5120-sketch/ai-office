@@ -359,7 +359,7 @@ function syncEmployeeStates(data, taskId) {
     const reviewExcerpt = typeof value.review === 'string'
       ? value.review.replace(/\s+/g, ' ').trim().slice(0, 220)
       : '';
-    const judgment = value.judgment ? '검수 판정: ' + String(value.judgment) : '';
+    const judgment = value.judgment ? '검수 판정: ' + String(value.judgment) : null;
     const detail = value.detail ?? value.description ?? value.task ??
       value.instruction ?? value.currentTask ??
       (resultExcerpt ? '수행 결과: ' + resultExcerpt : null) ??
