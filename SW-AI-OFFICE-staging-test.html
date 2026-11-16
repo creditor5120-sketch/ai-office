@@ -35,6 +35,40 @@ function setHeadState(status,detail){
  states.COO={status,detail,updatedAt:new Date().toISOString()};
  localStorage.setItem(employeeStateKey,JSON.stringify(states));
 }
+const employeeById=new Map(employeeDirectory.map(e=>[String(e.id),e]));
+const employeeByName=new Map(employeeDirectory.map(e=>[String(e.name),e]));
+function normalizeEmployeeStatus(value,stage){
+ const raw=String(value||stage||'').toLowerCase();
+ if(/검수|review|inspect|qa/.test(raw))return '검수 중';
+ if(/협업|collab|coordinate|meeting/.test(raw))return '협업 중';
+ if(/휴식|break|休/.test(raw))return '휴식 중';
+ if(/완료|승인|complete|done|approved|대기|pending|idle/.test(raw))return '대기';
+ return '업무 중';
+}
+function syncEmployeeStates(data,taskId){
+ if(!data||typeof data!=='object')return;
+ let states={};try{states=JSON.parse(localStorage.getItem(employeeStateKey)||'{}')}catch{}
+ const stage=data.currentStage||data.workflow?.currentStage||'업무 처리';
+ const seen=new Set();
+ const visited=new Set();
+ function walk(value,depth=0){
+  if(!value||typeof value!=='object'||depth>9||visited.has(value))return;
+  visited.add(value);
+  if(Array.isArray(value)){value.forEach(item=>walk(item,depth+1));return;}
+  const id= value.employeeId??value.assigneeId??value.assignedEmployeeId??value.workerId??value.staffId;
+  const name=value.employeeName??value.assigneeName??value.staffName??(typeof value.employee==='string'?value.employee:null)??(typeof value.assignee==='string'?value.assignee:null);
+  const employee=(id!=null&&employeeById.get(String(id)))||(name&&employeeByName.get(String(name)));
+  if(employee){
+   const rawStatus=value.status??value.state??value.currentStatus??value.taskStatus??value.stageStatus??stage;
+   const detail=value.detail??value.description??value.task??value.instruction??value.currentTask??stage;
+   states[employee.id]={status:normalizeEmployeeStatus(rawStatus,stage),detail:String(detail).slice(0,500),taskId,updatedAt:new Date().toISOString(),source:'staging-response'};
+   seen.add(employee.id);
+  }
+  Object.values(value).forEach(child=>walk(child,depth+1));
+ }
+ walk(data);
+ if(seen.size)localStorage.setItem(employeeStateKey,JSON.stringify(states));
+}
 function restorePending(){
  let saved=null;try{saved=JSON.parse(localStorage.getItem(pendingKey)||'null')}catch{}
  if(saved&&saved.taskId&&saved.task){
@@ -66,6 +100,7 @@ $('send').addEventListener('click',async()=>{
 같은 업무 ID로 저장된 결과를 이어서 처리하고 있습니다.`;
    const response=await fetch(STAGING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
    const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={responseText:raw};}
+   syncEmployeeStates(data,taskId);
    if(response.ok&&data.reply&&data.workflow&&['completed','partial','failed'].includes(data.workflow.status)){
     setHeadState('대기','스테이징 업무 처리가 종료되었습니다.');
     localStorage.removeItem(pendingKey);
