@@ -558,15 +558,7 @@ export default {
 
 const coo = findEmployee("COO");
 
-console.log("=== COO 진단 정보 ===");
-
-console.log("직원 수:", employees.length);
-
-console.log("직원 ID 목록:", JSON.stringify(employees.map(e => e.id)));
-
-console.log("전달된 직원 ID:", body.employeeId);
-
-console.log("본부장 데이터:", JSON.stringify(coo || null));
+// 운영 로그에 직원 명단·개인별 지시문 등 내부 조직 정보를 출력하지 않는다.
 
       const employeeList = employees.map(e => ({
 
