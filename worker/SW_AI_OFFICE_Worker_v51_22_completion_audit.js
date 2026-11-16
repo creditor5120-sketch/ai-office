@@ -1,4 +1,4 @@
-// SW AI OFFICE Worker v51.24 - Gemini free-tier API + completion audit integrity
+// SW AI OFFICE Worker v51.25 - Gemini free-tier API + completion audit integrity
 export default {
 
   async fetch(request, env) {
@@ -84,7 +84,7 @@ export default {
       await env.DB.prepare(
         `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.24", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
+      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.25", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
     };
 
     let lastRecordedStage = null;
@@ -2508,7 +2508,7 @@ if (lastRecordedStage) {
          SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
        )`
     ).bind(
-      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.24", lastRecordedStage,
+      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.25", lastRecordedStage,
       JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
       completionAt, taskId, lockToken, finalTaskStatus, completionAt
     )
@@ -2522,7 +2522,7 @@ completionStatements.push(
        SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
      )`
   ).bind(
-    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.24",
+    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.25",
     "본부장 최종 검토 및 보고",
     JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.24" }),
     completionAt, taskId, lockToken, finalTaskStatus, completionAt
@@ -2560,9 +2560,9 @@ return json(successPayload);
         `SELECT COUNT(*) AS total FROM task_events
          WHERE task_id = ? AND event_type = 'AI_TIMEOUT_RESUME' AND stage = ?`
       ).bind(taskId, currentStage).first();
-      // 모델 응답 지연에 대비해 동일 단계는 최대 3회까지만 체크포인트 재개한다.
+      // Gemini 응답 시간 초과는 일시 장애로 보고 동일 단계 체크포인트 재개를 최대 5회 허용한다.
       priorTimeoutCount = Number(priorTimeout?.total || 0);
-      timeoutResumable = priorTimeoutCount < 3;
+      timeoutResumable = priorTimeoutCount < 5;
     } catch (timeoutCheckError) {
       console.error("시간 초과 재개 횟수 확인 실패:", timeoutCheckError.message);
     }
@@ -2616,7 +2616,7 @@ return json(successPayload);
                SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
              )`
           ).bind(
-            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.24",
+            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.25",
             currentStage, JSON.stringify(detail), failureAt,
             taskId, lockToken, nextStatus, failureAt
           )
@@ -2626,7 +2626,7 @@ return json(successPayload);
         appendFailureEvent("AI_TIMEOUT_RESUME", {
           status: "PROCESSING",
           retryCount: priorTimeoutCount + 1,
-          maxRetriesForStage: 3,
+          maxRetriesForStage: 5,
           cachedAiCallCount: cachedAiCalls.size,
           nextAiCallIndex: aiCallCursor,
           error: error.message
@@ -2667,7 +2667,8 @@ return json(successPayload);
     currentStage,
     resumeRequired: resumable || nextStatus === "WAITING_FOR_API_QUOTA",
     modelUnavailableResumable,
-    resumeDelayMs: modelUnavailableResumable ? 30000 : 1200,
+    timeoutResumable,
+    resumeDelayMs: (modelUnavailableResumable || timeoutResumable) ? 30000 : 1200,
     cachedAiCallCount: cachedAiCalls.size,
     error: yielded
       ? "이번 요청의 AI 호출 단위를 마쳤습니다. 같은 taskId와 idempotencyKey로 이어서 처리합니다."
