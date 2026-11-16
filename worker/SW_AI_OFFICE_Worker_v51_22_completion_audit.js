@@ -720,7 +720,7 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
         callIndex,
         elapsedMs: Date.now() - aiCallStartedAt,
         outputLength: String(value || "").length,
-        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        model: "gemini-3.8-flash"
       });
     } catch (eventError) { console.error("AI 호출 완료 이력 기록 실패:", eventError.message); }
     return value;
