@@ -256,32 +256,54 @@ export default {
           let priorDetail = {};
           try { priorDetail = JSON.parse(prior.detail_json || "{}"); } catch (_) {}
           if (priorDetail.decision === decision) {
-            return json({ taskId, decision, recordedAt: prior.created_at, duplicate: true, message: "동일한 대표 결정이 이미 기록되어 있습니다." }, 200);
+            return json({ taskId, ...priorDetail, recordedAt: prior.created_at, duplicate: true, message: "동일한 결정이 이미 기록되어 있습니다." }, 200);
           }
-          return json({ error: "이미 대표 결정이 기록된 업무입니다. 기존 결정을 덮어쓰지 않았습니다.", taskId, priorDecision: priorDetail.decision, recordedAt: prior.created_at }, 409);
+          return json({ error: "이미 결정이 기록된 업무입니다. 기존 결정을 덮어쓰지 않았습니다.", taskId, priorDecision: priorDetail.decision, recordedAt: prior.created_at }, 409);
         }
 
         const recordedAt = new Date().toISOString();
         const decisionDetail = {
           decision,
           decisionLabel: decision === "APPROVE" ? "대표 승인" : "대표 반려",
-          actor: "대표이사 피터",
+          actor: "대표 화면 사용자(공통 API 인증)",
           reason: reason || "",
           reportStatus: result.workflow?.resultStatus || result.workflow?.status || "미확인",
           finalReleaseAllowed: releaseAllowed,
           recordedAt,
-          attributionNote: "앱의 공통 API 인증을 통과한 요청으로 기록. 개인별 대표 로그인 검증은 별도 구현 필요."
+          attributionNote: "공통 API 인증을 통과한 대표 화면 요청으로 기록. 개인별 대표 로그인·신원 검증은 구현되지 않음."
         };
-        await env.DB.prepare(
+        // 중복 요청이 동시에 도착해도 단일 SQL의 조건부 INSERT로 최초 결정만 기록한다.
+        const insertDecision = await env.DB.prepare(
           `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
-           VALUES (?, ?, 'REPRESENTATIVE_DECISION', ?, ?, ?, ?)`
-        ).bind(crypto.randomUUID(), taskId, "대표이사 피터", decisionDetail.decisionLabel, JSON.stringify(decisionDetail), recordedAt).run();
+           SELECT ?, ?, 'REPRESENTATIVE_DECISION', ?, ?, ?, ?
+           WHERE NOT EXISTS (
+             SELECT 1 FROM task_events WHERE task_id = ? AND event_type = 'REPRESENTATIVE_DECISION'
+           )`
+        ).bind(
+          crypto.randomUUID(), taskId, decisionDetail.actor, decisionDetail.decisionLabel,
+          JSON.stringify(decisionDetail), recordedAt, taskId
+        ).run();
+        if ((insertDecision.meta?.changes ?? 0) !== 1) {
+          const concurrent = await env.DB.prepare(
+            `SELECT detail_json, created_at FROM task_events
+             WHERE task_id = ? AND event_type = 'REPRESENTATIVE_DECISION'
+             ORDER BY created_at DESC, rowid DESC LIMIT 1`
+          ).bind(taskId).first();
+          let concurrentDetail = {};
+          try { concurrentDetail = JSON.parse(concurrent?.detail_json || "{}"); } catch (_) {}
+          if (concurrentDetail.decision === decision) {
+            return json({ taskId, ...concurrentDetail, recordedAt: concurrent?.created_at || null, duplicate: true, message: "동일한 결정이 먼저 기록되어 중복 요청은 새로 저장하지 않았습니다." }, 200);
+          }
+          return json({ error: "다른 결정이 먼저 기록되었습니다. 기존 결정을 덮어쓰지 않았습니다.", taskId, priorDecision: concurrentDetail.decision || null, recordedAt: concurrent?.created_at || null }, 409);
+        }
 
         return json({
           taskId,
           decision,
           decisionLabel: decisionDetail.decisionLabel,
           actor: decisionDetail.actor,
+          reason: decisionDetail.reason,
+          attributionNote: decisionDetail.attributionNote,
           recordedAt,
           finalReleaseAllowed: releaseAllowed,
           message: decision === "APPROVE" ? "대표 승인 이력을 기록했습니다." : "대표 반려 이력을 기록했습니다."
