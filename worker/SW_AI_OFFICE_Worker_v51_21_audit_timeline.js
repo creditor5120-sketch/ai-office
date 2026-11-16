@@ -241,7 +241,7 @@ export default {
         const rows = await env.DB.prepare(
           `SELECT event_id, event_type, actor, stage, detail_json, created_at
            FROM task_events WHERE task_id = ?
-           ORDER BY created_at ASC, rowid ASC LIMIT 300`
+           ORDER BY created_at DESC, rowid DESC LIMIT 300`
         ).bind(taskId).all();
         const events = (rows.results || []).map(row => {
           let detail = {};
@@ -256,7 +256,7 @@ export default {
             detail,
             createdAt: row.created_at
           };
-        });
+        }).reverse();
         return json({
           task: {
             taskId: taskRow.task_id,
