@@ -671,6 +671,65 @@ function renderWorkflowReview(data) {
     panel.appendChild(section);
   });
 
+  // 서버 D1에 저장된 단계별 감사 이력을 표시한다.
+  if (decisionTaskId) {
+    const historySection = document.createElement('section');
+    const historyHeading = document.createElement('strong');
+    historyHeading.textContent = '서버 업무 처리 이력';
+    historySection.appendChild(historyHeading);
+    const historyStatus = document.createElement('p');
+    historyStatus.textContent = '서버 이력을 확인하고 있습니다.';
+    historySection.appendChild(historyStatus);
+    const historyList = document.createElement('ol');
+    historySection.appendChild(historyList);
+    panel.appendChild(historySection);
+
+    const historyToken = accessTokenBox.value.trim();
+    if (historyToken) {
+      fetch('https://ai-office-api.creditor5120.workers.dev/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + historyToken
+        },
+        body: JSON.stringify({
+          action: 'get_task_history',
+          taskId: decisionTaskId
+        })
+      }).then(async response => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || '업무 이력 조회에 실패했습니다.');
+        return result;
+      }).then(result => {
+        historyList.replaceChildren();
+        historyStatus.textContent = `서버 기록 ${result.eventCount || 0}건 · 업무 상태: ${result.task?.status || '미확인'}`;
+        (result.events || []).forEach(event => {
+          const item = document.createElement('li');
+          const timestamp = event.createdAt ? new Date(event.createdAt).toLocaleString('ko-KR') : '시각 미확인';
+          const stage = event.stage || event.eventType || '단계 미확인';
+          const actor = event.actor || '담당자 미확인';
+          const detail = event.detail && typeof event.detail === 'object'
+            ? Object.entries(event.detail)
+                .filter(([key, value]) => !['raw', 'prompt', 'content'].includes(key) && value !== null && value !== undefined && typeof value !== 'object')
+                .map(([key, value]) => `${key}: ${String(value)}`)
+                .join(' · ')
+            : '';
+          item.textContent = `${timestamp} | ${stage} | ${event.eventType || ''} | ${actor}${detail ? ' | ' + detail : ''}`;
+          historyList.appendChild(item);
+        });
+        if (result.truncated) {
+          const note = document.createElement('p');
+          note.textContent = '표시 가능한 최근 300건까지만 조회했습니다.';
+          historySection.appendChild(note);
+        }
+      }).catch(error => {
+        historyStatus.textContent = '서버 이력을 불러오지 못했습니다: ' + (error.message || '조회 오류');
+      });
+    } else {
+      historyStatus.textContent = '서버 API 인증값을 입력해야 서버 업무 이력을 조회할 수 있습니다.';
+    }
+  }
+
   responseBox.appendChild(panel);
 } 
 function loadTaskHistory() {
