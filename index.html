@@ -320,6 +320,100 @@ const PENDING_TASK_KEY = 'swAIOfficePendingTask';
 const TASK_HISTORY_KEY = 'swAIOfficeTaskHistory';
 const TASK_HISTORY_LIMIT = 10;
 
+ 
+// 가상 사무실 직원 현황 연동
+const EMPLOYEE_STATE_KEY = 'swAIOfficeEmployeeStates';
+const employeeById = new Map(employeeDirectory.map(e => [String(e.id), e]));
+const employeeByName = new Map(employeeDirectory.map(e => [String(e.name), e]));
+
+function normalizeEmployeeStatus(value, stage) {
+  const raw = String(value || stage || '').toLowerCase();
+  if (/검수|review|inspect|qa/.test(raw)) return '검수 중';
+  if (/협업|collab|coordinate|meeting/.test(raw)) return '협업 중';
+  if (/휴식|break/.test(raw)) return '휴식 중';
+  if (/완료|승인|complete|done|approved|대기|pending|idle/.test(raw)) return '대기';
+  return '업무 중';
+}
+
+function syncEmployeeStates(data, taskId) {
+  if (!data || typeof data !== 'object') return;
+  let states = {};
+  try {
+    states = JSON.parse(localStorage.getItem(EMPLOYEE_STATE_KEY) || '{}');
+  } catch (_) {
+    states = {};
+  }
+
+  const stage = data.currentStage || data.workflow?.currentStage || '업무 처리';
+  const now = new Date().toISOString();
+  const seen = new Set();
+  const visited = new Set();
+
+  function applyEmployee(employee, value, role = '담당') {
+    if (!employee) return;
+    const rawStatus = value.status ?? value.state ?? value.currentStatus ??
+      value.taskStatus ?? value.stageStatus ?? stage;
+    const detail = value.detail ?? value.description ?? value.task ??
+      value.instruction ?? value.currentTask ??
+      (role === '팀장' ? '팀장 검수 및 협업' : stage);
+
+    states[employee.id] = {
+      status: normalizeEmployeeStatus(rawStatus, stage),
+      detail: String(detail).slice(0, 500),
+      taskId,
+      updatedAt: now,
+      source: 'main-response'
+    };
+    seen.add(employee.id);
+  }
+
+  function walk(value, depth = 0) {
+    if (!value || typeof value !== 'object' || depth > 9 || visited.has(value)) return;
+    visited.add(value);
+
+    if (Array.isArray(value)) {
+      value.forEach(item => walk(item, depth + 1));
+      return;
+    }
+
+    const id = value.employeeId ?? value.assigneeId ??
+      value.assignedEmployeeId ?? value.workerId ?? value.staffId ??
+      (employeeById.has(String(value.id ?? '')) ? value.id : null);
+    const name = value.employeeName ?? value.assigneeName ?? value.staffName ??
+      value.title ?? ((value.department || value.position) ? value.name : null) ??
+      (typeof value.employee === 'string' ? value.employee : null) ??
+      (typeof value.assignee === 'string' ? value.assignee : null);
+    const employee = (id != null && employeeById.get(String(id))) ||
+      (name && employeeByName.get(String(name)));
+
+    applyEmployee(employee, value);
+
+    const leaderName = typeof value.teamLeader === 'string'
+      ? value.teamLeader
+      : value.teamLeader?.name;
+    if (leaderName) applyEmployee(employeeByName.get(String(leaderName)), value, '팀장');
+
+    Object.values(value).forEach(child => walk(child, depth + 1));
+  }
+
+  walk(data);
+
+  const headStatus = data.status === 'WAITING_FOR_API_QUOTA'
+    ? '대기'
+    : normalizeEmployeeStatus(stage, stage);
+  states.COO = {
+    status: headStatus,
+    detail: data.status === 'WAITING_FOR_API_QUOTA'
+      ? 'AI 호출 한도 회복 대기 중 · 기존 업무 보존'
+      : String(stage).slice(0, 500),
+    taskId,
+    updatedAt: now,
+    source: 'main-response'
+  };
+
+  localStorage.setItem(EMPLOYEE_STATE_KEY, JSON.stringify(states));
+}
+
 // 업무 진행 및 최종 검수 결과 표시
 function renderWorkflowReview(data) {
   const oldPanel = document.getElementById('workflowReviewPanel');
@@ -924,6 +1018,9 @@ savedAt: new Date().toISOString()
       } catch (_) {
         data = { error: raw || '서버 응답을 해석할 수 없습니다.' };
       }
+
+      // 서버가 반환한 실제 배정·진행 정보를 가상 사무실 직원 상태에 반영한다.
+      syncEmployeeStates(data, taskId);
 
       // v51.15의 최종 성공 응답은 top-level status가 아니라 reply + workflow로 식별한다.
       if (response.ok && data.reply && data.workflow) {
