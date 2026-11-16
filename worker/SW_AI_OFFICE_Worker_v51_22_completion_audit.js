@@ -2582,9 +2582,42 @@ return json(successPayload);
 
   if (dbReady && taskId) {
     try {
-      await updateTask({ status: nextStatus, stage: currentStage, error: resumable ? null : error.message });
+      // 실패·대기·일시정지 상태와 해당 감사 이벤트도 한 트랜잭션으로 저장한다.
+      const failureAt = new Date().toISOString();
+      const failureEventType = yielded
+        ? "TASK_YIELDED_FOR_NEXT_REQUEST"
+        : timeoutResumable
+          ? "TASK_TIMEOUT_RESUME_REQUIRED"
+          : nextStatus === "PAUSED"
+            ? "TASK_PAUSED"
+            : nextStatus === "CANCELLED"
+              ? "TASK_CANCELLED"
+              : nextStatus === "WAITING_FOR_API_QUOTA"
+                ? "TASK_WAITING_FOR_QUOTA"
+                : "TASK_FAILED";
+      const failureStatements = [
+        env.DB.prepare(
+          `UPDATE tasks SET status = ?, current_stage = ?, error_message = ?, updated_at = ?, completed_at = NULL
+           WHERE task_id = ? AND lock_token = ?`
+        ).bind(nextStatus, currentStage, resumable ? null : error.message, failureAt, taskId, lockToken)
+      ];
+      const appendFailureEvent = (eventType, detail) => {
+        failureStatements.push(
+          env.DB.prepare(
+            `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+             SELECT ?, ?, ?, ?, ?, ?, ?
+             WHERE EXISTS (
+               SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
+             )`
+          ).bind(
+            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.22",
+            currentStage, JSON.stringify(detail), failureAt,
+            taskId, lockToken, nextStatus, failureAt
+          )
+        );
+      };
       if (timeoutResumable) {
-        await writeTaskEvent("AI_TIMEOUT_RESUME", currentStage, {
+        appendFailureEvent("AI_TIMEOUT_RESUME", {
           status: "PROCESSING",
           retryCount: priorTimeoutCount + 1,
           maxRetriesForStage: 3,
@@ -2593,13 +2626,19 @@ return json(successPayload);
           error: error.message
         });
       }
-      await writeTaskEvent(
-        yielded ? "TASK_YIELDED_FOR_NEXT_REQUEST" : timeoutResumable ? "TASK_TIMEOUT_RESUME_REQUIRED" : nextStatus === "PAUSED" ? "TASK_PAUSED" : nextStatus === "CANCELLED" ? "TASK_CANCELLED" : nextStatus === "WAITING_FOR_API_QUOTA" ? "TASK_WAITING_FOR_QUOTA" : "TASK_FAILED",
-        currentStage,
-        { status: nextStatus, error: resumable ? null : error.message, cachedAiCallCount: cachedAiCalls.size, nextAiCallIndex: aiCallCursor, timeoutResumable }
-      );
+      appendFailureEvent(failureEventType, {
+        status: nextStatus,
+        error: resumable ? null : error.message,
+        cachedAiCallCount: cachedAiCalls.size,
+        nextAiCallIndex: aiCallCursor,
+        timeoutResumable
+      });
+      const failureResults = await env.DB.batch(failureStatements);
+      if (failureResults.some(result => (result?.meta?.changes ?? 0) !== 1)) {
+        throw new Error("SW_AI_LOCK_LOST_OR_AUDIT_WRITE_FAILED");
+      }
     } catch (dbError) {
-      console.error("D1 상태 기록 실패:", dbError.message);
+      console.error("D1 상태 및 감사 이력 기록 실패:", dbError.message);
     }
     try { await releaseTaskLock(); } catch (lockError) { console.error("실행 잠금 해제 실패:", lockError.message); }
   }
