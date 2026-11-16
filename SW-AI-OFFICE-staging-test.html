@@ -31,7 +31,10 @@ $('send').addEventListener('click',async()=>{
  if(!task){$('result').textContent='테스트 업무 지시를 입력해 주세요.';return;}
  if(!Array.isArray(employeeDirectory)||!employeeDirectory.some(e=>e.id==='COO')){$('result').textContent='employees.js에서 본부장(COO) 데이터를 찾지 못했습니다.';return;}
  const button=$('send');button.disabled=true;
- const taskId=crypto.randomUUID();
+ const pendingKey='swAIOfficeStagingPendingTask';
+ let pending=null;try{pending=JSON.parse(localStorage.getItem(pendingKey)||'null');}catch{}
+ const taskId=pending&&pending.task===task&&pending.taskId?pending.taskId:crypto.randomUUID();
+ localStorage.setItem(pendingKey,JSON.stringify({task,taskId}));
  const payload={task,taskId,idempotencyKey:taskId,employees:employeeDirectory};
  try{
   for(let step=1;step<=80;step++){
@@ -40,7 +43,11 @@ $('send').addEventListener('click',async()=>{
    const response=await fetch(STAGING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
    const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={responseText:raw};}
    if(response.ok&&data.reply&&data.workflow&&['completed','partial','failed'].includes(data.workflow.status)){
+    localStorage.removeItem(pendingKey);
     $('result').textContent=`업무 처리 종료: ${data.workflow.resultStatus||data.workflow.status}\nHTTP ${response.status}\n\n${JSON.stringify(data,null,2)}`;return;
+   }
+   if(data.status==='WAITING_FOR_API_QUOTA'){
+    $('result').textContent=`OpenRouter 사용 한도 대기 상태입니다.\n같은 업무 ID를 보존했습니다: ${taskId}\n호출 한도가 회복된 뒤 같은 업무 내용을 입력하고 다시 누르면 기존 업무를 이어서 처리합니다. 새 업무로 만들지 마세요.\n\n${JSON.stringify(data,null,2)}`;return;
    }
    if(response.status===202&&data.status==='PROCESSING'){
     $('result').textContent=`업무 처리 중 (${step}/80)
