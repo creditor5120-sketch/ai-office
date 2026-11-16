@@ -639,31 +639,6 @@ function renderWorkflowReview(data) {
     }
     panel.appendChild(decisionBox);
 
-    // 서버 기록을 다시 조회해 다른 브라우저에서 처리한 대표 결정도 표시한다.
-    const accessTokenForHistory = accessTokenBox.value.trim();
-    if (accessTokenForHistory) {
-      fetch('https://ai-office-api.creditor5120.workers.dev/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + accessTokenForHistory
-        },
-        body: JSON.stringify({
-          action: 'get_representative_decision',
-          taskId: decisionTaskId
-        })
-      }).then(response => response.ok ? response.json() : null)
-        .then(result => {
-          if (!result || !result.decision) return;
-          localStorage.setItem(savedDecisionKey, JSON.stringify(result));
-          decisionStatus.textContent = result.decisionLabel + ' · ' + new Date(result.recordedAt).toLocaleString('ko-KR');
-          if (reasonInput) reasonInput.disabled = true;
-          if (approveButton) approveButton.remove();
-          if (rejectButton) rejectButton.remove();
-        })
-        .catch(error => console.warn('대표 결정 이력 조회 실패:', error));
-    }
-  }
 
   reviews.forEach((review, index) => {
     const section = document.createElement('section');
