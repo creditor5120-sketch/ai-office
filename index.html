@@ -353,9 +353,10 @@ function syncEmployeeStates(data, taskId) {
     if (!employee) return;
     const rawStatus = value.status ?? value.state ?? value.currentStatus ??
       value.taskStatus ?? value.stageStatus ?? stage;
-    const resultExcerpt = typeof value.result === 'string'
-      ? value.result.replace(/\s+/g, ' ').trim().slice(0, 260)
-      : '';
+    const employeeOutput = typeof value.result === 'string'
+      ? value.result
+      : typeof value.content === 'string' ? value.content : '';
+    const resultExcerpt = employeeOutput.replace(/\s+/g, ' ').trim().slice(0, 260);
     const reviewExcerpt = typeof value.review === 'string'
       ? value.review.replace(/\s+/g, ' ').trim().slice(0, 220)
       : '';
