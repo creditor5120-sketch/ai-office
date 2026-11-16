@@ -83,10 +83,16 @@ const roomFor=e=>e.id==='CEO'?'ceo':e.id==='COO'?'coo':e.department==='기술·I
 const targetFor=e=>{const room=roomFor(e);if(room==='ceo')return document.querySelector('.ceo');if(room==='coo')return document.querySelector('.coo');if(room==='it')return document.querySelector('.it');return [...document.querySelectorAll('.team')].find(x=>x.dataset.team===room)||document.querySelector('.teams')};
 function loadStates(){try{return JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}')}catch{return {}}}
 let states=loadStates();
-function stateOf(e){const v=states[e.id];return v&&['업무 중','협업 중','검수 중','휴식 중','대기'].includes(v.status)?v:{status:'대기',detail:'현재 직원별 업무 상태 데이터가 연결되지 않았습니다.'}}
+function stateOf(e){
+ const v=states[e.id];
+ const valid=v&&['업무 중','협업 중','검수 중','휴식 중','대기'].includes(v.status);
+ const stamp=v&&Date.parse(v.updatedAt||'');
+ const fresh=Number.isFinite(stamp)&&Date.now()-stamp<=15*60*1000;
+ return valid&&fresh?v:{status:'대기',detail:valid?'직원 상태 정보가 오래되어 대기 상태로 표시합니다.':'현재 직원별 업무 상태 데이터가 연결되지 않았습니다.'};
+}
 function placePeople(){all.forEach((e,i)=>{const room=targetFor(e);if(!room)return;const p=document.createElement('div');p.className='person';p.dataset.id=e.id;p.dataset.state=stateOf(e).status;p.style.setProperty('--shirt',colors[i%colors.length]);p.innerHTML='<span class="hair"></span><span class="face"></span><span class="shirt"></span><span class="legs"></span><span class="dot"></span><span class="tag"></span>';p.querySelector('.tag').textContent=e.name;p.title=e.name+' · '+e.position;const count=room.querySelectorAll('.person').length;const cols=Math.max(2,Math.floor((room.clientWidth||250)/62));p.style.left=(10+(count%cols)*Math.min(62,Math.max(48,(room.clientWidth-42)/cols)))+'px';p.style.top=(48+Math.floor(count/cols)*57)+'px';p.addEventListener('click',()=>showProfile(e));room.append(p)})}
 function refresh(){states=loadStates();let counts={'업무 중':0,'협업 중':0,'검수 중':0,'휴식 중':0,'대기':0};all.forEach(e=>{const s=stateOf(e);counts[s.status]++;const p=document.querySelector('[data-id="'+e.id+'"]');if(p){p.dataset.state=s.status;p.querySelector('.dot').title=s.status}});document.getElementById('working').textContent=counts['업무 중'];document.getElementById('collab').textContent=counts['협업 중'];document.getElementById('review').textContent=counts['검수 중'];document.getElementById('idle').textContent=counts['대기']+counts['휴식 중'];
-const connected=all.filter(e=>states[e.id]&&states[e.id].updatedAt).length;
+const connected=all.filter(e=>{const stamp=Date.parse(states[e.id]?.updatedAt||'');return Number.isFinite(stamp)&&Date.now()-stamp<=15*60*1000}).length;
 const active=counts['업무 중']+counts['협업 중']+counts['검수 중'];
 document.getElementById('syncNote').textContent=connected
  ? `업무 상태 연동 중 · 상태 정보 ${connected}명 · 진행 중 ${active}명 · 3초마다 갱신`
