@@ -32,7 +32,18 @@ const pendingKey='swAIOfficeStagingPendingTask';
 const employeeStateKey='swAIOfficeEmployeeStates';
 function setHeadState(status,detail){
  let states={};try{states=JSON.parse(localStorage.getItem(employeeStateKey)||'{}')}catch{}
- states.COO={status,detail,updatedAt:new Date().toISOString()};
+ states.COO={status,detail,updatedAt:new Date().toISOString(),source:'staging-response'};
+ localStorage.setItem(employeeStateKey,JSON.stringify(states));
+}
+function setStagingEmployeesIdle(detail,taskId){
+ let states={};try{states=JSON.parse(localStorage.getItem(employeeStateKey)||'{}')}catch{}
+ const now=new Date().toISOString();
+ for(const employee of employeeDirectory){
+  const current=states[employee.id];
+  if(current&&current.source==='staging-response'){
+   states[employee.id]={...current,status:'대기',detail,taskId:taskId||current.taskId,updatedAt:now,source:'staging-response'};
+  }
+ }
  localStorage.setItem(employeeStateKey,JSON.stringify(states));
 }
 const employeeById=new Map(employeeDirectory.map(e=>[String(e.id),e]));
@@ -92,6 +103,7 @@ $('send').addEventListener('click',async()=>{
  $('task').value=task;
  localStorage.setItem(pendingKey,JSON.stringify({task,taskId}));
  $('resumeTaskId').value=taskId;
+ setStagingEmployeesIdle('새 업무를 시작하기 전 대기 상태로 전환했습니다.',taskId);
  setHeadState('업무 중','스테이징 업무를 처리하고 있습니다.');
  const payload={task,taskId,idempotencyKey:taskId,employees:employeeDirectory};
  try{
@@ -102,12 +114,14 @@ $('send').addEventListener('click',async()=>{
    const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={responseText:raw};}
    syncEmployeeStates(data,taskId);
    if(response.ok&&data.reply&&data.workflow&&['completed','partial','failed'].includes(data.workflow.status)){
+    setStagingEmployeesIdle('업무 처리가 종료되어 대기 중입니다.',taskId);
     setHeadState('대기','스테이징 업무 처리가 종료되었습니다.');
     localStorage.removeItem(pendingKey);
     $('result').textContent=`업무 처리 종료: ${data.workflow.resultStatus||data.workflow.status}\nHTTP ${response.status}\n\n${JSON.stringify(data,null,2)}`;return;
    }
    if(data.status==='WAITING_FOR_API_QUOTA'){
-    setHeadState((data.currentStage||'').includes('검수')?'검수 중':'업무 중','OpenRouter 호출 한도로 대기 중입니다. 기존 업무 결과는 보존되어 있습니다.');
+    setStagingEmployeesIdle('OpenRouter 호출 한도로 업무가 일시 대기 중입니다. 기존 업무 결과는 보존되어 있습니다.',taskId);
+    setHeadState('대기','OpenRouter 호출 한도로 기존 업무가 일시 대기 중입니다.');
     $('result').textContent=`OpenRouter 사용 한도 대기 상태입니다.\n같은 업무 ID를 보존했습니다: ${taskId}\n호출 한도가 회복된 뒤 같은 업무 내용을 입력하고 다시 누르면 기존 업무를 이어서 처리합니다. 새 업무로 만들지 마세요.\n\n${JSON.stringify(data,null,2)}`;return;
    }
    if(response.status===202&&data.status==='PROCESSING'){
