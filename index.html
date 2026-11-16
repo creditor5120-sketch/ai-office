@@ -880,10 +880,10 @@ savedAt: new Date().toISOString()
 
     // API 한도 대기 중에도 기존 업무 ID로만 재시도한다.
     let quotaRetryCount = 0;
-    const MAX_QUOTA_RETRIES = 12;
+    const MAX_QUOTA_RETRIES = 288;
     // v51.15 Worker는 AI 호출 1회 단위로 체크포인트를 저장하고 202로 반환한다.
     // 같은 업무 ID로 자동 재요청해 최종 보고서가 올 때까지 이어서 처리한다.
-    for (let step = 1; step <= 80; step++) {
+    for (let step = 1; step <= 320; step++) {
       responseBox.textContent =
         `업무 처리 중 (${step}/80)\n본부장 분석·배정, 전문 직원 수행 및 검수 단계를 이어서 처리하고 있습니다.`;
 
@@ -949,7 +949,7 @@ savedAt: new Date().toISOString()
         quotaRetryCount++;
         if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
           responseBox.textContent =
-            `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n5분 뒤 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
+            `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n5분 간격으로 최대 24시간 동안 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
           await sleep(300000);
           continue;
         }
