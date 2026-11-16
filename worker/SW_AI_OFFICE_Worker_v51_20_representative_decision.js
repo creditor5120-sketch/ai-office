@@ -228,6 +228,50 @@ export default {
         return json({ taskId, ...detail, recordedAt: event.created_at || detail.recordedAt || null }, 200);
       }
 
+      // 대표 화면에서 서버에 저장된 업무 단계별 감사 이력을 조회한다.
+      if (body.action === "get_task_history") {
+        if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무 이력을 조회할 수 없습니다." }, 503);
+        taskId = String(body.taskId || "").trim();
+        if (!taskId) return json({ error: "업무 ID가 없습니다." }, 400);
+        const taskRow = await env.DB.prepare(
+          `SELECT task_id, status, current_stage, created_at, updated_at, completed_at
+           FROM tasks WHERE task_id = ?`
+        ).bind(taskId).first();
+        if (!taskRow) return json({ error: "해당 업무를 찾을 수 없습니다.", taskId }, 404);
+        const rows = await env.DB.prepare(
+          `SELECT event_id, event_type, actor, stage, detail_json, created_at
+           FROM task_events WHERE task_id = ?
+           ORDER BY created_at ASC, rowid ASC LIMIT 300`
+        ).bind(taskId).all();
+        const events = (rows.results || []).map(row => {
+          let detail = {};
+          try { detail = JSON.parse(row.detail_json || "{}"); } catch (_) {
+            detail = { parseError: "이력 상세 JSON을 해석하지 못했습니다." };
+          }
+          return {
+            eventId: row.event_id,
+            eventType: row.event_type,
+            actor: row.actor,
+            stage: row.stage,
+            detail,
+            createdAt: row.created_at
+          };
+        });
+        return json({
+          task: {
+            taskId: taskRow.task_id,
+            status: taskRow.status,
+            currentStage: taskRow.current_stage,
+            createdAt: taskRow.created_at,
+            updatedAt: taskRow.updated_at,
+            completedAt: taskRow.completed_at
+          },
+          eventCount: events.length,
+          events,
+          truncated: events.length >= 300
+        }, 200);
+      }
+
       // 대표 승인·반려는 기존 D1 task_events에 추가 기록한다.
       // 결과물 원문을 변경하지 않는 append-only 의사결정 기록이다.
       if (body.action === "representative_decision") {
