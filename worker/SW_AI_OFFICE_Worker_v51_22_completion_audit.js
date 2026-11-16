@@ -101,7 +101,7 @@ export default {
       currentStage = nextStage;
       await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
         ...stageDetail,
-        executionVersion: "v51.24"
+        executionVersion: "v51.25"
       });
       lastRecordedStage = nextStage;
     };
@@ -185,7 +185,7 @@ export default {
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
         ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
         env.DB.prepare(
-          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.24', updated_at = ?
+          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.25', updated_at = ?
            WHERE task_id = ? AND lock_token = ?`
         ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
         env.DB.prepare(
@@ -520,7 +520,7 @@ export default {
       const leaseNow = new Date().toISOString();
       const leaseUntil = new Date(Date.now() + 180000).toISOString();
       const lockResult = await env.DB.prepare(
-        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.24', updated_at = ?
+        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.25', updated_at = ?
          WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
       ).bind(lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
       if ((lockResult.meta?.changes ?? 0) !== 1) {
@@ -542,10 +542,10 @@ export default {
         } catch (_) {}
       }
 
-      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.24", leaseExpiresAt: leaseUntil });
+      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.25", leaseExpiresAt: leaseUntil });
       await writeTaskEvent("TASK_ACCEPTED", "업무 접수", {
         taskId, idempotencyKey, retry: insertResult.meta?.changes === 0,
-        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.24"
+        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.25"
       });
 
       if (!env.GEMINI_API_KEY) throw new Error("Gemini API 키가 설정되지 않았습니다. Cloudflare Secret GEMINI_API_KEY를 확인하세요.");
@@ -2419,7 +2419,7 @@ finalReport = reportLines.join("\n");
 await assertWorkflowControl();
 
 const successPayload = {
-  version: "v51.24",
+  version: "v51.25",
   taskId,
   reply: finalReport,
 
@@ -2524,7 +2524,7 @@ completionStatements.push(
   ).bind(
     crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.25",
     "본부장 최종 검토 및 보고",
-    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.24" }),
+    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.25" }),
     completionAt, taskId, lockToken, finalTaskStatus, completionAt
   )
 );
