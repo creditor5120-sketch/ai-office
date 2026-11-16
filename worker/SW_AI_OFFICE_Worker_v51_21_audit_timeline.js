@@ -1,4 +1,4 @@
-// SW AI OFFICE Worker v51.21 - representative decision audit
+// SW AI OFFICE Worker v51.22 - completion audit integrity
 export default {
 
   async fetch(request, env) {
@@ -101,7 +101,7 @@ export default {
       currentStage = nextStage;
       await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
         ...stageDetail,
-        executionVersion: "v51.21"
+        executionVersion: "v51.22"
       });
       lastRecordedStage = nextStage;
     };
@@ -185,7 +185,7 @@ export default {
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
         ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
         env.DB.prepare(
-          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.21', updated_at = ?
+          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.22', updated_at = ?
            WHERE task_id = ? AND lock_token = ?`
         ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
         env.DB.prepare(
@@ -2502,18 +2502,25 @@ await updateTask({
   completedAt: new Date().toISOString(),
   requireNoControl: true
 });
-try {
-  if (lastRecordedStage) {
-    await writeTaskEvent("WORKFLOW_STAGE_COMPLETED", lastRecordedStage, {
-      outcome: "최종 보고서와 업무 결과 저장 완료"
+// 업무 완료 상태를 반환하기 전에 최종 단계와 완료 감사 이력이 모두 저장되어야 한다.
+  // 이력 저장에 실패하면 오류 처리 경로로 보내 업무를 PROCESSING_FAILED로 되돌리고,
+  // 이미 저장된 결과물은 유지하여 동일 taskId로 재시도할 수 있게 한다.
+  try {
+    if (lastRecordedStage) {
+      await writeTaskEvent("WORKFLOW_STAGE_COMPLETED", lastRecordedStage, {
+        outcome: "최종 보고서와 업무 결과 저장 완료"
+      });
+      lastRecordedStage = null;
+    }
+    await writeTaskEvent("TASK_COMPLETED", "본부장 최종 검토 및 보고", {
+      status: successPayload.workflow.status,
+      auditVersion: "v51.22"
     });
-    lastRecordedStage = null;
+  } catch (eventError) {
+    console.error("완료 이력 기록 실패:", eventError.message);
+    throw new Error("AUDIT_LOG_WRITE_FAILED: 최종 완료 감사 이력을 저장하지 못했습니다. 저장된 업무 결과를 보존하고 재시도해야 합니다. " + eventError.message);
   }
-  await writeTaskEvent("TASK_COMPLETED", "본부장 최종 검토 및 보고", { status: successPayload.workflow.status });
-} catch (eventError) {
-  console.error("완료 이력 기록 실패:", eventError.message);
-}
-await releaseTaskLock();
+  await releaseTaskLock();
 return json(successPayload);
 
 } catch (error) {
