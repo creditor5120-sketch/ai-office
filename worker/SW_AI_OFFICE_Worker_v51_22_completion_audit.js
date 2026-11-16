@@ -2419,7 +2419,7 @@ finalReport = reportLines.join("\n");
 await assertWorkflowControl();
 
 const successPayload = {
-  version: "v51.23",
+  version: "v51.24",
   taskId,
   reply: finalReport,
 
