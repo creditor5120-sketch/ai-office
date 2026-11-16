@@ -1,4 +1,4 @@
-// SW AI OFFICE Worker v51.25 - Gemini free-tier API + completion audit integrity
+// SW AI OFFICE Worker v51.26 - Gemini free-tier API + completion audit integrity
 export default {
 
   async fetch(request, env) {
@@ -84,7 +84,7 @@ export default {
       await env.DB.prepare(
         `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.25", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
+      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
     };
 
     let lastRecordedStage = null;
@@ -101,7 +101,7 @@ export default {
       currentStage = nextStage;
       await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
         ...stageDetail,
-        executionVersion: "v51.25"
+        executionVersion: "v51.26"
       });
       lastRecordedStage = nextStage;
     };
@@ -185,7 +185,7 @@ export default {
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
         ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
         env.DB.prepare(
-          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.25', updated_at = ?
+          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.26', updated_at = ?
            WHERE task_id = ? AND lock_token = ?`
         ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
         env.DB.prepare(
@@ -520,7 +520,7 @@ export default {
       const leaseNow = new Date().toISOString();
       const leaseUntil = new Date(Date.now() + 180000).toISOString();
       const lockResult = await env.DB.prepare(
-        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.25', updated_at = ?
+        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.26', updated_at = ?
          WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
       ).bind(lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
       if ((lockResult.meta?.changes ?? 0) !== 1) {
@@ -542,10 +542,10 @@ export default {
         } catch (_) {}
       }
 
-      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.25", leaseExpiresAt: leaseUntil });
+      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.26", leaseExpiresAt: leaseUntil });
       await writeTaskEvent("TASK_ACCEPTED", "업무 접수", {
         taskId, idempotencyKey, retry: insertResult.meta?.changes === 0,
-        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.25"
+        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.26"
       });
 
       if (!env.GEMINI_API_KEY) throw new Error("Gemini API 키가 설정되지 않았습니다. Cloudflare Secret GEMINI_API_KEY를 확인하세요.");
@@ -2419,7 +2419,7 @@ finalReport = reportLines.join("\n");
 await assertWorkflowControl();
 
 const successPayload = {
-  version: "v51.25",
+  version: "v51.26",
   taskId,
   reply: finalReport,
 
@@ -2508,7 +2508,7 @@ if (lastRecordedStage) {
          SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
        )`
     ).bind(
-      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.25", lastRecordedStage,
+      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.26", lastRecordedStage,
       JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
       completionAt, taskId, lockToken, finalTaskStatus, completionAt
     )
@@ -2522,9 +2522,9 @@ completionStatements.push(
        SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
      )`
   ).bind(
-    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.25",
+    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.26",
     "본부장 최종 검토 및 보고",
-    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.25" }),
+    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.26" }),
     completionAt, taskId, lockToken, finalTaskStatus, completionAt
   )
 );
@@ -2584,6 +2584,7 @@ return json(successPayload);
   else if (error.message === "SW_AI_CANCELLED") nextStatus = "CANCELLED";
   else if (error.message === "SW_AI_QUOTA_WAIT" || quotaEncountered || /(?:HTTP\s+)?(?:402|429)\b|RESOURCE_EXHAUSTED|insufficient[_\s-]?quota|quota|rate.?limit|payment required|credit balance|no credits/i.test(error.message || "")) nextStatus = "WAITING_FOR_API_QUOTA";
 
+  let failureStatePersisted = false;
   if (dbReady && taskId) {
     try {
       // 실패·대기·일시정지 상태와 해당 감사 이벤트도 한 트랜잭션으로 저장한다.
@@ -2616,7 +2617,7 @@ return json(successPayload);
                SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
              )`
           ).bind(
-            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.25",
+            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.26",
             currentStage, JSON.stringify(detail), failureAt,
             taskId, lockToken, nextStatus, failureAt
           )
@@ -2656,21 +2657,32 @@ return json(successPayload);
       if (failureResults.some(result => (result?.meta?.changes ?? 0) !== 1)) {
         throw new Error("SW_AI_LOCK_LOST_OR_AUDIT_WRITE_FAILED");
       }
+      failureStatePersisted = true;
     } catch (dbError) {
       console.error("D1 상태 및 감사 이력 기록 실패:", dbError.message);
     }
-    try { await releaseTaskLock(); } catch (lockError) { console.error("실행 잠금 해제 실패:", lockError.message); }
+    if (failureStatePersisted) {
+      try { await releaseTaskLock(); } catch (lockError) { console.error("실행 잠금 해제 실패:", lockError.message); }
+    } else if (lockToken) {
+      // 실패 상태·감사 이력 저장이 확인되지 않으면 잠금을 해제하지 않는다.
+      // 기존 3분 lease가 만료된 뒤 동일 업무 요청이 안전하게 재개를 시도한다.
+      console.error("실패 상태 및 감사 이력 미확정: 실행 잠금을 lease 만료까지 유지합니다.");
+    }
   }
+  const failurePersistenceBlocked = dbReady && taskId && Boolean(lockToken) && !failureStatePersisted;
+  if (failurePersistenceBlocked) nextStatus = "PROCESSING";
   return json({
     taskId,
     status: nextStatus,
     currentStage,
-    resumeRequired: resumable || nextStatus === "WAITING_FOR_API_QUOTA",
+    resumeRequired: resumable || nextStatus === "WAITING_FOR_API_QUOTA" || Boolean(failurePersistenceBlocked),
     modelUnavailableResumable,
     timeoutResumable,
     resumeDelayMs: (modelUnavailableResumable || timeoutResumable) ? 30000 : 1200,
     cachedAiCallCount: cachedAiCalls.size,
-    error: yielded
+    error: failurePersistenceBlocked
+      ? "실패 상태와 감사 이력을 D1에 확정하지 못해 실행 잠금을 유지하고 있습니다. 잠금 만료 후 같은 업무 ID로 자동 재개를 시도합니다."
+      : yielded
       ? "이번 요청의 AI 호출 단위를 마쳤습니다. 같은 taskId와 idempotencyKey로 이어서 처리합니다."
       : timeoutResumable
         ? "AI 응답 시간 초과가 발생했습니다. 저장된 체크포인트를 유지했으며 동일 단계 재개 횟수 한도 내에서 다시 처리할 수 있습니다."
@@ -2683,7 +2695,7 @@ return json(successPayload);
         : nextStatus === "CANCELLED"
           ? "업무가 취소되었습니다."
           : currentStage + " 단계 실패: " + error.message
-  }, resumable ? 202 : nextStatus === "WAITING_FOR_API_QUOTA" ? 429 : nextStatus === "PAUSED" || nextStatus === "CANCELLED" ? 200 : nextStatus === "PROCESSING" ? 409 : 500);
+  }, failurePersistenceBlocked ? 409 : resumable ? 202 : nextStatus === "WAITING_FOR_API_QUOTA" ? 429 : nextStatus === "PAUSED" || nextStatus === "CANCELLED" ? 200 : nextStatus === "PROCESSING" ? 409 : 500);
   }
 
 }
