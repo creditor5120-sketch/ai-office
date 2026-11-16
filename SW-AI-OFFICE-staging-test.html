@@ -57,7 +57,7 @@ function normalizeEmployeeStatus(value,stage){
  return '업무 중';
 }
 function syncEmployeeStates(data,taskId){
- if(!data||typeof data!=='object')return;
+ if(!data||typeof data!=='object')return {count:0,employees:[]};
  let states={};try{states=JSON.parse(localStorage.getItem(employeeStateKey)||'{}')}catch{}
  const stage=data.currentStage||data.workflow?.currentStage||'업무 처리';
  const seen=new Set();
@@ -79,6 +79,7 @@ function syncEmployeeStates(data,taskId){
  }
  walk(data);
  if(seen.size)localStorage.setItem(employeeStateKey,JSON.stringify(states));
+ return {count:seen.size,employees:[...seen].map(id=>employeeById.get(id)?.name||id)};
 }
 function restorePending(){
  let saved=null;try{saved=JSON.parse(localStorage.getItem(pendingKey)||'null')}catch{}
@@ -112,7 +113,10 @@ $('send').addEventListener('click',async()=>{
 같은 업무 ID로 저장된 결과를 이어서 처리하고 있습니다.`;
    const response=await fetch(STAGING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
    const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={responseText:raw};}
-   syncEmployeeStates(data,taskId);
+   const employeeSync=syncEmployeeStates(data,taskId);
+   $('employeeSyncNote').textContent=employeeSync.count
+    ? `직원 상태 연결 확인: ${employeeSync.employees.join(', ')} (${employeeSync.count}명)`
+    : '서버 응답에서 직원별 배정 정보가 확인되지 않았습니다. 본부장 상태만 표시합니다.';
    if(response.ok&&data.reply&&data.workflow&&['completed','partial','failed'].includes(data.workflow.status)){
     setStagingEmployeesIdle('업무 처리가 종료되어 대기 중입니다.',taskId);
     setHeadState('대기','스테이징 업무 처리가 종료되었습니다.');
