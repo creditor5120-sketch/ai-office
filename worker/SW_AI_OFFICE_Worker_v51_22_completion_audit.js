@@ -1,4 +1,4 @@
-// SW AI OFFICE Worker v51.23 - Gemini free-tier API + completion audit integrity
+// SW AI OFFICE Worker v51.24 - Gemini free-tier API + completion audit integrity
 export default {
 
   async fetch(request, env) {
@@ -84,7 +84,7 @@ export default {
       await env.DB.prepare(
         `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.23", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
+      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.24", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
     };
 
     let lastRecordedStage = null;
@@ -101,7 +101,7 @@ export default {
       currentStage = nextStage;
       await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
         ...stageDetail,
-        executionVersion: "v51.23"
+        executionVersion: "v51.24"
       });
       lastRecordedStage = nextStage;
     };
@@ -185,7 +185,7 @@ export default {
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
         ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
         env.DB.prepare(
-          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.23', updated_at = ?
+          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.24', updated_at = ?
            WHERE task_id = ? AND lock_token = ?`
         ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
         env.DB.prepare(
@@ -520,7 +520,7 @@ export default {
       const leaseNow = new Date().toISOString();
       const leaseUntil = new Date(Date.now() + 180000).toISOString();
       const lockResult = await env.DB.prepare(
-        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.23', updated_at = ?
+        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.24', updated_at = ?
          WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
       ).bind(lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
       if ((lockResult.meta?.changes ?? 0) !== 1) {
@@ -542,10 +542,10 @@ export default {
         } catch (_) {}
       }
 
-      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.23", leaseExpiresAt: leaseUntil });
+      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.24", leaseExpiresAt: leaseUntil });
       await writeTaskEvent("TASK_ACCEPTED", "업무 접수", {
         taskId, idempotencyKey, retry: insertResult.meta?.changes === 0,
-        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.23"
+        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.24"
       });
 
       if (!env.GEMINI_API_KEY) throw new Error("Gemini API 키가 설정되지 않았습니다. Cloudflare Secret GEMINI_API_KEY를 확인하세요.");
@@ -720,7 +720,7 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
         callIndex,
         elapsedMs: Date.now() - aiCallStartedAt,
         outputLength: String(value || "").length,
-        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        model: "gemini-3.8-flash"
       });
     } catch (eventError) { console.error("AI 호출 완료 이력 기록 실패:", eventError.message); }
     return value;
@@ -2419,7 +2419,7 @@ finalReport = reportLines.join("\n");
 await assertWorkflowControl();
 
 const successPayload = {
-  version: "v51.23",
+  version: "v51.24",
   taskId,
   reply: finalReport,
 
@@ -2508,7 +2508,7 @@ if (lastRecordedStage) {
          SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
        )`
     ).bind(
-      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.23", lastRecordedStage,
+      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.24", lastRecordedStage,
       JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
       completionAt, taskId, lockToken, finalTaskStatus, completionAt
     )
@@ -2522,9 +2522,9 @@ completionStatements.push(
        SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
      )`
   ).bind(
-    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.23",
+    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.24",
     "본부장 최종 검토 및 보고",
-    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.23" }),
+    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.24" }),
     completionAt, taskId, lockToken, finalTaskStatus, completionAt
   )
 );
@@ -2541,6 +2541,19 @@ return json(successPayload);
   const yielded = error.message === "SW_AI_YIELD";
   let timeoutResumable = false;
   let priorTimeoutCount = 0;
+  let modelUnavailableResumable = false;
+  let priorModelUnavailableCount = 0;
+  const errorText = String(error && error.message || error || "");
+  const transientModelFailure = ["HTTP 500", "HTTP 502", "HTTP 503", "HTTP 504", "HTTP 524"].some(code => errorText.includes(code));
+  if (transientModelFailure && dbReady && taskId) {
+    try {
+      const priorModelUnavailable = await env.DB.prepare("SELECT COUNT(*) AS total FROM task_events WHERE task_id = ? AND event_type = 'AI_MODEL_RESUME' AND stage = ?").bind(taskId, currentStage).first();
+      priorModelUnavailableCount = Number(priorModelUnavailable && priorModelUnavailable.total || 0);
+      modelUnavailableResumable = priorModelUnavailableCount < 5;
+    } catch (modelResumeCheckError) {
+      console.error("모델 과부하 재개 횟수 확인 실패:", modelResumeCheckError.message);
+    }
+  }
   if (isTimeoutFailure(error) && dbReady && taskId) {
     try {
       const priorTimeout = await env.DB.prepare(
@@ -2554,7 +2567,7 @@ return json(successPayload);
       console.error("시간 초과 재개 횟수 확인 실패:", timeoutCheckError.message);
     }
   }
-  const resumable = yielded || timeoutResumable;
+  const resumable = yielded || timeoutResumable || modelUnavailableResumable;
   let nextStatus = (resumable || error.message === "SW_AI_LOCK_LOST") ? "PROCESSING" : "PROCESSING_FAILED";
   if (error.message === "SW_AI_CONTROL_CHANGED") {
     try {
@@ -2579,6 +2592,8 @@ return json(successPayload);
         ? "TASK_YIELDED_FOR_NEXT_REQUEST"
         : timeoutResumable
           ? "TASK_TIMEOUT_RESUME_REQUIRED"
+          : modelUnavailableResumable
+            ? "TASK_MODEL_RESUME_REQUIRED"
           : nextStatus === "PAUSED"
             ? "TASK_PAUSED"
             : nextStatus === "CANCELLED"
@@ -2601,7 +2616,7 @@ return json(successPayload);
                SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
              )`
           ).bind(
-            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.23",
+            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.24",
             currentStage, JSON.stringify(detail), failureAt,
             taskId, lockToken, nextStatus, failureAt
           )
@@ -2617,12 +2632,25 @@ return json(successPayload);
           error: error.message
         });
       }
+      if (modelUnavailableResumable) {
+        appendFailureEvent("AI_MODEL_RESUME", {
+          status: "PROCESSING",
+          retryCount: priorModelUnavailableCount + 1,
+          maxRetriesForStage: 5,
+          provider: "Google Gemini",
+          model: "gemini-3.8-flash",
+          cachedAiCallCount: cachedAiCalls.size,
+          nextAiCallIndex: aiCallCursor,
+          error: error.message
+        });
+      }
       appendFailureEvent(failureEventType, {
         status: nextStatus,
         error: resumable ? null : error.message,
         cachedAiCallCount: cachedAiCalls.size,
         nextAiCallIndex: aiCallCursor,
-        timeoutResumable
+        timeoutResumable,
+        modelUnavailableResumable
       });
       const failureResults = await env.DB.batch(failureStatements);
       if (failureResults.some(result => (result?.meta?.changes ?? 0) !== 1)) {
@@ -2638,11 +2666,15 @@ return json(successPayload);
     status: nextStatus,
     currentStage,
     resumeRequired: resumable || nextStatus === "WAITING_FOR_API_QUOTA",
+    modelUnavailableResumable,
+    resumeDelayMs: modelUnavailableResumable ? 30000 : 1200,
     cachedAiCallCount: cachedAiCalls.size,
     error: yielded
       ? "이번 요청의 AI 호출 단위를 마쳤습니다. 같은 taskId와 idempotencyKey로 이어서 처리합니다."
       : timeoutResumable
         ? "AI 응답 시간 초과가 발생했습니다. 저장된 체크포인트를 유지했으며 동일 단계 재개 횟수 한도 내에서 다시 처리할 수 있습니다."
+      : modelUnavailableResumable
+        ? "Gemini 서버가 일시적으로 과부하 상태입니다. 업무와 체크포인트를 보존했으며 잠시 후 같은 업무를 이어서 처리할 수 있습니다."
       : nextStatus === "WAITING_FOR_API_QUOTA"
       ? "Gemini API 할당량 또는 호출 제한으로 대기 중입니다. 같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다."
       : nextStatus === "PAUSED"

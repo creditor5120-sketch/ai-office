@@ -1284,9 +1284,11 @@ savedAt: new Date().toISOString()
       }
 
       if (response.status === 202 && data.status === 'PROCESSING') {
-        responseBox.textContent =
-          `업무 처리 중 (${step}/1000)\n현재 단계: ${data.currentStage || '확인 중'}\n저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
-        await sleep(1200);
+        const resumeDelayMs = Math.max(1200, Number(data.resumeDelayMs) || 1200);
+        responseBox.textContent = data.modelUnavailableResumable
+          ? `Gemini 서버 과부하로 업무를 보존했습니다. ${Math.ceil(resumeDelayMs / 1000)}초 후 같은 업무를 자동 재개합니다.\n현재 단계: ${data.currentStage || '확인 중'}\n저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`
+          : `업무 처리 중 (${step}/1000)\n현재 단계: ${data.currentStage || '확인 중'}\n저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
+        await sleep(resumeDelayMs);
         continue;
       }
 
