@@ -30,9 +30,11 @@ const STAGING_ENDPOINT='https://sweet-bush-c87eai-office-api-v51-staging.credito
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const pendingKey='swAIOfficeStagingPendingTask';
+const quotaRetryKey='swAIOfficeStagingQuotaRetries';
 const employeeStateKey='swAIOfficeEmployeeStates';
 const MAX_QUOTA_RETRIES=288;
-let quotaRetryCount=0;
+function readQuotaRetryCount(taskId){let saved=null;try{saved=JSON.parse(localStorage.getItem(quotaRetryKey)||'null')}catch{}return saved&&saved.taskId===taskId?Math.max(0,Number(saved.count)||0):0;}
+function saveQuotaRetryCount(taskId,count){localStorage.setItem(quotaRetryKey,JSON.stringify({taskId,count,updatedAt:new Date().toISOString()}));}
 function setHeadState(status,detail){
  let states={};try{states=JSON.parse(localStorage.getItem(employeeStateKey)||'{}')}catch{}
  states.COO={status,detail,updatedAt:new Date().toISOString(),source:'staging-response'};
@@ -108,6 +110,7 @@ $('send').addEventListener('click',async()=>{
  if(!Array.isArray(employeeDirectory)||!employeeDirectory.some(e=>e.id==='COO')){$('result').textContent='employees.js에서 본부장(COO) 데이터를 찾지 못했습니다.';return;}
  const button=$('send');button.disabled=true;
  const taskId=pending&&pending.taskId?pending.taskId:crypto.randomUUID();
+ let quotaRetryCount=readQuotaRetryCount(taskId);
  $('task').value=task;
  localStorage.setItem(pendingKey,JSON.stringify({task,taskId}));
  $('resumeTaskId').value=taskId;
@@ -128,10 +131,12 @@ $('send').addEventListener('click',async()=>{
     setStagingEmployeesIdle('업무 처리가 종료되어 대기 중입니다.',taskId);
     setHeadState('대기','스테이징 업무 처리가 종료되었습니다.');
     localStorage.removeItem(pendingKey);
+    localStorage.removeItem(quotaRetryKey);
     $('result').textContent=`업무 처리 종료: ${data.workflow.resultStatus||data.workflow.status}\nHTTP ${response.status}\n\n${JSON.stringify(data,null,2)}`;return;
    }
    if(data.status==='WAITING_FOR_API_QUOTA'){
     quotaRetryCount++;
+    saveQuotaRetryCount(taskId,quotaRetryCount);
     if(quotaRetryCount<=MAX_QUOTA_RETRIES){
      setHeadState('대기','OpenRouter 호출 한도 회복을 기다리는 중입니다. 기존 업무 ID를 유지합니다.');
      $('result').textContent=`OpenRouter 호출 한도로 대기 중입니다.\n기존 업무 ID: ${taskId}\n새 업무를 만들지 않고 5분 간격으로 최대 24시간 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n브라우저 탭을 닫지 않으면 계속 진행합니다.`;
