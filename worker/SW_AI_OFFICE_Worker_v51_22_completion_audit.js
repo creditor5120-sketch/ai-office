@@ -2649,7 +2649,8 @@ return json(successPayload);
         error: resumable ? null : error.message,
         cachedAiCallCount: cachedAiCalls.size,
         nextAiCallIndex: aiCallCursor,
-        timeoutResumable
+        timeoutResumable,
+        modelUnavailableResumable
       });
       const failureResults = await env.DB.batch(failureStatements);
       if (failureResults.some(result => (result?.meta?.changes ?? 0) !== 1)) {
