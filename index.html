@@ -710,8 +710,8 @@ function renderWorkflowReview(data) {
           const actor = event.actor || '담당자 미확인';
           const detail = event.detail && typeof event.detail === 'object'
             ? Object.entries(event.detail)
-                .filter(([key, value]) => !['raw', 'prompt', 'content'].includes(key) && value !== null && value !== undefined && typeof value !== 'object')
-                .map(([key, value]) => `${key}: ${String(value)}`)
+                .filter(([key, value]) => !['raw', 'prompt', 'content'].includes(key) && value !== null && value !== undefined && (typeof value !== 'object' || Array.isArray(value)))
+                .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : String(value)}`)
                 .join(' · ')
             : '';
           item.textContent = `${timestamp} | ${stage} | ${event.eventType || ''} | ${actor}${detail ? ' | ' + detail : ''}`;
