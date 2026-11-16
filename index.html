@@ -331,7 +331,8 @@ function normalizeEmployeeStatus(value, stage) {
   if (/검수|review|inspect|qa/.test(raw)) return '검수 중';
   if (/협업|collab|coordinate|meeting/.test(raw)) return '협업 중';
   if (/휴식|break/.test(raw)) return '휴식 중';
-  if (/완료|승인|complete|done|approved|대기|pending|idle/.test(raw)) return '대기';
+  if (/완료|complete|done|approved/.test(raw)) return '완료';
+  if (/승인|대기|pending|idle/.test(raw)) return '대기';
   return '업무 중';
 }
 
