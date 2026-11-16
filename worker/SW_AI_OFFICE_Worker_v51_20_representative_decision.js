@@ -783,7 +783,7 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
 
       // 1. 본부장: 업무 분석 및 담당자 배정
 
-      await setCurrentStage("본부장 업무 분석 및 배정");
+      await setCurrentStage("본부장 업무 분석 및 배정", { responsibleRole: "본부장 알렉스", activity: "업무 분석 및 담당 팀 배정" });
 
       const planText = await askAI(
 
@@ -893,7 +893,7 @@ ${directoryText}
 
       // 2. 담당 직원 및 팀장 확인
 
-      await setCurrentStage("담당 직원 및 팀장 확인");
+      await setCurrentStage("담당 직원 및 팀장 확인", { responsibleRole: "본부장 알렉스", activity: "전문 직원과 팀장 배정 확인" });
 
       const allowedDepartments = new Set([
         plan.leadDepartment,
@@ -960,7 +960,7 @@ ${directoryText}
 
       // 3. 본부장: 실행계획 수립
 
-      await setCurrentStage("본부장 실행계획 수립");
+      await setCurrentStage("본부장 실행계획 수립", { responsibleRole: "본부장 알렉스", activity: "실행 순서와 검수 기준 수립" });
 
       const cooPlan = await askAI(
 
@@ -998,7 +998,7 @@ ${JSON.stringify(teamLeader, null, 2)}
 
 // 4. 전문 직원: 완성본 단일 작성
 // 여러 장별 호출과 별도 AI 완결성 감사 호출을 제거해 524 타임아웃 위험을 줄인다.
-await setCurrentStage("전문 직원 완성본 작성");
+await setCurrentStage("전문 직원 완성본 작성", { responsibleRole: "담당 전문 직원", participants: (uniqueSpecialists || []).map(item => item.name) });
 const specialistResults = [];
 
 for (const specialist of uniqueSpecialists) {
@@ -1079,7 +1079,7 @@ ${specialist.name} (${specialist.position})
 
 // 5. 팀장: 전문 직원 결과물 검수
 
-await setCurrentStage("부서장 검수");
+await setCurrentStage("팀장 1차 검수", { responsibleRole: "각 담당 팀장", participants: [...new Set((uniqueSpecialists || []).map(item => getTeamLeader(item)?.name).filter(Boolean))] });
 
 const reviewResults = [];
 
@@ -1234,7 +1234,7 @@ ${specialist.result}
 }
 
 // 5-1. 전문 직원: 조건부 승인 또는 반려인 경우에만 수정
-await setCurrentStage("전문 직원 결과물 수정");
+await setCurrentStage("전문 직원 결과물 수정", { responsibleRole: "담당 전문 직원", participants: (specialistResults || []).map(item => item.name) });
 
 for (const specialist of specialistResults) {
   const reviewItem = reviewResults.find(item => item.id === specialist.id);
@@ -1302,7 +1302,7 @@ ${reviewItem.review}
 }
 
  // 5-2. 팀장: 수정 결과물 2차 최종 검수
-await setCurrentStage("팀장 2차 최종 검수");
+await setCurrentStage("팀장 2차 최종 검수", { responsibleRole: "각 담당 팀장", participants: [...new Set((uniqueSpecialists || []).map(item => getTeamLeader(item)?.name).filter(Boolean))] });
 
 const finalReviewResults = [];
 
@@ -1743,7 +1743,7 @@ ${String(specialist.result || "")}`,
 
 
 // 5-3. 폐쇄형 수정 루프: 2차 검수에서 발견된 수정 가능 오류를 실제 본문에 반영하고 재검수한다.
-await setCurrentStage("검수 지적사항 실제 수정 및 재검수");
+await setCurrentStage("검수 지적사항 실제 수정 및 재검수", { responsibleRole: "담당 전문 직원 및 팀장", participants: (specialistResults || []).map(item => item.name) });
 
 function deterministicContentIssues(content) {
   const value = String(content || "");
@@ -2331,7 +2331,7 @@ await writeTaskEvent("TASK_REVIEW_RESULTS_RECORDED", "팀장 최종 검수", {
 await assertWorkflowControl();
 if (quotaEncountered) throw new Error("SW_AI_QUOTA_WAIT");
 if (aiCallFailureEncountered) throw new Error("SW_AI_STEP_FAILED: " + aiCallFailureMessage);
-await setCurrentStage("본부장 최종 검토 및 보고");
+await setCurrentStage("본부장 최종 검토 및 보고", { responsibleRole: "본부장 알렉스", activity: "전문 직원 결과 통합 및 대표 보고" });
 
 let finalReport;
 const finalReportFallback = true;
