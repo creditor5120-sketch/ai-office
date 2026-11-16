@@ -410,14 +410,22 @@ function syncEmployeeStates(data, taskId) {
 
   walk(data);
 
-  const headStatus = data.status === 'WAITING_FOR_API_QUOTA'
+  // 최종 응답(reply + workflow)이 도착하면 본부장도 보고 완료 상태로 전환한다.
+  // 중간 처리·쿼터 대기 응답에서는 완료로 오인하지 않는다.
+  const isFinalReport = Boolean(data.reply && data.workflow);
+  const isQuotaWaiting = data.status === 'WAITING_FOR_API_QUOTA';
+  const headStatus = isQuotaWaiting
     ? '대기'
-    : normalizeEmployeeStatus(stage, stage);
+    : isFinalReport
+      ? '완료'
+      : normalizeEmployeeStatus(stage, stage);
   states.COO = {
     status: headStatus,
-    detail: data.status === 'WAITING_FOR_API_QUOTA'
+    detail: isQuotaWaiting
       ? 'AI 호출 한도 회복 대기 중 · 기존 업무 보존'
-      : String(stage).slice(0, 500),
+      : isFinalReport
+        ? '전문 직원 결과 통합 및 최종 보고 완료 · 대표 승인 대기'
+        : String(stage).slice(0, 500),
     taskId,
     updatedAt: now,
     source: 'main-response'
