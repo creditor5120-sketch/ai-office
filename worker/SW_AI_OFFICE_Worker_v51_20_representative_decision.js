@@ -87,6 +87,24 @@ export default {
       ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.20", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
     };
 
+    let lastRecordedStage = null;
+
+    // 주요 업무 단계의 시작·완료를 D1 감사 이력에 남긴다.
+    const setCurrentStage = async (nextStage, detail = {}) => {
+      if (lastRecordedStage && lastRecordedStage !== nextStage) {
+        await writeTaskEvent("WORKFLOW_STAGE_COMPLETED", lastRecordedStage, {
+          outcome: "다음 단계로 정상 진입",
+          nextStage
+        });
+      }
+      currentStage = nextStage;
+      await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
+        ...detail,
+        executionVersion: "v51.20"
+      });
+      lastRecordedStage = nextStage;
+    };
+
     const updateTask = async (values) => {
       if (!env.DB || !taskId || !lockToken) throw new Error("SW_AI_LOCK_LOST");
       const result = await env.DB.prepare(
@@ -470,7 +488,7 @@ export default {
 
       if (!env.OPENROUTER_API_KEY) throw new Error("OpenRouter API 키가 설정되지 않았습니다.");
 
-      currentStage = "요청 처리";
+      await setCurrentStage("요청 처리");
 
       const findEmployee = id =>
 
@@ -721,7 +739,7 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
 
       // 1. 본부장: 업무 분석 및 담당자 배정
 
-      currentStage = "본부장 업무 분석 및 배정";
+      await setCurrentStage("본부장 업무 분석 및 배정");
 
       const planText = await askAI(
 
@@ -831,7 +849,7 @@ ${directoryText}
 
       // 2. 담당 직원 및 팀장 확인
 
-      currentStage = "담당 직원 및 팀장 확인";
+      await setCurrentStage("담당 직원 및 팀장 확인");
 
       const allowedDepartments = new Set([
         plan.leadDepartment,
@@ -898,7 +916,7 @@ ${directoryText}
 
       // 3. 본부장: 실행계획 수립
 
-      currentStage = "본부장 실행계획 수립";
+      await setCurrentStage("본부장 실행계획 수립");
 
       const cooPlan = await askAI(
 
@@ -936,7 +954,7 @@ ${JSON.stringify(teamLeader, null, 2)}
 
 // 4. 전문 직원: 완성본 단일 작성
 // 여러 장별 호출과 별도 AI 완결성 감사 호출을 제거해 524 타임아웃 위험을 줄인다.
-currentStage = "전문 직원 완성본 작성";
+await setCurrentStage("전문 직원 완성본 작성");
 const specialistResults = [];
 
 for (const specialist of uniqueSpecialists) {
@@ -1017,7 +1035,7 @@ ${specialist.name} (${specialist.position})
 
 // 5. 팀장: 전문 직원 결과물 검수
 
-currentStage = "부서장 검수";
+await setCurrentStage("부서장 검수");
 
 const reviewResults = [];
 
@@ -1172,7 +1190,7 @@ ${specialist.result}
 }
 
 // 5-1. 전문 직원: 조건부 승인 또는 반려인 경우에만 수정
-currentStage = "전문 직원 결과물 수정";
+await setCurrentStage("전문 직원 결과물 수정");
 
 for (const specialist of specialistResults) {
   const reviewItem = reviewResults.find(item => item.id === specialist.id);
@@ -1240,7 +1258,7 @@ ${reviewItem.review}
 }
 
  // 5-2. 팀장: 수정 결과물 2차 최종 검수
-currentStage = "팀장 2차 최종 검수";
+await setCurrentStage("팀장 2차 최종 검수");
 
 const finalReviewResults = [];
 
@@ -1681,7 +1699,7 @@ ${String(specialist.result || "")}`,
 
 
 // 5-3. 폐쇄형 수정 루프: 2차 검수에서 발견된 수정 가능 오류를 실제 본문에 반영하고 재검수한다.
-currentStage = "검수 지적사항 실제 수정 및 재검수";
+await setCurrentStage("검수 지적사항 실제 수정 및 재검수");
 
 function deterministicContentIssues(content) {
   const value = String(content || "");
@@ -2269,7 +2287,7 @@ await writeTaskEvent("TASK_REVIEW_RESULTS_RECORDED", "팀장 최종 검수", {
 await assertWorkflowControl();
 if (quotaEncountered) throw new Error("SW_AI_QUOTA_WAIT");
 if (aiCallFailureEncountered) throw new Error("SW_AI_STEP_FAILED: " + aiCallFailureMessage);
-currentStage = "본부장 최종 검토 및 보고";
+await setCurrentStage("본부장 최종 검토 및 보고");
 
 let finalReport;
 const finalReportFallback = true;
