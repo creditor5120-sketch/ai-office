@@ -878,6 +878,9 @@ savedAt: new Date().toISOString()
     let data = null;
     let completedResponse = false;
 
+    // API 한도 대기 중에도 기존 업무 ID로만 재시도한다.
+    let quotaRetryCount = 0;
+    const MAX_QUOTA_RETRIES = 12;
     // v51.15 Worker는 AI 호출 1회 단위로 체크포인트를 저장하고 202로 반환한다.
     // 같은 업무 ID로 자동 재요청해 최종 보고서가 올 때까지 이어서 처리한다.
     for (let step = 1; step <= 80; step++) {
@@ -939,6 +942,17 @@ savedAt: new Date().toISOString()
           `기존 실행이 끝나기를 기다리는 중 (${step}/80)\n현재 단계: ${data.currentStage || '확인 중'}`;
         await sleep(2500);
         continue;
+      }
+
+      // OpenRouter 한도 초과: 업무 ID/idempotencyKey를 바꾸지 않고 자동 재개
+      if (data.status === 'WAITING_FOR_API_QUOTA') {
+        quotaRetryCount++;
+        if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
+          responseBox.textContent =
+            `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n5분 뒤 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
+          await sleep(300000);
+          continue;
+        }
       }
 
       const apiError = new Error(data.error || '서버 연결 오류');
