@@ -63,19 +63,23 @@ function syncEmployeeStates(data,taskId){
  const stage=data.currentStage||data.workflow?.currentStage||'업무 처리';
  const seen=new Set();
  const visited=new Set();
+ function applyEmployee(employee,value,role='담당'){
+  if(!employee)return;
+  const rawStatus=value.status??value.state??value.currentStatus??value.taskStatus??value.stageStatus??stage;
+  const detail=value.detail??value.description??value.task??value.instruction??value.currentTask??(role==='팀장'?'팀장 검수 및 협업':stage);
+  states[employee.id]={status:normalizeEmployeeStatus(rawStatus,stage),detail:String(detail).slice(0,500),taskId,updatedAt:new Date().toISOString(),source:'staging-response'};
+  seen.add(employee.id);
+ }
  function walk(value,depth=0){
   if(!value||typeof value!=='object'||depth>9||visited.has(value))return;
   visited.add(value);
   if(Array.isArray(value)){value.forEach(item=>walk(item,depth+1));return;}
-  const id= value.employeeId??value.assigneeId??value.assignedEmployeeId??value.workerId??value.staffId??(employeeById.has(String(value.id??''))?value.id:null);
-  const name=value.employeeName??value.assigneeName??value.staffName??value.title??(typeof value.employee==='string'?value.employee:null)??(typeof value.assignee==='string'?value.assignee:null);
+  const id=value.employeeId??value.assigneeId??value.assignedEmployeeId??value.workerId??value.staffId??(employeeById.has(String(value.id??''))?value.id:null);
+  const name=value.employeeName??value.assigneeName??value.staffName??value.title??((value.department||value.position)?value.name:null)??(typeof value.employee==='string'?value.employee:null)??(typeof value.assignee==='string'?value.assignee:null);
   const employee=(id!=null&&employeeById.get(String(id)))||(name&&employeeByName.get(String(name)));
-  if(employee){
-   const rawStatus=value.status??value.state??value.currentStatus??value.taskStatus??value.stageStatus??stage;
-   const detail=value.detail??value.description??value.task??value.instruction??value.currentTask??stage;
-   states[employee.id]={status:normalizeEmployeeStatus(rawStatus,stage),detail:String(detail).slice(0,500),taskId,updatedAt:new Date().toISOString(),source:'staging-response'};
-   seen.add(employee.id);
-  }
+  applyEmployee(employee,value);
+  const leaderName=typeof value.teamLeader==='string'?value.teamLeader:value.teamLeader?.name;
+  if(leaderName)applyEmployee(employeeByName.get(String(leaderName)),value,'팀장');
   Object.values(value).forEach(child=>walk(child,depth+1));
  }
  walk(data);
