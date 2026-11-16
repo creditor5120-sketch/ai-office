@@ -518,6 +518,10 @@ function renderWorkflowReview(data) {
     const decisionTitle = document.createElement('strong');
     decisionTitle.textContent = '대표 최종 결정';
     decisionBox.appendChild(decisionTitle);
+    const decisionNotice = document.createElement('p');
+    decisionNotice.className = 'small';
+    decisionNotice.textContent = '현재는 공통 API 인증을 기준으로 기록합니다. 개인별 대표 로그인 및 신원 확인은 아직 구현되지 않았습니다.';
+    decisionBox.appendChild(decisionNotice);
 
     const savedDecisionKey = 'swAIOfficeRepresentativeDecision:' + decisionTaskId;
 
