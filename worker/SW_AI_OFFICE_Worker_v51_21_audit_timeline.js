@@ -91,15 +91,16 @@ export default {
 
     // 주요 업무 단계의 시작·완료를 D1 감사 이력에 남긴다.
     const setCurrentStage = async (nextStage, detail = {}) => {
+      const { previousStageOutcome, ...stageDetail } = detail;
       if (lastRecordedStage && lastRecordedStage !== nextStage) {
         await writeTaskEvent("WORKFLOW_STAGE_COMPLETED", lastRecordedStage, {
-          outcome: "다음 단계로 정상 진입",
+          ...(previousStageOutcome || { outcome: "다음 단계로 정상 진입" }),
           nextStage
         });
       }
       currentStage = nextStage;
       await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
-        ...detail,
+        ...stageDetail,
         executionVersion: "v51.21"
       });
       lastRecordedStage = nextStage;
@@ -1096,7 +1097,7 @@ ${specialist.name} (${specialist.position})
 
 // 5. 팀장: 전문 직원 결과물 검수
 
-await setCurrentStage("팀장 1차 검수", { responsibleRole: "각 담당 팀장", participants: [...new Set((uniqueSpecialists || []).map(item => getTeamLeader(item)?.name).filter(Boolean))] });
+await setCurrentStage("팀장 1차 검수", { responsibleRole: "각 담당 팀장", participants: [...new Set((uniqueSpecialists || []).map(item => getTeamLeader(item)?.name).filter(Boolean))], previousStageOutcome: { outcome: "전문 직원 결과물 작성 단계 종료", specialistCount: specialistResults.length, completedCount: specialistResults.filter(item => item.status === "completed").length, partialCount: specialistResults.filter(item => item.status !== "completed").length } });
 
 const reviewResults = [];
 
@@ -1251,7 +1252,7 @@ ${specialist.result}
 }
 
 // 5-1. 전문 직원: 조건부 승인 또는 반려인 경우에만 수정
-await setCurrentStage("전문 직원 결과물 수정", { responsibleRole: "담당 전문 직원", participants: (specialistResults || []).map(item => item.name) });
+await setCurrentStage("전문 직원 결과물 수정", { responsibleRole: "담당 전문 직원", participants: (specialistResults || []).map(item => item.name), previousStageOutcome: { outcome: "팀장 1차 검수 결과 기록", reviewCount: reviewResults.length, approvedCount: reviewResults.filter(item => item.judgment === "승인").length } });
 
 for (const specialist of specialistResults) {
   const reviewItem = reviewResults.find(item => item.id === specialist.id);
@@ -1319,7 +1320,7 @@ ${reviewItem.review}
 }
 
  // 5-2. 팀장: 수정 결과물 2차 최종 검수
-await setCurrentStage("팀장 2차 최종 검수", { responsibleRole: "각 담당 팀장", participants: [...new Set((uniqueSpecialists || []).map(item => getTeamLeader(item)?.name).filter(Boolean))] });
+await setCurrentStage("팀장 2차 최종 검수", { responsibleRole: "각 담당 팀장", participants: [...new Set((uniqueSpecialists || []).map(item => getTeamLeader(item)?.name).filter(Boolean))], previousStageOutcome: { outcome: "1차 검수 의견 반영 수정 단계 종료", revisedCount: specialistResults.filter(item => item.status === "completed").length, partialCount: specialistResults.filter(item => item.status !== "completed").length } });
 
 const finalReviewResults = [];
 
@@ -1760,7 +1761,7 @@ ${String(specialist.result || "")}`,
 
 
 // 5-3. 폐쇄형 수정 루프: 2차 검수에서 발견된 수정 가능 오류를 실제 본문에 반영하고 재검수한다.
-await setCurrentStage("검수 지적사항 실제 수정 및 재검수", { responsibleRole: "담당 전문 직원 및 팀장", participants: (specialistResults || []).map(item => item.name) });
+await setCurrentStage("검수 지적사항 실제 수정 및 재검수", { responsibleRole: "담당 전문 직원 및 팀장", participants: (specialistResults || []).map(item => item.name), previousStageOutcome: { outcome: "팀장 2차 최종 검수 완료", approvedCount: finalReviewResults.filter(item => item.judgment === "승인").length, pendingCount: finalReviewResults.filter(item => item.judgment !== "승인").length } });
 
 function deterministicContentIssues(content) {
   const value = String(content || "");
@@ -2348,7 +2349,7 @@ await writeTaskEvent("TASK_REVIEW_RESULTS_RECORDED", "팀장 최종 검수", {
 await assertWorkflowControl();
 if (quotaEncountered) throw new Error("SW_AI_QUOTA_WAIT");
 if (aiCallFailureEncountered) throw new Error("SW_AI_STEP_FAILED: " + aiCallFailureMessage);
-await setCurrentStage("본부장 최종 검토 및 보고", { responsibleRole: "본부장 알렉스", activity: "전문 직원 결과 통합 및 대표 보고" });
+await setCurrentStage("본부장 최종 검토 및 보고", { responsibleRole: "본부장 알렉스", activity: "전문 직원 결과 통합 및 대표 보고", previousStageOutcome: { outcome: "폐쇄형 수정 루프 및 재검수 완료", approvedCount: finalReviewResults.filter(item => item.judgment === "승인").length, pendingCount: finalReviewResults.filter(item => item.judgment !== "승인").length } });
 
 let finalReport;
 const finalReportFallback = true;
