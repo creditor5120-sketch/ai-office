@@ -2494,33 +2494,56 @@ const successPayload = {
   }
 };
 
-await updateTask({
-  status: successPayload.workflow.status === "completed" ? "COMPLETED" : "PARTIAL_COMPLETED",
-  stage: "본부장 최종 검토 및 보고",
-  resultJson: JSON.stringify(successPayload),
-  error: null,
-  completedAt: new Date().toISOString(),
-  requireNoControl: true
-});
-// 업무 완료 상태를 반환하기 전에 최종 단계와 완료 감사 이력이 모두 저장되어야 한다.
-  // 이력 저장에 실패하면 오류 처리 경로로 보내 업무를 PROCESSING_FAILED로 되돌리고,
-  // 이미 저장된 결과물은 유지하여 동일 taskId로 재시도할 수 있게 한다.
-  try {
-    if (lastRecordedStage) {
-      await writeTaskEvent("WORKFLOW_STAGE_COMPLETED", lastRecordedStage, {
-        outcome: "최종 보고서와 업무 결과 저장 완료"
-      });
-      lastRecordedStage = null;
-    }
-    await writeTaskEvent("TASK_COMPLETED", "본부장 최종 검토 및 보고", {
-      status: successPayload.workflow.status,
-      auditVersion: "v51.22"
-    });
-  } catch (eventError) {
-    console.error("완료 이력 기록 실패:", eventError.message);
-    throw new Error("AUDIT_LOG_WRITE_FAILED: 최종 완료 감사 이력을 저장하지 못했습니다. 저장된 업무 결과를 보존하고 재시도해야 합니다. " + eventError.message);
-  }
-  await releaseTaskLock();
+// 업무 완료 상태와 최종 감사 이력을 D1 단일 트랜잭션으로 확정한다.
+// D1 batch는 문장 중 하나라도 실패하면 전체 batch를 롤백한다.
+const finalTaskStatus = successPayload.workflow.status === "completed" ? "COMPLETED" : "PARTIAL_COMPLETED";
+const completionAt = new Date().toISOString();
+const completionStatements = [
+  env.DB.prepare(
+    `UPDATE tasks SET status = ?, current_stage = ?, partial_result_json = COALESCE(?, partial_result_json),
+     error_message = ?, updated_at = ?, started_at = COALESCE(started_at, ?), completed_at = ?
+     WHERE task_id = ? AND lock_token = ? AND control_request NOT IN ('PAUSE', 'CANCEL')`
+  ).bind(
+    finalTaskStatus, "본부장 최종 검토 및 보고", JSON.stringify(successPayload),
+    null, completionAt, completionAt, completionAt, taskId, lockToken
+  )
+];
+if (lastRecordedStage) {
+  completionStatements.push(
+    env.DB.prepare(
+      `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+       SELECT ?, ?, 'WORKFLOW_STAGE_COMPLETED', ?, ?, ?, ?
+       WHERE EXISTS (
+         SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
+       )`
+    ).bind(
+      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.22", lastRecordedStage,
+      JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
+      completionAt, taskId, lockToken, finalTaskStatus, completionAt
+    )
+  );
+}
+completionStatements.push(
+  env.DB.prepare(
+    `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+     SELECT ?, ?, 'TASK_COMPLETED', ?, ?, ?, ?
+     WHERE EXISTS (
+       SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
+     )`
+  ).bind(
+    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.22",
+    "본부장 최종 검토 및 보고",
+    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.22" }),
+    completionAt, taskId, lockToken, finalTaskStatus, completionAt
+  )
+);
+const completionResults = await env.DB.batch(completionStatements);
+if ((completionResults?.[0]?.meta?.changes ?? 0) !== 1 ||
+    completionResults.slice(1).some(result => (result?.meta?.changes ?? 0) !== 1)) {
+  throw new Error("AUDIT_LOG_WRITE_FAILED: 업무 완료 상태와 최종 감사 이력을 함께 확정하지 못했습니다.");
+}
+lastRecordedStage = null;
+await releaseTaskLock();
 return json(successPayload);
 
 } catch (error) {
