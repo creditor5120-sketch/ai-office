@@ -932,7 +932,7 @@ savedAt: new Date().toISOString()
 
       if (response.status === 202 && data.status === 'PROCESSING') {
         responseBox.textContent =
-          `업무 처리 중 (${step}/80)\n현재 단계: ${data.currentStage || '확인 중'}\n저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
+          `업무 처리 중 (${step}/1000)\n현재 단계: ${data.currentStage || '확인 중'}\n저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
         await sleep(1200);
         continue;
       }
