@@ -2440,6 +2440,12 @@ await updateTask({
   requireNoControl: true
 });
 try {
+  if (lastRecordedStage) {
+    await writeTaskEvent("WORKFLOW_STAGE_COMPLETED", lastRecordedStage, {
+      outcome: "최종 보고서와 업무 결과 저장 완료"
+    });
+    lastRecordedStage = null;
+  }
   await writeTaskEvent("TASK_COMPLETED", "본부장 최종 검토 및 보고", { status: successPayload.workflow.status });
 } catch (eventError) {
   console.error("완료 이력 기록 실패:", eventError.message);
