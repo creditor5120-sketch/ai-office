@@ -678,12 +678,12 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
   if (!jsonMode && candidate?.finishReason === "MAX_TOKENS" && continuationDepth < 1) {
     const continuation = await askAIBare(
       systemPrompt,
-      "앞선 답변의 마지막 문장 다음부터 이어서 작성하라. 이미 작성한 내용을 반복하거나 요약하지 말고 문서의 나머지 부분을 완결하라.\\n\\n" +
-      "--- 지금까지 작성된 내용 ---\\n" + text,
+      "앞선 답변의 마지막 문장 다음부터 이어서 작성하라. 이미 작성한 내용을 반복하거나 요약하지 말고 문서의 나머지 부분을 완결하라.\n\n" +
+      "--- 지금까지 작성된 내용 ---\n" + text,
       false,
       continuationDepth + 1
     );
-    return text + "\\n\\n" + continuation;
+    return text + "\n\n" + continuation;
   }
 
   return text;
