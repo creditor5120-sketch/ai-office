@@ -856,6 +856,7 @@ function restoreTaskHistory(index) {
   localStorage.setItem(
     'myAIOfficeLastResult',
     JSON.stringify({
+  taskId: item.taskId,
   reply: item.reply,
   deliverables,
   workflow: item.workflow || {},
@@ -1391,8 +1392,9 @@ if (deliverableText.trim()) {
 localStorage.setItem(
   'myAIOfficeLastResult',
   JSON.stringify({
+    taskId: taskId,
     reply: fullReply,
-        deliverables: deliverables,
+    deliverables: deliverables,
     workflow: workflow,
     finalReviewResults: finalReviewResults,
     savedAt: new Date().toISOString()
