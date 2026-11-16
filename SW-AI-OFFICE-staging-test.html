@@ -31,6 +31,8 @@ const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const pendingKey='swAIOfficeStagingPendingTask';
 const employeeStateKey='swAIOfficeEmployeeStates';
+const MAX_QUOTA_RETRIES=12;
+let quotaRetryCount=0;
 function setHeadState(status,detail){
  let states={};try{states=JSON.parse(localStorage.getItem(employeeStateKey)||'{}')}catch{}
  states.COO={status,detail,updatedAt:new Date().toISOString(),source:'staging-response'};
@@ -129,9 +131,15 @@ $('send').addEventListener('click',async()=>{
     $('result').textContent=`업무 처리 종료: ${data.workflow.resultStatus||data.workflow.status}\nHTTP ${response.status}\n\n${JSON.stringify(data,null,2)}`;return;
    }
    if(data.status==='WAITING_FOR_API_QUOTA'){
-    setStagingEmployeesIdle('OpenRouter 호출 한도로 업무가 일시 대기 중입니다. 기존 업무 결과는 보존되어 있습니다.',taskId);
-    setHeadState('대기','OpenRouter 호출 한도로 기존 업무가 일시 대기 중입니다.');
-    $('result').textContent=`OpenRouter 사용 한도 대기 상태입니다.\n같은 업무 ID를 보존했습니다: ${taskId}\n호출 한도가 회복된 뒤 같은 업무 내용을 입력하고 다시 누르면 기존 업무를 이어서 처리합니다. 새 업무로 만들지 마세요.\n\n${JSON.stringify(data,null,2)}`;return;
+    quotaRetryCount++;
+    if(quotaRetryCount<=MAX_QUOTA_RETRIES){
+     setHeadState('대기','OpenRouter 호출 한도 회복을 기다리는 중입니다. 기존 업무 ID를 유지합니다.');
+     $('result').textContent=`OpenRouter 호출 한도로 대기 중입니다.\n기존 업무 ID: ${taskId}\n새 업무를 만들지 않고 5분 뒤 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n브라우저 탭을 닫지 않으면 계속 진행합니다.`;
+     await sleep(300000);continue;
+    }
+    setStagingEmployeesIdle('OpenRouter 호출 한도로 자동 재시도 한도에 도달했습니다. 기존 업무 결과는 보존되어 있습니다.',taskId);
+    setHeadState('대기','OpenRouter 호출 한도로 자동 재시도가 종료되었습니다.');
+    $('result').textContent=`OpenRouter 사용 한도로 자동 재시도를 종료했습니다.\n같은 업무 ID가 보존되어 있습니다: ${taskId}\n새 업무를 만들지 않았습니다.\n\n${JSON.stringify(data,null,2)}`;return;
    }
    if(response.status===202&&data.status==='PROCESSING'){
     setHeadState((data.currentStage||'').includes('검수')?'검수 중':(data.currentStage||'').includes('협업')?'협업 중':'업무 중',`현재 단계: ${data.currentStage||'확인 중'}`);
