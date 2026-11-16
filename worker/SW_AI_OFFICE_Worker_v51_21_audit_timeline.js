@@ -1252,7 +1252,7 @@ ${specialist.result}
 }
 
 // 5-1. 전문 직원: 조건부 승인 또는 반려인 경우에만 수정
-await setCurrentStage("전문 직원 결과물 수정", { responsibleRole: "담당 전문 직원", participants: (specialistResults || []).map(item => item.name), previousStageOutcome: { outcome: "팀장 1차 검수 결과 기록", reviewCount: reviewResults.length, approvedCount: reviewResults.filter(item => item.judgment === "승인").length } });
+await setCurrentStage("전문 직원 결과물 수정", { responsibleRole: "담당 전문 직원", participants: (specialistResults || []).map(item => item.name), previousStageOutcome: { outcome: "팀장 1차 검수 결과 기록", reviewCount: reviewResults.length, completedReviewCount: reviewResults.filter(item => item.status === "completed").length, failedReviewCount: reviewResults.filter(item => item.status !== "completed").length } });
 
 for (const specialist of specialistResults) {
   const reviewItem = reviewResults.find(item => item.id === specialist.id);
