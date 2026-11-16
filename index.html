@@ -250,6 +250,15 @@ textarea {
     style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px;border:1px solid #64748b;background:#fff;color:#111827;font:inherit;"
   >
   <p class="small">인증값은 브라우저에 저장하지 않고 요청에만 사용합니다. 대화창에 인증값을 보내지 마세요.</p>
+  <label for="representativeAccessToken" class="small">대표 승인 전용 인증</label>
+  <input
+    id="representativeAccessToken"
+    type="password"
+    autocomplete="off"
+    placeholder="Cloudflare REPRESENTATIVE_ACCESS_TOKEN 입력"
+    style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px;border:1px solid #64748b;background:#fff;color:#111827;font:inherit;"
+  >
+  <p class="small">업무 처리용 인증과 별도입니다. 대표 승인·반려 시에만 사용하며 브라우저에 저장하지 않습니다.</p>
   <textarea
     id="request"
     placeholder="본부장에게 업무를 지시하세요."
@@ -309,6 +318,7 @@ const responseBox = document.getElementById('response');
 const sendButton = document.getElementById('sendButton');
 const requestBox = document.getElementById('request');
 const accessTokenBox = document.getElementById('officeAccessToken');
+const representativeAccessTokenBox = document.getElementById('representativeAccessToken');
 let currentWorkflowReviewData = null;
 const retryTaskButton = document.getElementById('retryTaskButton');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -520,7 +530,7 @@ function renderWorkflowReview(data) {
     decisionBox.appendChild(decisionTitle);
     const decisionNotice = document.createElement('p');
     decisionNotice.className = 'small';
-    decisionNotice.textContent = '현재는 공통 API 인증을 기준으로 기록합니다. 개인별 대표 로그인 및 신원 확인은 아직 구현되지 않았습니다.';
+    decisionNotice.textContent = '업무 API 인증과 별도의 대표 승인 전용 인증을 추가로 확인합니다. 개인별 계정 로그인 및 신원 확인은 아직 구현되지 않았습니다.';
     decisionBox.appendChild(decisionNotice);
 
     const savedDecisionKey = 'swAIOfficeRepresentativeDecision:' + decisionTaskId;
@@ -543,8 +553,13 @@ function renderWorkflowReview(data) {
 
     async function submitRepresentativeDecision(decision) {
       const accessToken = accessTokenBox.value.trim();
+      const representativeAccessToken = representativeAccessTokenBox.value.trim();
       if (!accessToken) {
         decisionMessage.textContent = '서버 API 인증값을 먼저 입력해야 합니다.';
+        return;
+      }
+      if (!representativeAccessToken) {
+        decisionMessage.textContent = '대표 승인 전용 인증값을 입력해야 합니다.';
         return;
       }
       const reason = reasonInput.value.trim();
@@ -560,7 +575,8 @@ function renderWorkflowReview(data) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + accessToken
+            'Authorization': 'Bearer ' + accessToken,
+            'X-Representative-Authorization': 'Bearer ' + representativeAccessToken
           },
           body: JSON.stringify({
             action: 'representative_decision',
