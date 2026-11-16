@@ -115,8 +115,8 @@ $('send').addEventListener('click',async()=>{
  setHeadState('업무 중','스테이징 업무를 처리하고 있습니다.');
  const payload={task,taskId,idempotencyKey:taskId,employees:employeeDirectory};
  try{
-  for(let step=1;step<=320;step++){
-   $('result').textContent=`업무 처리 중 (${step}/80)
+  for(let step=1;step<=1000;step++){
+   $('result').textContent=`업무 처리 중 (${step}/1000)
 같은 업무 ID로 저장된 결과를 이어서 처리하고 있습니다.`;
    const response=await fetch(STAGING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
    const raw=await response.text();let data;try{data=JSON.parse(raw);}catch{data={responseText:raw};}
@@ -143,14 +143,14 @@ $('send').addEventListener('click',async()=>{
    }
    if(response.status===202&&data.status==='PROCESSING'){
     setHeadState((data.currentStage||'').includes('검수')?'검수 중':(data.currentStage||'').includes('협업')?'협업 중':'업무 중',`현재 단계: ${data.currentStage||'확인 중'}`);
-    $('result').textContent=`업무 처리 중 (${step}/80)
+    $('result').textContent=`업무 처리 중 (${step}/1000)
 현재 단계: ${data.currentStage||'확인 중'}
 저장된 AI 결과: ${data.cachedAiCallCount??0}건
 다음 처리 단위로 자동 연결합니다.`;
     await sleep(1200);continue;
    }
    if(response.status===409&&data.status==='PROCESSING'){
-    $('result').textContent=`기존 실행이 끝나기를 기다리는 중 (${step}/80)
+    $('result').textContent=`기존 실행이 끝나기를 기다리는 중 (${step}/1000)
 ${JSON.stringify(data,null,2)}`;
     await sleep(2500);continue;
    }
