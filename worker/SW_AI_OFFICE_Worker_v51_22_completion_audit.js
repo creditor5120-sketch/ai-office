@@ -1,4 +1,4 @@
-// SW AI OFFICE Worker v51.22 - completion audit integrity
+// SW AI OFFICE Worker v51.23 - Gemini free-tier API + completion audit integrity
 export default {
 
   async fetch(request, env) {
@@ -84,7 +84,7 @@ export default {
       await env.DB.prepare(
         `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.22", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
+      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.23", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
     };
 
     let lastRecordedStage = null;
@@ -101,7 +101,7 @@ export default {
       currentStage = nextStage;
       await writeTaskEvent("WORKFLOW_STAGE_STARTED", nextStage, {
         ...stageDetail,
-        executionVersion: "v51.22"
+        executionVersion: "v51.23"
       });
       lastRecordedStage = nextStage;
     };
@@ -185,7 +185,7 @@ export default {
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
         ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
         env.DB.prepare(
-          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.22', updated_at = ?
+          `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.23', updated_at = ?
            WHERE task_id = ? AND lock_token = ?`
         ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
         env.DB.prepare(
@@ -520,7 +520,7 @@ export default {
       const leaseNow = new Date().toISOString();
       const leaseUntil = new Date(Date.now() + 180000).toISOString();
       const lockResult = await env.DB.prepare(
-        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.22', updated_at = ?
+        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.23', updated_at = ?
          WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
       ).bind(lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
       if ((lockResult.meta?.changes ?? 0) !== 1) {
@@ -542,10 +542,10 @@ export default {
         } catch (_) {}
       }
 
-      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.22", leaseExpiresAt: leaseUntil });
+      await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.23", leaseExpiresAt: leaseUntil });
       await writeTaskEvent("TASK_ACCEPTED", "업무 접수", {
         taskId, idempotencyKey, retry: insertResult.meta?.changes === 0,
-        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.22"
+        cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.23"
       });
 
       if (!env.GEMINI_API_KEY) throw new Error("Gemini API 키가 설정되지 않았습니다. Cloudflare Secret GEMINI_API_KEY를 확인하세요.");
@@ -2419,7 +2419,7 @@ finalReport = reportLines.join("\n");
 await assertWorkflowControl();
 
 const successPayload = {
-  version: "v51.22",
+  version: "v51.23",
   taskId,
   reply: finalReport,
 
@@ -2508,7 +2508,7 @@ if (lastRecordedStage) {
          SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
        )`
     ).bind(
-      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.22", lastRecordedStage,
+      crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.23", lastRecordedStage,
       JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
       completionAt, taskId, lockToken, finalTaskStatus, completionAt
     )
@@ -2522,9 +2522,9 @@ completionStatements.push(
        SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
      )`
   ).bind(
-    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.22",
+    crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.23",
     "본부장 최종 검토 및 보고",
-    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.22" }),
+    JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.23" }),
     completionAt, taskId, lockToken, finalTaskStatus, completionAt
   )
 );
@@ -2601,7 +2601,7 @@ return json(successPayload);
                SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
              )`
           ).bind(
-            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.22",
+            crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.23",
             currentStage, JSON.stringify(detail), failureAt,
             taskId, lockToken, nextStatus, failureAt
           )
