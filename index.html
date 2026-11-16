@@ -527,8 +527,11 @@ function renderWorkflowReview(data) {
       : '아직 대표 결정이 기록되지 않았습니다.';
     decisionBox.appendChild(decisionStatus);
 
+    let reasonInput = null;
+    let approveButton = null;
+    let rejectButton = null;
     if (!savedDecision) {
-      const reasonInput = document.createElement('textarea');
+      reasonInput = document.createElement('textarea');
       reasonInput.rows = 3;
       reasonInput.placeholder = '반려할 경우 사유를 입력하세요.';
       reasonInput.setAttribute('aria-label', '대표 반려 사유');
@@ -582,7 +585,7 @@ function renderWorkflowReview(data) {
         }
       }
 
-      const approveButton = document.createElement('button');
+      approveButton = document.createElement('button');
       approveButton.type = 'button';
       approveButton.textContent = '대표 승인 기록';
       approveButton.disabled = workflow.reviewGate?.finalReleaseAllowed !== true;
@@ -591,7 +594,7 @@ function renderWorkflowReview(data) {
         : '서버에 대표 승인 이력을 기록합니다.';
       approveButton.addEventListener('click', () => submitRepresentativeDecision('APPROVE'));
 
-      const rejectButton = document.createElement('button');
+      rejectButton = document.createElement('button');
       rejectButton.type = 'button';
       rejectButton.textContent = '대표 반려 기록';
       rejectButton.style.marginLeft = '8px';
@@ -601,6 +604,31 @@ function renderWorkflowReview(data) {
     }
 
     panel.appendChild(decisionBox);
+
+    // 서버 기록을 다시 조회해 다른 브라우저에서 처리한 대표 결정도 표시한다.
+    const accessTokenForHistory = accessTokenBox.value.trim();
+    if (accessTokenForHistory) {
+      fetch('https://ai-office-api.creditor5120.workers.dev/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessTokenForHistory
+        },
+        body: JSON.stringify({
+          action: 'get_representative_decision',
+          taskId: decisionTaskId
+        })
+      }).then(response => response.ok ? response.json() : null)
+        .then(result => {
+          if (!result || !result.decision) return;
+          localStorage.setItem(savedDecisionKey, JSON.stringify(result));
+          decisionStatus.textContent = result.decisionLabel + ' · ' + new Date(result.recordedAt).toLocaleString('ko-KR');
+          if (reasonInput) reasonInput.disabled = true;
+          if (approveButton) approveButton.remove();
+          if (rejectButton) rejectButton.remove();
+        })
+        .catch(error => console.warn('대표 결정 이력 조회 실패:', error));
+    }
   }
 
   reviews.forEach((review, index) => {
