@@ -302,6 +302,13 @@ textarea {
   <div id="taskHistoryList">
     <p class="small">아직 저장된 업무 기록이 없습니다.</p>
   </div>
+  <div style="margin-top:16px;padding-top:12px;border-top:1px solid #475569;">
+    <label for="serverHistoryTaskId" class="small">서버 업무 이력 조회 · 업무 ID</label>
+    <input id="serverHistoryTaskId" type="text" autocomplete="off" placeholder="조회할 업무 ID 입력" style="width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #64748b;background:#fff;color:#111827;font:inherit;">
+    <button id="loadServerHistoryButton" type="button">서버 이력 조회</button>
+    <p id="serverHistoryStatus" class="small" aria-live="polite">업무 ID를 입력하면 기존 처리 이력만 조회합니다.</p>
+    <ol id="serverHistoryEvents"></ol>
+  </div>
 </div>
   
 <script type="module">
@@ -803,6 +810,63 @@ function saveTaskHistory(
     JSON.stringify(updated)
   );
 }
+
+// 실패·미완료 업무도 업무 ID로 서버 감사 이력을 조회한다. AI 실행 요청은 발생시키지 않는다.
+const serverHistoryTaskIdBox = document.getElementById('serverHistoryTaskId');
+const loadServerHistoryButton = document.getElementById('loadServerHistoryButton');
+const serverHistoryStatus = document.getElementById('serverHistoryStatus');
+const serverHistoryEvents = document.getElementById('serverHistoryEvents');
+
+loadServerHistoryButton?.addEventListener('click', async () => {
+  const taskId = serverHistoryTaskIdBox?.value.trim();
+  const token = accessTokenBox?.value.trim();
+  serverHistoryEvents.replaceChildren();
+  if (!taskId) {
+    serverHistoryStatus.textContent = '조회할 업무 ID를 입력하세요.';
+    return;
+  }
+  if (!token) {
+    serverHistoryStatus.textContent = '먼저 서버 접속 인증값을 입력하세요.';
+    return;
+  }
+  loadServerHistoryButton.disabled = true;
+  serverHistoryStatus.textContent = '서버 이력을 조회하고 있습니다.';
+  try {
+    const response = await fetch('https://ai-office-api.creditor5120.workers.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ action: 'get_task_history', taskId })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || '서버 이력 조회에 실패했습니다.');
+    serverHistoryStatus.textContent =
+      `업무 상태: ${result.task?.status || '미확인'} · 서버 기록 ${result.eventCount || 0}건`;
+    (result.events || []).forEach(event => {
+      const item = document.createElement('li');
+      const timestamp = event.createdAt ? new Date(event.createdAt).toLocaleString('ko-KR') : '시각 미확인';
+      const detail = event.detail && typeof event.detail === 'object'
+        ? Object.entries(event.detail)
+            .filter(([key, value]) => !['raw', 'prompt', 'content'].includes(key) && value !== null && value !== undefined && (typeof value !== 'object' || Array.isArray(value)))
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : String(value)}`)
+            .join(' · ')
+        : '';
+      item.textContent = `${timestamp} | ${event.stage || event.eventType || '단계 미확인'} | ${event.eventType || ''} | ${event.actor || '담당자 미확인'}${detail ? ' | ' + detail : ''}`;
+      serverHistoryEvents.appendChild(item);
+    });
+    if (result.truncated) {
+      const note = document.createElement('li');
+      note.textContent = '최근 300건까지만 표시했습니다.';
+      serverHistoryEvents.appendChild(note);
+    }
+  } catch (error) {
+    serverHistoryStatus.textContent = error.message || '서버 이력 조회 중 오류가 발생했습니다.';
+  } finally {
+    loadServerHistoryButton.disabled = false;
+  }
+});
 
 function renderTaskHistory() {
   const list = document.getElementById('taskHistoryList');
