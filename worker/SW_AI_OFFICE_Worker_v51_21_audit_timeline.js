@@ -277,6 +277,21 @@ export default {
       // 대표 승인·반려는 기존 D1 task_events에 추가 기록한다.
       // 결과물 원문을 변경하지 않는 append-only 의사결정 기록이다.
       if (body.action === "representative_decision") {
+        // 일반 API 토큰과 분리된 대표 승인 전용 비밀값을 추가로 요구한다.
+        const expectedRepresentativeToken = String(env.REPRESENTATIVE_ACCESS_TOKEN || "").trim();
+        if (!expectedRepresentativeToken) {
+          return json({ error: "대표 승인 전용 인증값이 Worker Secret에 설정되지 않았습니다." }, 503);
+        }
+        const suppliedRepresentativeAuthorization = String(request.headers.get("X-Representative-Authorization") || "");
+        const expectedRepresentativeAuthorization = "Bearer " + expectedRepresentativeToken;
+        let representativeAuthDifference = suppliedRepresentativeAuthorization.length ^ expectedRepresentativeAuthorization.length;
+        const representativeAuthLength = Math.max(suppliedRepresentativeAuthorization.length, expectedRepresentativeAuthorization.length);
+        for (let i = 0; i < representativeAuthLength; i++) {
+          representativeAuthDifference |= (suppliedRepresentativeAuthorization.charCodeAt(i) || 0) ^ (expectedRepresentativeAuthorization.charCodeAt(i) || 0);
+        }
+        if (representativeAuthDifference !== 0) {
+          return json({ error: "대표 승인 전용 인증에 실패했습니다." }, 401);
+        }
         if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 승인 이력을 기록할 수 없습니다." }, 503);
         taskId = String(body.taskId || "").trim();
         const decision = String(body.decision || "").trim().toUpperCase();
@@ -329,12 +344,12 @@ export default {
         const decisionDetail = {
           decision,
           decisionLabel: decision === "APPROVE" ? "대표 승인" : "대표 반려",
-          actor: "대표 화면 사용자(공통 API 인증)",
+          actor: "대표 승인 전용 토큰 사용자(개인별 신원 미확인)",
           reason: reason || "",
           reportStatus: result.workflow?.resultStatus || result.workflow?.status || "미확인",
           finalReleaseAllowed: releaseAllowed,
           recordedAt,
-          attributionNote: "공통 API 인증을 통과한 대표 화면 요청으로 기록. 개인별 대표 로그인·신원 검증은 구현되지 않음."
+          attributionNote: "일반 API 인증과 별도의 대표 승인 전용 토큰을 통과한 요청. 개인별 계정 로그인·신원 검증은 구현되지 않음."
         };
         // 중복 요청이 동시에 도착해도 단일 SQL의 조건부 INSERT로 최초 결정만 기록한다.
         const insertDecision = await env.DB.prepare(
