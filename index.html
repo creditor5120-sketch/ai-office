@@ -328,6 +328,7 @@ const employeeByName = new Map(employeeDirectory.map(e => [String(e.name), e]));
 
 function normalizeEmployeeStatus(value, stage) {
   const raw = String(value || stage || '').toLowerCase();
+  if (/보완 필요|revision required|needs revision/.test(raw)) return '보완 필요';
   if (/검수|review|inspect|qa/.test(raw)) return '검수 중';
   if (/협업|collab|coordinate|meeting/.test(raw)) return '협업 중';
   if (/휴식|break/.test(raw)) return '휴식 중';
