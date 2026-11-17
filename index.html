@@ -1374,12 +1374,20 @@ savedAt: new Date().toISOString()
           localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(quotaPending));
         }
         if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
-          responseBox.textContent =
-            `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n5분 간격으로 최대 24시간 동안 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
-          await sleep(300000);
-          continue;
-        }
-      }
+  const quotaWaitMs = Number(data.quotaRetryAfterMs) > 0
+    ? Number(data.quotaRetryAfterMs)
+    : 300000;
+
+  const quotaWaitMinutes = Math.ceil(quotaWaitMs / 60000);
+
+  responseBox.textContent =
+    `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n약 ${quotaWaitMinutes}분 후 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
+
+  await sleep(quotaWaitMs);
+  continue;
+}
+
+     }
 
       const apiError = new Error(data.error || '서버 연결 오류');
       apiError.code = data.errorCode || '';
