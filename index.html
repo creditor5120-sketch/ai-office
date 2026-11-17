@@ -971,6 +971,37 @@ localStorage.setItem(
     responseBox.textContent =
       '이전에 접수했으나 처리가 완료되지 않은 업무가 보존되어 있어. ' +
       '기존 업무 지시를 확인하고 다시 처리할 수 있어.';
+   if (savedTask.status === 'WAITING_FOR_API_QUOTA' && savedTask.nextRetryAt) {
+  const remainingMs = Date.parse(savedTask.nextRetryAt) - Date.now();
+
+  if (remainingMs <= 0) {
+    responseBox.textContent =
+      '대기 시간이 종료되어 기존 업무를 자동 재개합니다.';
+    sendTask(true);
+  } else {
+    const remainingMinutes = Math.ceil(remainingMs / 60000);
+
+    responseBox.textContent =
+      `AI API 사용 한도로 대기 중입니다.\n` +
+      `기존 업무는 보존되어 있습니다.\n` +
+      `약 ${remainingMinutes}분 후 자동 재개합니다.`;
+
+    setTimeout(() => {
+      const currentTask = JSON.parse(
+        localStorage.getItem(PENDING_TASK_KEY) || 'null'
+      );
+
+      if (
+        currentTask &&
+        currentTask.taskId === savedTask.taskId &&
+        currentTask.status === 'WAITING_FOR_API_QUOTA'
+      ) {
+        requestBox.value = currentTask.task;
+        sendTask(true);
+      }
+    }, remainingMs);
+  }
+}
   }
 } catch (error) {
   console.error('미처리 업무 복원 실패:', error);
@@ -1363,31 +1394,42 @@ savedAt: new Date().toISOString()
         continue;
       }
 
-      // OpenRouter 한도 초과: 업무 ID/idempotencyKey를 바꾸지 않고 자동 재개
-      if (data.status === 'WAITING_FOR_API_QUOTA') {
-        quotaRetryCount++;
-        const quotaPending = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
-        if (quotaPending && quotaPending.taskId === taskId) {
-          quotaPending.quotaRetryCount = quotaRetryCount;
-          quotaPending.status = 'WAITING_FOR_API_QUOTA';
-          quotaPending.updatedAt = new Date().toISOString();
-          localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(quotaPending));
-        }
-        if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
+      // Gemini 한도 초과: 업무 ID/idempotencyKey를 유지하고 자동 재개
+if (data.status === 'WAITING_FOR_API_QUOTA') {
+  quotaRetryCount++;
+
   const quotaWaitMs = Number(data.quotaRetryAfterMs) > 0
     ? Number(data.quotaRetryAfterMs)
     : 300000;
 
-  const quotaWaitMinutes = Math.ceil(quotaWaitMs / 60000);
+  const quotaPending = JSON.parse(
+    localStorage.getItem(PENDING_TASK_KEY) || 'null'
+  );
 
-  responseBox.textContent =
-    `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n약 ${quotaWaitMinutes}분 후 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
+  if (quotaPending && quotaPending.taskId === taskId) {
+    quotaPending.quotaRetryCount = quotaRetryCount;
+    quotaPending.status = 'WAITING_FOR_API_QUOTA';
+    quotaPending.updatedAt = new Date().toISOString();
+    quotaPending.nextRetryAt = new Date(
+      Date.now() + quotaWaitMs
+    ).toISOString();
 
-  await sleep(quotaWaitMs);
-  continue;
+    localStorage.setItem(
+      PENDING_TASK_KEY,
+      JSON.stringify(quotaPending)
+    );
+  }
+
+  if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
+    const quotaWaitMinutes = Math.ceil(quotaWaitMs / 60000);
+
+    responseBox.textContent =
+      `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n약 ${quotaWaitMinutes}분 후 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
+
+    await sleep(quotaWaitMs);
+    continue;
+  }
 }
-
-     }
 
       const apiError = new Error(data.error || '서버 연결 오류');
       apiError.code = data.errorCode || '';
