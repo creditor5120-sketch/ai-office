@@ -332,7 +332,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
  // 업무 중복 실행 방지 잠금
 let isTaskRunning = false;
 // API 오류로 중단된 업무 지시 복원
-const PENDING_TASK_KEY = 'swAIOfficePendingTask';
+const PENDING_TASK_KEY = 'swAIOfficeStagingPendingTask';
 
 // 최근 업무 기록 관리
 const TASK_HISTORY_KEY = 'swAIOfficeTaskHistory';
