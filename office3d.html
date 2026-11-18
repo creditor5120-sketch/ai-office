@@ -24,6 +24,16 @@ header{position:fixed;z-index:5;left:16px;right:16px;top:14px;display:flex;justi
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+window.addEventListener('error',e=>{
+ const box=document.getElementById('loading');
+ if(box){box.style.display='block';box.textContent='3D 초기화 오류: '+(e.message||'스크립트 오류');}
+});
+window.addEventListener('unhandledrejection',e=>{
+ const box=document.getElementById('loading');
+ if(box){box.style.display='block';box.textContent='3D 초기화 오류: '+(e.reason?.message||String(e.reason));}
+});
+
 import directory from './employees.js';
 const mount=document.getElementById('scene'),scene=new THREE.Scene();
 scene.background=new THREE.Color(0xaebfca);scene.fog=new THREE.Fog(0xaebfca,48,100);
@@ -97,76 +107,29 @@ function makePixelSheet(person,index){
  const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;t.generateMipmaps=false;t.repeat.set(.25,1);return t;
 }
 function makeAvatar(person,index,x,z){
- const tex=makePixelSheet(person,index),sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
- sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;sprite.userData.texture=tex;sprite.userData.frame=0;
- const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(248,251,255,.94)';ctx.beginPath();ctx.roundRect(5,8,374,80,18);ctx.fill();ctx.fillStyle='#263b50';ctx.font='bold 42px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(person.name,192,49);
- const labelTex=new THREE.CanvasTexture(labelCanvas);labelTex.colorSpace=THREE.SRGBColorSpace;const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex,depthTest:false,transparent:true}));label.position.set(0,1.12,0);label.scale.set(1.8,.45,1);label.userData.avatar=sprite;sprite.add(label);
- const marker=new THREE.Mesh(new THREE.TorusGeometry(.48,.035,6,20),new THREE.MeshBasicMaterial({color:0x7fd0ff}));marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;sprite.add(marker);sprite.userData.marker=marker;
- const ph=sprite.userData.phase;sprite.userData.route=[new THREE.Vector3(x,.82,z),new THREE.Vector3(x+Math.cos(ph)*.78,.82,z+Math.sin(ph)*.58),new THREE.Vector3(x+Math.cos(ph+2.1)*.68,.82,z+Math.sin(ph+2.1)*.7),new THREE.Vector3(x+Math.cos(ph+4.2)*.72,.82,z+Math.sin(ph+4.2)*.56)];sprite.userData.routeIndex=0;sprite.userData.wait=1+(index%4)*.55;
- avatarRoot.add(sprite);avatars.push(sprite);return;
-
-  const g=new THREE.Group();g.position.set(x,0,z);g.userData.person=person;
-  const isPeter=person.id==='CEO',isAlex=person.id==='COO';
-  const shirtColors=[0x6f91b4,0x75977f,0x9a829e,0xb58b68,0x70849a,0x6d9a9a,0xc09a72];
-  const hairColors=[0x30251f,0x49372b,0x241f20,0x62452e,0x252b34];
-  const shirt=mat(isPeter?0x777d83:isAlex?0x8dbbd5:shirtColors[index%shirtColors.length],{roughness:.62});
-  const hair=mat(isPeter?0x24201e:hairColors[index%hairColors.length],{roughness:.88});
-  const skin=mat(0xf0c9a9,{roughness:.72});
-  const pants=mat(isPeter?0x3c5c7d:0x46566a,{roughness:.8});
-  const dark=mat(0x283849),white=mat(0xf4f1e9),shoe=mat(0x343c45);
-  const mesh=(geo,material,px,py,pz)=>{const o=new THREE.Mesh(geo,material);o.position.set(px,py,pz);o.castShadow=true;o.receiveShadow=true;o.userData.avatar=g;g.add(o);return o};
-  // 큰 머리와 작은 몸의 치비 비율
-  mesh(new THREE.CapsuleGeometry(.245,.28,5,12),shirt,0,.78,0);
-  mesh(new THREE.SphereGeometry(.34,20,16),skin,0,1.48,0);
-  // 헤어 캡과 앞머리
-  mesh(new THREE.SphereGeometry(.355,18,12,0,Math.PI*2,0,Math.PI*.53),hair,0,1.59,0);
-  if(isPeter||index%3===0){
-    const fringe=mesh(new THREE.SphereGeometry(.16,12,8),hair,.12,1.72,.235);fringe.scale.set(1.2,.58,.75);
-  }else if(index%3===1){
-    const side=mesh(new THREE.SphereGeometry(.18,12,8),hair,-.24,1.48,.02);side.scale.set(.55,1.05,.8);
-  }
-  // 눈과 미소
-  for(const ex of [-.115,.115])mesh(new THREE.SphereGeometry(.035,10,8),dark,ex,1.49,.302);
-  const smilePts=[new THREE.Vector3(-.07,1.385,.305),new THREE.Vector3(0,1.36,.323),new THREE.Vector3(.07,1.385,.305)];
-  const smile=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(smilePts),10,.012,6,false),dark);smile.userData.avatar=g;g.add(smile);
-  // 팔과 다리
-  for(const side of [-1,1]){
-    const arm=mesh(new THREE.CapsuleGeometry(.065,.27,4,8),shirt,side*.29,.84,0);arm.rotation.z=side*.24;
-    mesh(new THREE.CylinderGeometry(.078,.075,.27,10),pants,side*.12,.28,0);
-    mesh(new THREE.SphereGeometry(.105,10,8),shoe,side*.12,.105,.055);
-  }
-  // 피터의 회색 후드 집업과 흰 티셔츠, 청바지
-  if(isPeter){
-    mesh(new THREE.BoxGeometry(.17,.42,.025),white,0,.8,.226);
-    mesh(new THREE.BoxGeometry(.018,.45,.018),mat(0xd5d8da),0,.8,.245);
-    for(const side of [-1,1])mesh(new THREE.BoxGeometry(.08,.18,.018),mat(0x666d75),side*.12,.98,.22);
-  }
-  // 알렉스의 하늘색 셔츠와 남색 조끼
-  if(isAlex){
-    for(const side of [-1,1])mesh(new THREE.BoxGeometry(.09,.43,.035),dark,side*.12,.82,.22);
-    mesh(new THREE.BoxGeometry(.08,.12,.035),white,0,1.02,.235);
-  }
-  // 둥근 안경: 피터와 알렉스
-  if(isPeter||isAlex){
-    for(const ex of [-.105,.105]){
-      const lens=new THREE.Mesh(new THREE.TorusGeometry(.083,.012,6,20),dark);lens.position.set(ex,1.49,.323);lens.userData.avatar=g;g.add(lens);
-    }
-    const bridge=mesh(new THREE.BoxGeometry(.055,.014,.018),dark,0,1.49,.33);
-  }
-  // 직무별 소품을 든 작은 손 패널
-  const propColor=person.id==='LE-01'?0x8b775d:person.id==='IR-01'?0x4f7fbd:person.id==='SP-01'?0x779b83:person.id==='GA-01'?0x9a825f:person.id==='MA-01'?0x718aa3:0x526f8b;
-  if(isAlex||['LE-01','IR-01','SP-01','MA-01'].includes(person.id)){
-    const prop=mesh(new THREE.BoxGeometry(.22,.28,.045),mat(propColor),.34,.82,.12);prop.rotation.z=-.18;
-    mesh(new THREE.BoxGeometry(.16,.012,.012),white,.34,.87,.15);
-  }
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.4,.035,7,24),new THREE.MeshBasicMaterial({color:0x7fd0ff}));ring.rotation.x=Math.PI/2;ring.position.y=.04;ring.visible=false;ring.userData.avatar=g;g.add(ring);g.userData.marker=ring;g.userData.phase=index*.73;
-  // 이름표는 캐릭터 위에 표시
-  const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;
-  const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(248,251,255,.94)';ctx.beginPath();ctx.roundRect(5,8,374,80,18);ctx.fill();
-  ctx.fillStyle='#263b50';ctx.font='bold 42px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(person.name,192,49);
-  const labelTexture=new THREE.CanvasTexture(labelCanvas);labelTexture.colorSpace=THREE.SRGBColorSpace;
-  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTexture,depthTest:false}));label.position.set(0,2.13,0);label.scale.set(1.8,.45,1);label.userData.avatar=g;g.add(label);
-  g.traverse(o=>{if(o.isMesh)o.castShadow=true});avatarRoot.add(g);avatars.push(g);
+ const tex=makePixelSheet(person,index);
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+ sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);
+ sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;
+ sprite.userData.texture=tex;sprite.userData.frame=0;
+ const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;
+ const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(248,251,255,.94)';
+ ctx.fillRect(5,8,374,80);ctx.fillStyle='#263b50';ctx.font='bold 42px sans-serif';
+ ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(person.name,192,49);
+ const labelTex=new THREE.CanvasTexture(labelCanvas);labelTex.colorSpace=THREE.SRGBColorSpace;
+ const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex,depthTest:false,transparent:true}));
+ label.position.set(0,1.12,0);label.scale.set(1.8,.45,1);label.userData.avatar=sprite;sprite.add(label);
+ const marker=new THREE.Mesh(new THREE.TorusGeometry(.48,.035,6,20),new THREE.MeshBasicMaterial({color:0x7fd0ff}));
+ marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;sprite.add(marker);sprite.userData.marker=marker;
+ const ph=sprite.userData.phase;
+ sprite.userData.route=[
+  new THREE.Vector3(x,.82,z),
+  new THREE.Vector3(x+Math.cos(ph)*.78,.82,z+Math.sin(ph)*.58),
+  new THREE.Vector3(x+Math.cos(ph+2.1)*.68,.82,z+Math.sin(ph+2.1)*.7),
+  new THREE.Vector3(x+Math.cos(ph+4.2)*.72,.82,z+Math.sin(ph+4.2)*.56)
+ ];
+ sprite.userData.routeIndex=0;sprite.userData.wait=1+(index%4)*.55;
+ avatarRoot.add(sprite);avatars.push(sprite);
 }
 const peter={id:'CEO',name:'피터',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
 const staff=[peter,...directory];
