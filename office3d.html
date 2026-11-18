@@ -16,7 +16,7 @@ header{position:fixed;z-index:5;left:16px;right:16px;top:14px;display:flex;justi
 </head>
 <body>
 <div id="scene"></div><div id="loading">SW AI OFFICE 3D 공간을 준비하고 있습니다...</div>
-<header><div class="brand">SW AI OFFICE<small>가상 본사 · 3D OFFICE</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="view2d">2D 사무실</button><button id="dashboard">업무 화면</button></div></header>
+<header><div class="brand">SW AI OFFICE<small>가상 본사 · 3D OFFICE</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="view2d">2D 보기</button><button id="dashboard">업무 화면</button></div></header>
 <section class="hud"><h2>가상 사무실 현황</h2><div class="counts"><div class="count"><b id="staffCount">-</b><span>구성원</span></div><div class="count"><b>6</b><span>팀</span></div><div class="count"><b id="selectedCount">0</b><span>선택 직원</span></div></div></section>
 <div class="hint">드래그: 시점 회전 · 휠: 확대/축소 · 직원 클릭: 업무 지시</div>
 <div class="modal" id="modal"><div class="dialog"><h2 id="personName">직원</h2><div class="sub" id="personRole"></div><p id="personInfo"></p><textarea id="taskText" placeholder="이 직원에게 지시할 업무를 입력하세요."></textarea><div class="row"><button class="action secondary" id="close">닫기</button><button class="action" id="taskButton">업무 지시하기</button></div></div></div>
@@ -42,8 +42,8 @@ function table(x,z,w=3,d=1.5,round=false){const top=new THREE.Mesh(round?new THR
 function sofa(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(2.4,.48,.85,M.fabric,0,.48,0,g);cube(2.4,.75,.18,M.fabric,0,.92,-.34,g);for(const dx of [-1.02,1.02])cube(.2,.7,.85,M.fabric,dx,.72,0,g);scene.add(g)}
 function plant(x,z){const p=new THREE.Mesh(new THREE.CylinderGeometry(.24,.3,.42,12),M.wood);p.position.set(x,.21,z);scene.add(p);const l=new THREE.Mesh(new THREE.SphereGeometry(.55,12,9),M.green);l.position.set(x,.85,z);l.scale.y=1.25;scene.add(l)}
 // 넓은 단일 평면과 외곽 구조
-cube(50,.55,37,M.floor,0,-.38,0);const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),mat(0x849aa6));ground.rotation.x=-Math.PI/2;ground.position.y=-.68;ground.receiveShadow=true;scene.add(ground);
-cube(50,3,.28,M.wall,0,1.1,-18.5);cube(50,3,.28,M.wall,0,1.1,18.5);cube(.28,3,37,M.wall,-25,1.1,0);cube(.28,3,37,M.wall,25,1.1,0);
+cube(54,.55,48,M.floor,0,-.38,0);const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),mat(0x849aa6));ground.rotation.x=-Math.PI/2;ground.position.y=-.68;ground.receiveShadow=true;scene.add(ground);
+cube(54,3,.28,M.wall,0,1.1,-24);cube(54,3,.28,M.wall,0,1.1,24);cube(.28,3,48,M.wall,-27,1.1,0);cube(.28,3,48,M.wall,27,1.1,0);
 // 상단 임원·회의 공간: 대표이사실 / 본부장실 / 대회의실 / 소회의실
 room(-18,-12,12,12,'대표이사실 · 피터');room(-5,-12,12,12,'본부장실 · 알렉스');room(8,-12,13,12,'대회의실');room(19.5,-12,9,12,'소회의실');
 sofa(-20,-14.7);sofa(-16,-14.7);desk(-19,-9.5);chair(-19,-10.8);table(-17,-9.2,2,2,true);for(let i=0;i<3;i++){const a=i*Math.PI*2/3;chair(-17+Math.cos(a)*1.55,-9.2+Math.sin(a)*1.55)}
@@ -89,7 +89,35 @@ renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=e.clientX/inner
 function selectAvatar(a){if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;document.getElementById('selectedCount').textContent='1';const p=a.userData.person;document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';document.getElementById('taskText').value='';modal.classList.add('show')}
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 document.getElementById('taskButton').onclick=()=>{const task=document.getElementById('taskText').value.trim(),p=selected?.userData.person;if(!p)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);if(task)u.searchParams.set('task',task);location.href=u.toString()};
-document.getElementById('view2d').onclick=()=>location.href='./office.html';document.getElementById('dashboard').onclick=()=>location.href='./index.html';document.getElementById('home').onclick=()=>{controls.target.set(0,0,0);camera.position.set(37,34,43);controls.update()};
+let is2D=false;
+const viewButton=document.getElementById('view2d');
+const perspectivePosition=new THREE.Vector3(37,34,43);
+viewButton.onclick=()=>{
+  is2D=!is2D;
+  if(is2D){
+    perspectivePosition.copy(camera.position);
+    camera.position.set(0,76,0.01);
+    controls.minPolarAngle=0.001;
+    controls.maxPolarAngle=0.001;
+    controls.target.set(0,0,0);
+    viewButton.textContent='3D 보기';
+    document.querySelector('.hint').textContent='2D 평면 보기 · 휠: 확대/축소 · 직원 클릭: 업무 지시';
+  }else{
+    camera.position.copy(perspectivePosition);
+    controls.minPolarAngle=0;
+    controls.maxPolarAngle=Math.PI*.49;
+    controls.target.set(0,0,0);
+    viewButton.textContent='2D 보기';
+    document.querySelector('.hint').textContent='드래그: 시점 회전 · 휠: 확대/축소 · 직원 클릭: 업무 지시';
+  }
+  controls.update();
+};
+document.getElementById('dashboard').onclick=()=>location.href='./index.html';
+document.getElementById('home').onclick=()=>{
+  controls.target.set(0,0,0);
+  camera.position.copy(is2D?new THREE.Vector3(0,76,0.01):new THREE.Vector3(37,34,43));
+  controls.update();
+};
 let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls.autoRotate=spin;controls.autoRotateSpeed=.55;e.target.textContent=spin?'회전 끄기':'자동 회전'};
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();for(const a of avatars){a.position.y=Math.sin(t*1.5+a.userData.phase)*.022;a.rotation.y=Math.sin(t*.45+a.userData.phase)*.035}controls.update();renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
