@@ -32,8 +32,9 @@ const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=19;controls.maxDistance=82;
 scene.add(new THREE.HemisphereLight(0xf2f7ff,0x81796d,2.15));const sun=new THREE.DirectionalLight(0xfff1dc,3.2);sun.position.set(-22,34,22);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;scene.add(sun);
 const mat=(color,opts={})=>new THREE.MeshStandardMaterial({color,roughness:.82,...opts});
+const wallMeshes=[];
 const M={floor:mat(0xd8d2c6),wall:mat(0xe8e4dc),wood:mat(0x98704e),wood2:mat(0x644a39),glass:mat(0x8ec5d0,{transparent:true,opacity:.28,roughness:.18}),metal:mat(0x607487),screen:mat(0x24394f,{emissive:0x14263a}),fabric:mat(0x718b91),green:mat(0x56815d),rug:mat(0xc1c9c1)};
-function cube(w,h,d,m,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function cube(w,h,d,m,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);if(m===M.wall||m===M.glass)wallMeshes.push(o);return o}
 function textSprite(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');q.fillStyle='rgba(250,252,255,.94)';q.beginPath();q.roundRect(8,12,496,104,18);q.fill();q.fillStyle='#34495e';q.font='bold 42px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,65);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false}));s.position.set(x,3.25,z);s.scale.set(6.4,1.6,1);scene.add(s)}
 function room(cx,cz,w,d,name,{glass=true,back=true}={}){cube(w,.28,d,M.floor,cx,-.12,cz);const wallMat=glass?M.glass:M.wall;cube(w,.18,.18,M.wall,cx,.12,cz-d/2);cube(.18,2.8,d,wallMat,cx-w/2,1.45,cz);cube(.18,2.8,d,wallMat,cx+w/2,1.45,cz);if(back)cube(w,2.8,.18,wallMat,cx,1.45,cz+d/2);textSprite(name,cx,cz-d/2+1.1)}
 function desk(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(1.8,.16,.9,M.wood,0,1.03,0,g);for(const a of [-.72,.72])for(const b of [-.32,.32])cube(.12,.94,.12,M.wood2,a,.48,b,g);cube(.62,.42,.08,M.metal,0,1.34,-.2,g);cube(.53,.29,.025,M.screen,0,1.35,-.145,g);scene.add(g)}
@@ -46,7 +47,7 @@ cube(54,.55,48,M.floor,0,-.38,0);const ground=new THREE.Mesh(new THREE.PlaneGeom
 cube(54,3,.28,M.wall,0,1.1,-24);cube(54,3,.28,M.wall,0,1.1,24);cube(.28,3,48,M.wall,-27,1.1,0);cube(.28,3,48,M.wall,27,1.1,0);
 // 상단 임원·회의 공간: 대표이사실 / 본부장실 / 대회의실 / 소회의실
 room(-18,-12,12,12,'대표이사실 · 피터');room(-5,-12,12,12,'본부장실 · 알렉스');room(8,-12,13,12,'대회의실');room(19.5,-12,9,12,'소회의실');
-sofa(-20,-14.7);sofa(-16,-14.7);desk(-19,-9.5);chair(-19,-10.8);table(-17,-9.2,2,2,true);for(let i=0;i<3;i++){const a=i*Math.PI*2/3;chair(-17+Math.cos(a)*1.55,-9.2+Math.sin(a)*1.55)}
+sofa(-20,-14.7);desk(-19,-9.5);chair(-19,-10.8);table(-17,-9.2,2,2,true);for(let i=0;i<3;i++){const a=i*Math.PI*2/3;chair(-17+Math.cos(a)*1.55,-9.2+Math.sin(a)*1.55)}
 table(-5,-12,4.2,2);for(let i=0;i<4;i++){const a=i*Math.PI/2;chair(-5+Math.cos(a)*2.55,-12+Math.sin(a)*1.45)}
 table(8,-12,7,2.3);for(let i=0;i<6;i++){chair(5+i*1.2,-9.8);chair(5+i*1.2,-14.2)}
 table(19.5,-12,4,1.7);for(let i=0;i<4;i++)chair(18+i,-9.8);
@@ -77,7 +78,33 @@ cube(7,.18,3.2,M.rug,20, -.02,15.7);table(20,15.4,2.4,1.3);for(let i=0;i<3;i++)c
 // 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
+function makePixelSheet(person,index){
+ const c=document.createElement('canvas');c.width=128;c.height=40;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
+ const colors=[['#6f91b4','#3c5c7d','#30251f','#f0c9a9'],['#75977f','#46566a','#49372b','#e9bd9c'],['#9a829e','#46566a','#241f20','#f1c9ad'],['#b58b68','#46566a','#62452e','#e6b995'],['#70849a','#46566a','#252b34','#efc8a5'],['#6d9a9a','#46566a','#382b25','#f0c9a9']];
+ const p=colors[index%colors.length],isPeter=person.id==='CEO',isAlex=person.id==='COO',shirt=isPeter?'#777d83':isAlex?'#8dbbd5':p[0],hair=isPeter?'#24201e':p[2],skin=p[3],pants=isPeter?'#3c5c7d':p[1];
+ const r=(x,y,w,h,color)=>{q.fillStyle=color;q.fillRect(x,y,w,h)};
+ for(let f=0;f<4;f++){const o=f*32,step=f%2;
+ r(o+8,32+(step?1:0),7,5,'#343c45');r(o+19,32+(step?0:1),7,5,'#343c45');r(o+10,24+(step?1:0),5,9,pants);r(o+19,24+(step?0:1),5,9,pants);
+ r(o+8,15,16,11,shirt);r(o+10,13,12,3,shirt);
+ if(isPeter){r(o+15,15,2,10,'#f4f1e9');r(o+14,14,1,12,'#d5d8da')}
+ if(isAlex){r(o+10,15,4,10,'#283849');r(o+18,15,4,10,'#283849');r(o+14,14,4,3,'#f4f1e9')}
+ r(o+5,16+(step?1:0),4,9,shirt);r(o+23,16+(step?0:1),4,9,shirt);r(o+5,24+(step?1:0),4,3,skin);r(o+23,24+(step?0:1),4,3,skin);
+ r(o+9,3,14,12,skin);r(o+8,5,2,7,hair);r(o+22,5,2,7,hair);r(o+9,2,14,4,hair);r(o+11,1,10,2,hair);
+ if(index%3===0){r(o+9,5,5,3,hair);r(o+18,5,5,2,hair)}else if(index%3===1){r(o+8,6,4,7,hair)}else{r(o+18,5,5,3,hair)}
+ r(o+12,9,2,2,'#263849');r(o+19,9,2,2,'#263849');r(o+15,12,4,1,'#9b5e55');
+ if(isPeter||isAlex){r(o+10,8,5,1,'#293746');r(o+10,8,1,4,'#293746');r(o+14,8,1,4,'#293746');r(o+18,8,5,1,'#293746');r(o+22,8,1,4,'#293746');r(o+18,11,5,1,'#293746');r(o+15,9,3,1,'#293746')}
+ }
+ const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;t.generateMipmaps=false;t.repeat.set(.25,1);return t;
+}
 function makeAvatar(person,index,x,z){
+ const tex=makePixelSheet(person,index),sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+ sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;sprite.userData.texture=tex;sprite.userData.frame=0;
+ const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(248,251,255,.94)';ctx.beginPath();ctx.roundRect(5,8,374,80,18);ctx.fill();ctx.fillStyle='#263b50';ctx.font='bold 42px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(person.name,192,49);
+ const labelTex=new THREE.CanvasTexture(labelCanvas);labelTex.colorSpace=THREE.SRGBColorSpace;const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex,depthTest:false,transparent:true}));label.position.set(0,1.12,0);label.scale.set(1.8,.45,1);label.userData.avatar=sprite;sprite.add(label);
+ const marker=new THREE.Mesh(new THREE.TorusGeometry(.48,.035,6,20),new THREE.MeshBasicMaterial({color:0x7fd0ff}));marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;sprite.add(marker);sprite.userData.marker=marker;
+ const ph=sprite.userData.phase;sprite.userData.route=[new THREE.Vector3(x,.82,z),new THREE.Vector3(x+Math.cos(ph)*.78,.82,z+Math.sin(ph)*.58),new THREE.Vector3(x+Math.cos(ph+2.1)*.68,.82,z+Math.sin(ph+2.1)*.7),new THREE.Vector3(x+Math.cos(ph+4.2)*.72,.82,z+Math.sin(ph+4.2)*.56)];sprite.userData.routeIndex=0;sprite.userData.wait=1+(index%4)*.55;
+ avatarRoot.add(sprite);avatars.push(sprite);return;
+
   const g=new THREE.Group();g.position.set(x,0,z);g.userData.person=person;
   const isPeter=person.id==='CEO',isAlex=person.id==='COO';
   const shirtColors=[0x6f91b4,0x75977f,0x9a829e,0xb58b68,0x70849a,0x6d9a9a,0xc09a72];
@@ -170,6 +197,7 @@ document.getElementById('taskButton').onclick=()=>{const task=document.getElemen
 let is2D=new URLSearchParams(location.search).get('view')==='2d';
 const viewButton=document.getElementById('view2d');
 if(is2D){
+  wallMeshes.forEach(w=>w.visible=false);
   camera.position.set(0,76,0.01);
   controls.minPolarAngle=0.001;
   controls.maxPolarAngle=0.001;
@@ -180,6 +208,7 @@ const perspectivePosition=new THREE.Vector3(37,34,43);
 viewButton.onclick=()=>{
   is2D=!is2D;
   if(is2D){
+    wallMeshes.forEach(w=>w.visible=false);
     perspectivePosition.copy(camera.position);
     camera.position.set(0,76,0.01);
     controls.minPolarAngle=0.001;
@@ -188,6 +217,7 @@ viewButton.onclick=()=>{
     viewButton.textContent='3D 보기';
     document.querySelector('.hint').textContent='2D 평면 보기 · 휠: 확대/축소 · 직원 클릭: 업무 지시';
   }else{
+    wallMeshes.forEach(w=>w.visible=true);
     camera.position.copy(perspectivePosition);
     controls.minPolarAngle=0;
     controls.maxPolarAngle=Math.PI*.49;
@@ -204,7 +234,7 @@ document.getElementById('home').onclick=()=>{
   controls.update();
 };
 let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls.autoRotate=spin;controls.autoRotateSpeed=.55;e.target.textContent=spin?'회전 끄기':'자동 회전'};
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();for(const a of avatars){a.position.y=Math.sin(t*1.5+a.userData.phase)*.022;a.rotation.y=Math.sin(t*.45+a.userData.phase)*.035}controls.update();renderer.render(scene,camera)}animate();
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;for(const a of avatars){if(a.userData.wait>0){a.userData.wait-=dt}else{const route=a.userData.route,target=route[(a.userData.routeIndex+1)%route.length],dx=target.x-a.position.x,dz=target.z-a.position.z,dist=Math.hypot(dx,dz);if(dist<.06){a.userData.routeIndex=(a.userData.routeIndex+1)%route.length;a.userData.wait=1.4+(Math.floor(a.userData.phase*10)%5)*.55}else{a.position.x+=dx/dist*Math.min(dist,.62*dt);a.position.z+=dz/dist*Math.min(dist,.62*dt)}const f=Math.floor(t*7+a.userData.phase)%4;if(f!==a.userData.frame){a.userData.texture.offset.x=f*.25;a.userData.frame=f}}if(a.userData.wait>0)a.userData.texture.offset.x=0}controls.update();renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 document.getElementById('loading').style.display='none';
 </script>
