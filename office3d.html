@@ -60,7 +60,16 @@ const teams=[
 {name:'전략기획팀',dept:'전략기획',cx:0,cz:8},
 {name:'기술·IT팀',dept:'기술·IT',cx:16,cz:8}
 ];
-for(const t of teams){room(t.cx,t.cz,15,9,t.name);for(let i=0;i<3;i++){const x=t.cx-4.2+(i%2)*4.2,z=t.cz-.3+Math.floor(i/2)*2.2;desk(x,z);chair(x,z+1.05)}}
+for(const t of teams){
+  room(t.cx,t.cz,15,9,t.name);
+  // 7석 T자형: 팀장 1석 상단 중앙, 전문 직원 6석 아래 2열
+  const seats=[
+    [t.cx,t.cz-3.05],
+    [t.cx-4.1,t.cz-.55],[t.cx,t.cz-.55],[t.cx+4.1,t.cz-.55],
+    [t.cx-4.1,t.cz+2.0],[t.cx,t.cz+2.0],[t.cx+4.1,t.cz+2.0]
+  ];
+  for(const [x,z] of seats){desk(x,z);chair(x,z+1.02)}
+}
 // 팀 사이 유리 파티션 강조
 for(const z of [3])cube(47,.12,.12,M.glass,0,1.18,z);
 // 하단 휴게·카페 구역은 우측 팀 공간 바깥의 코너에 배치
@@ -73,24 +82,37 @@ const peter={id:'CEO',name:'피터',department:'대표이사실',position:'대�
 const staff=[peter,...directory];
 const zoneSlots={
 '본부장실':[[-5,-10.3]],
-'경영관리':[[-19,-2],[-15,-2],[-19,0],[-15,0],[-11,-2]],
-'법무':[[-3,-2],[1,-2],[-3,0],[1,0],[4,-2]],
-'IR':[[13,-2],[17,-2],[13,0],[17,0],[20,-2],[20,0]],
-'총무':[[-19,8],[-15,8],[-19,10],[-15,10],[-11,8]],
-'전략기획':[[-3,8],[1,8],[-3,10],[1,10],[4,8]],
-'기술·IT':[[13,8],[17,8],[13,10],[17,10],[20,8]]
+'경영관리':[[-16,-1.9],[-20.1,-.4],[-16,-.4],[-11.9,-.4],[-20.1,2.1],[-16,2.1],[-11.9,2.1]],
+'법무':[[0,-1.9],[-4.1,-.4],[0,-.4],[4.1,-.4],[-4.1,2.1],[0,2.1],[4.1,2.1]],
+'IR':[[16,-1.9],[11.9,-.4],[16,-.4],[20.1,-.4],[11.9,2.1],[16,2.1],[20.1,2.1]],
+'총무':[[-16,8.1],[-20.1,9.6],[-16,9.6],[-11.9,9.6],[-20.1,12.1],[-16,12.1],[-11.9,12.1]],
+'전략기획':[[0,8.1],[-4.1,9.6],[0,9.6],[4.1,9.6],[-4.1,12.1],[0,12.1],[4.1,12.1]],
+'기술·IT':[[16,8.1],[11.9,9.6],[16,9.6],[20.1,9.6],[11.9,12.1],[16,12.1],[20.1,12.1]]
 };
 const used={};function nextSlot(dept){const a=zoneSlots[dept]||[[0,0]];const n=used[dept]||0;used[dept]=n+1;return a[n%a.length]}
 makeAvatar(peter,0,-19,-8.1);
-for(const p of directory){if(p.id==='COO'){makeAvatar(p,1,-5,-8.5);continue}const [x,z]=nextSlot(p.department);makeAvatar(p,avatars.length,x,z)}
+const characterNames={'COO':'알렉스','MA-01':'데니스','LE-01':'단테','IR-01':'라이언','GA-01':'에이든','SP-01':'에릭'};
+for(const p of directory){
+  const displayPerson={...p,name:characterNames[p.id]||p.name};
+  if(p.id==='COO'){makeAvatar(displayPerson,1,-5,-8.5);continue}
+  const [x,z]=nextSlot(p.department);
+  makeAvatar(displayPerson,avatars.length,x,z)
+}
 document.getElementById('staffCount').textContent=staff.length;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null;
 renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=e.clientX/innerWidth*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
 function selectAvatar(a){if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;document.getElementById('selectedCount').textContent='1';const p=a.userData.person;document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';document.getElementById('taskText').value='';modal.classList.add('show')}
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 document.getElementById('taskButton').onclick=()=>{const task=document.getElementById('taskText').value.trim(),p=selected?.userData.person;if(!p)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);if(task)u.searchParams.set('task',task);location.href=u.toString()};
-let is2D=false;
+let is2D=new URLSearchParams(location.search).get('view')==='2d';
 const viewButton=document.getElementById('view2d');
+if(is2D){
+  camera.position.set(0,76,0.01);
+  controls.minPolarAngle=0.001;
+  controls.maxPolarAngle=0.001;
+  viewButton.textContent='3D 보기';
+  document.querySelector('.hint').textContent='2D 평면 보기 · 휠: 확대/축소 · 직원 클릭: 업무 지시';
+}
 const perspectivePosition=new THREE.Vector3(37,34,43);
 viewButton.onclick=()=>{
   is2D=!is2D;
