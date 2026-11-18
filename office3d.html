@@ -40,7 +40,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 #detailInput{width:100%;height:105px;resize:vertical;padding:12px;border:1px solid #c8b995;background:#fffdf7;font:inherit}
 #detailSend{margin-top:8px;float:right;background:var(--brown);color:white;border:0;padding:9px 16px;cursor:pointer}
 #loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#e9dfc8;color:#17283b;font-weight:700}
-.modal{display:none;position:fixed;z-index:10;inset:58px 0 0;background:#07111d99;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.dialog{width:min(350px,100%);background:#fbf6e8;border:1px solid #c9b995;border-radius:8px;padding:18px;color:#26354a}.profileDialog h2{margin:0 0 13px;font-size:21px}.profileInfo{font-size:14px;line-height:1.9;white-space:pre-line;border-top:1px solid #e1d5bd;border-bottom:1px solid #e1d5bd;padding:10px 2px}.profileActions{display:flex;justify-content:flex-end;margin-top:13px}
+.modal{display:none;position:fixed;z-index:10;inset:58px 0 0;background:#07111d99;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.dialog{width:min(350px,100%);background:#fbf6e8;border:1px solid #c9b995;border-radius:8px;padding:18px;color:#26354a}.profileHeader{display:flex;align-items:center;gap:13px;margin-bottom:13px}.profilePhoto{width:76px;height:92px;image-rendering:pixelated;object-fit:contain;background:#e6dcc4;border:1px solid #c9b995}.profileHeader h2{margin:0;font-size:21px}.profileInfo{font-size:14px;line-height:1.9;white-space:pre-line;border-top:1px solid #e1d5bd;border-bottom:1px solid #e1d5bd;padding:10px 2px}.profileActions{display:flex;justify-content:space-between;gap:8px;margin-top:13px}.profileActions .action{flex:1}.action.primary{background:var(--brown);color:#fff;border-color:var(--brown)}
 @media(max-width:850px){#appMain{grid-template-columns:minmax(0,1fr) minmax(270px,.85fr)}.staffCard{flex-basis:160px}}
 @media(max-width:650px){header{height:52px;padding:0 8px}.brand{font-size:12px}.brand small{font-size:9px}.tools button{font-size:10px;padding:6px 7px}#appMain{top:52px;bottom:92px;padding:6px;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 180px;gap:6px}#chatHead{min-height:48px;padding:6px 9px}#chatAvatar{width:32px;height:32px;font-size:19px}#chatHistory{padding:7px;font-size:11px}#taskComposer{padding:7px}#taskInput{height:45px}#staffStrip{height:84px;padding:6px}.staffCard{flex-basis:145px;padding:5px}.staffFace{width:34px;height:40px}#detailView{inset:52px 0 0;grid-template-columns:116px minmax(0,1fr)}#detailEmployees{padding:6px}.detailPerson{padding:6px;font-size:10px;gap:5px}.detailPerson .staffFace{width:28px;height:34px}#detailTop{padding:10px;font-size:13px}#detailMessages{padding:10px;font-size:12px}#detailComposer{padding:8px}#detailInput{height:80px}#officeTools button{font-size:10px;padding:5px 7px}}
 
@@ -51,12 +51,12 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 <header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
 <div id="appMain">
  <section id="officeStage"><div id="scene"></div><div id="officeStatus">● 활성 직원 <b id="activeCount">-</b>명</div><div id="officeTools"><button id="zoomOut">－ 축소</button><button id="zoomIn">＋ 확대</button><button id="resetView">전체 보기</button><button>드래그: 회전 · 휠: 확대/축소</button></div></section>
- <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>메시지 · 업무 지시</label><textarea id="taskInput" placeholder="선택한 직원에게 업무를 지시하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
+ <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>대화 · 업무 지시</label><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
 </div>
 <div id="staffStrip"></div>
 <section id="detailView"><aside id="detailEmployees"><h3>AI 직원 목록</h3><div id="detailEmployeeList"></div></aside><section id="detailConversation"><div id="detailTop">알렉스 · 본부장</div><div id="detailMessages"><div class="chatBubble">직원을 선택하면 해당 직원의 상세 업무 화면이 표시됩니다. 업무 지시를 입력하면 기존 업무 처리 화면으로 연결됩니다.</div></div><div id="detailComposer"><textarea id="detailInput" placeholder="업무 내용을 입력하세요."></textarea><button id="detailSend">업무 지시하기 →</button></div></section></section>
 <div class="hint" style="display:none"> </div>
-<div class="modal" id="modal"><div class="dialog profileDialog"><h2 id="personName">직원</h2><div id="personInfo" class="profileInfo"></div><div class="profileActions"><button class="action secondary" id="close">닫기</button></div></div></div>
+<div class="modal" id="modal"><div class="dialog profileDialog"><div class="profileHeader"><canvas id="profilePhoto" class="profilePhoto" width="96" height="120"></canvas><h2 id="personName">직원</h2></div><div id="personInfo" class="profileInfo"></div><div class="profileActions"><button class="action primary" id="profileChat">대화하기</button><button class="action secondary" id="close">닫기</button></div></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -83,7 +83,8 @@ const wallMeshes=[];
 const M={floor:mat(0xd8d2c6),wall:mat(0xe8e4dc),wood:mat(0x98704e),wood2:mat(0x644a39),glass:mat(0x8ec5d0,{transparent:true,opacity:.28,roughness:.18}),metal:mat(0x607487),screen:mat(0x24394f,{emissive:0x14263a}),fabric:mat(0x718b91),green:mat(0x56815d),rug:mat(0xc1c9c1)};
 function cube(w,h,d,m,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);if(m===M.wall||m===M.glass)wallMeshes.push(o);return o}
 function textSprite(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');q.fillStyle='rgba(250,252,255,.94)';q.beginPath();q.roundRect(8,12,496,104,18);q.fill();q.fillStyle='#34495e';q.font='bold 42px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,65);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false}));s.position.set(x,3.25,z);s.scale.set(6.4,1.6,1);scene.add(s)}
-function room(cx,cz,w,d,name,{glass=true,back=true}={}){cube(w,.28,d,M.floor,cx,-.12,cz);const wallMat=glass?M.glass:M.wall;cube(w,.18,.18,M.wall,cx,.12,cz-d/2);cube(.18,2.8,d,wallMat,cx-w/2,1.45,cz);cube(.18,2.8,d,wallMat,cx+w/2,1.45,cz);if(back)cube(w,2.8,.18,wallMat,cx,1.45,cz+d/2);textSprite(name,cx,cz-d/2+1.1)}
+function wallSign(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');q.fillStyle='#f8f5ec';q.fillRect(8,8,496,112);q.strokeStyle='#9d8765';q.lineWidth=7;q.strokeRect(8,8,496,112);q.fillStyle='#263b50';q.font='bold 48px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,66);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.8,1.2),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));sign.position.set(x,2.05,z);scene.add(sign)}
+function room(cx,cz,w,d,name,{glass=true,back=true}={}){cube(w,.28,d,M.floor,cx,-.12,cz);const wallMat=glass?M.glass:M.wall;cube(w,.18,.18,M.wall,cx,.12,cz-d/2);cube(.18,2.8,d,wallMat,cx-w/2,1.45,cz);cube(.18,2.8,d,wallMat,cx+w/2,1.45,cz);if(back)cube(w,2.8,.18,wallMat,cx,1.45,cz+d/2);if(name)textSprite(name,cx,cz-d/2+1.1)}
 function desk(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(1.8,.16,.9,M.wood,0,1.03,0,g);for(const a of [-.72,.72])for(const b of [-.32,.32])cube(.12,.94,.12,M.wood2,a,.48,b,g);cube(.62,.42,.08,M.metal,0,1.34,-.2,g);cube(.53,.29,.025,M.screen,0,1.35,-.145,g);scene.add(g)}
 function chair(x,z){const g=new THREE.Group();g.position.set(x,0,z);cube(.58,.12,.58,M.metal,0,.58,0,g);cube(.58,.68,.13,M.metal,0,.91,-.23,g);const stem=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.5,8),M.metal);stem.position.y=.25;g.add(stem);scene.add(g)}
 function table(x,z,w=3,d=1.5,round=false){const top=new THREE.Mesh(round?new THREE.CylinderGeometry(w/2,w/2,.18,32):new THREE.BoxGeometry(w,.18,d),M.wood);top.position.set(x,.94,z);top.castShadow=true;scene.add(top);for(const dx of (round?[-.3,.3]:[-w*.38,w*.38]))for(const dz of (round?[-.3,.3]:[-d*.3,d*.3]))cube(.13,.88,.13,M.wood2,x+dx,.44,z+dz)}
@@ -109,7 +110,8 @@ const teams=[
 {name:'기술·IT팀',dept:'기술·IT',cx:16,cz:8}
 ];
 for(const t of teams){
-  room(t.cx,t.cz,15,9,t.name);
+  room(t.cx,t.cz,15,9,'');
+  wallSign(t.name,t.cx,t.cz+4.39);
   // 7석 T자형: 팀장 1석 상단 중앙, 전문 직원 6석 아래 2열
   const seats=[
     [t.cx,t.cz-3.05],
@@ -223,13 +225,14 @@ function selectAvatar(a,showProfile=true){
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
  document.getElementById('detailMessages').innerHTML='<div class="chatBubble">'+(p.instruction||'담당 업무를 수행하는 직원입니다.')+'</div>';
  document.getElementById('personName').textContent=p.name;
+ const photo=document.getElementById('profilePhoto');const photoCtx=photo.getContext('2d');photoCtx.clearRect(0,0,photo.width,photo.height);photoCtx.imageSmoothingEnabled=false;const spriteImage=a.userData.texture?.image;if(spriteImage)photoCtx.drawImage(spriteImage,0,0,32,40,0,0,photo.width,photo.height);
  const teamName=p.department==='본부장실'?'본부장실':(p.department||'')+'팀';
  const jobTitle=p.jobTitle||(p.position==='팀장'?p.position:p.name);
  const workStatus=p.currentTask?'업무 중 ('+p.currentTask+')':(p.workStatus||'업무 대기');
  document.getElementById('personInfo').textContent='직원 코드: '+(p.id||'-')+'\n소속팀: '+teamName+'\n담당 직무: '+jobTitle+'\n상태: '+workStatus;
  if(showProfile){modal.classList.add('show');}
 }
-document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
+document.getElementById('close').onclick=()=>modal.classList.remove('show');document.getElementById('profileChat').onclick=()=>{modal.classList.remove('show');const p=selected?.userData.person;if(p){document.getElementById('taskInput').placeholder=p.name+'에게 간단한 대화나 업무지시를 입력하세요.';document.getElementById('chatIntro').textContent=p.name+'와 대화를 시작합니다. 간단한 질문이나 업무지시를 입력하세요.';document.getElementById('taskInput').focus();}};modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 function submitSelectedTask(value){const task=(value||'').trim(),p=selected?.userData.person;if(!p||!task)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);u.searchParams.set('task',task);location.href=u.toString()}
 document.getElementById('sendTask').onclick=()=>submitSelectedTask(document.getElementById('taskInput').value);
 document.getElementById('detailSend').onclick=()=>submitSelectedTask(document.getElementById('detailInput').value);
