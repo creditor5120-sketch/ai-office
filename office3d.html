@@ -16,7 +16,7 @@ header{position:fixed;z-index:5;left:16px;right:16px;top:14px;display:flex;justi
 </head>
 <body>
 <div id="scene"></div><div id="loading">SW AI OFFICE 3D 공간을 준비하고 있습니다...</div>
-<header><div class="brand">SW AI OFFICE<small>가상 본사 · 3D OFFICE</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="dashboard">업무 화면</button></div></header>
+<header><div class="brand">SW AI OFFICE<small>가상 본사 · 3D OFFICE</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="view2d">2D 사무실</button><button id="dashboard">업무 화면</button></div></header>
 <section class="hud"><h2>가상 사무실 현황</h2><div class="counts"><div class="count"><b id="staffCount">-</b><span>구성원</span></div><div class="count"><b>6</b><span>팀</span></div><div class="count"><b id="selectedCount">0</b><span>선택 직원</span></div></div></section>
 <div class="hint">드래그: 시점 회전 · 휠: 확대/축소 · 직원 클릭: 업무 지시</div>
 <div class="modal" id="modal"><div class="dialog"><h2 id="personName">직원</h2><div class="sub" id="personRole"></div><p id="personInfo"></p><textarea id="taskText" placeholder="이 직원에게 지시할 업무를 입력하세요."></textarea><div class="row"><button class="action secondary" id="close">닫기</button><button class="action" id="taskButton">업무 지시하기</button></div></div></div>
@@ -89,7 +89,7 @@ renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=e.clientX/inner
 function selectAvatar(a){if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;document.getElementById('selectedCount').textContent='1';const p=a.userData.person;document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';document.getElementById('taskText').value='';modal.classList.add('show')}
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 document.getElementById('taskButton').onclick=()=>{const task=document.getElementById('taskText').value.trim(),p=selected?.userData.person;if(!p)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);if(task)u.searchParams.set('task',task);location.href=u.toString()};
-document.getElementById('dashboard').onclick=()=>location.href='./index.html';document.getElementById('home').onclick=()=>{controls.target.set(0,0,0);camera.position.set(37,34,43);controls.update()};
+document.getElementById('view2d').onclick=()=>location.href='./office.html';document.getElementById('dashboard').onclick=()=>location.href='./index.html';document.getElementById('home').onclick=()=>{controls.target.set(0,0,0);camera.position.set(37,34,43);controls.update()};
 let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls.autoRotate=spin;controls.autoRotateSpeed=.55;e.target.textContent=spin?'회전 끄기':'자동 회전'};
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();for(const a of avatars){a.position.y=Math.sin(t*1.5+a.userData.phase)*.022;a.rotation.y=Math.sin(t*.45+a.userData.phase)*.035}controls.update();renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
