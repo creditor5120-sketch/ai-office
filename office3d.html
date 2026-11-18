@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SW AI OFFICE | 3D 가상 사무실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
+<style>
+:root{color-scheme:dark;--bg:#0c1422;--panel:#17243a;--line:#344762;--muted:#9eb0c8;--accent:#9ed2ff}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family: 'NanumSquare',sans-serif;color:#edf4ff}
+#scene{position:fixed;inset:0}
+header{position:fixed;z-index:5;left:18px;right:18px;top:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}
+.brand,.tools{pointer-events:auto;background:#111e31eF;border:1px solid #3a506d;border-radius:12px;box-shadow:0 10px 35px #0005;backdrop-filter:blur(12px)}
+.brand{padding:12px 16px;font-weight:900;letter-spacing:1.1px;color:#b9dcff}.brand small{display:block;font-size:10px;letter-spacing:2px;color:#9eafc6;margin-top:4px}
+.tools{display:flex;gap:8px;padding:8px}.tools button,.action{border:1px solid #526a89;background:#243954;color:#eff6ff;padding:9px 12px;border-radius:8px;font:inherit;cursor:pointer}.tools button:hover,.action:hover{background:#345477}
+.hud{position:fixed;z-index:4;left:18px;bottom:18px;width:min(310px,calc(100vw - 36px));background:#111e31ed;border:1px solid #3a506d;border-radius:13px;padding:14px;box-shadow:0 10px 35px #0006;backdrop-filter:blur(12px)}
+.hud h2{font-size:14px;margin:0 0 10px;color:#dcecff}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.count{background:#1b2b43;border:1px solid #354a65;border-radius:8px;padding:8px}.count b{display:block;font-size:19px}.count span{font-size:10px;color:#aebed2}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px;color:#b6c5d8;font-size:11px}.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;background:#56c58a}
+.hint{position:fixed;right:18px;bottom:18px;z-index:4;color:#d6e4f5;background:#111e31d9;border:1px solid #3a506d;border-radius:10px;padding:10px 13px;font-size:12px}
+.modal{display:none;position:fixed;z-index:10;inset:0;background:#050b14bb;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.dialog{width:min(430px,100%);background:#17243a;border:1px solid #4b6381;border-radius:15px;padding:20px;box-shadow:0 24px 70px #0009}.dialog h2{margin:0 0 5px;font-size:21px}.dialog .sub{color:#9eb0c8;font-size:13px}.dialog p{line-height:1.6;color:#d3deec;font-size:14px}.dialog textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #4b6381;border-radius:9px;background:#0e1929;color:white;padding:11px;font:inherit}.dialog .row{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.secondary{background:#1b2b43!important}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#0c1422;color:#dcecff;font-size:14px}
+@media(max-width:600px){header{left:10px;right:10px;top:10px}.brand{font-size:13px;padding:10px}.tools{gap:4px;padding:5px}.tools button{font-size:11px;padding:8px}.hud{left:10px;bottom:10px;width:245px}.hint{right:10px;bottom:10px;font-size:10px;max-width:130px}}
+</style>
+</head>
+<body>
+<div id="scene"></div><div id="loading">3D 가상 사무실을 불러오는 중...</div>
+<header><div class="brand">SW AI OFFICE<small>AI VIRTUAL COMPANY · FLOOR 01</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전 켜기</button><button id="dashboard">업무 화면</button></div></header>
+<section class="hud"><h2>실시간 가상 사무실</h2><div class="counts"><div class="count"><b id="staffCount">33</b><span>전체 구성원</span></div><div class="count"><b id="teamCount">6</b><span>팀</span></div><div class="count"><b id="selectedCount">0</b><span>선택 직원</span></div></div><div class="legend"><span><i></i>근무 공간</span><span>클릭하여 직원 선택</span></div></section>
+<div class="hint">마우스 드래그: 회전 · 휠: 확대/축소</div>
+<div class="modal" id="modal"><div class="dialog"><h2 id="personName">직원</h2><div class="sub" id="personRole"></div><p id="personInfo"></p><textarea id="taskText" placeholder="이 직원에게 지시할 업무를 입력하세요."></textarea><div class="row"><button class="action secondary" id="close">닫기</button><button class="action" id="taskButton">업무지시 화면 열기</button></div></div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import directory from './employees.js';
+const mount=document.getElementById('scene');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb4c8);scene.fog=new THREE.Fog(0x9eb4c8,34,75);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,150);camera.position.set(25,24,30);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;mount.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.48;controls.minDistance=15;controls.maxDistance=55;
+scene.add(new THREE.HemisphereLight(0xeaf4ff,0x887c68,2.0));const sun=new THREE.DirectionalLight(0xfff2dc,3.1);sun.position.set(-12,25,15);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-25;sun.shadow.camera.right=25;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;scene.add(sun);
+const mats={floor:new THREE.MeshStandardMaterial({color:0xd9d2c4,roughness:.92}),wall:new THREE.MeshStandardMaterial({color:0xe9e5dc,roughness:.9}),wood:new THREE.MeshStandardMaterial({color:0x98704e,roughness:.8}),darkwood:new THREE.MeshStandardMaterial({color:0x634a39}),glass:new THREE.MeshStandardMaterial({color:0x8fc2d0,transparent:true,opacity:.24,roughness:.15}),metal:new THREE.MeshStandardMaterial({color:0x52677b,roughness:.55}),green:new THREE.MeshStandardMaterial({color:0x54835e}),screen:new THREE.MeshStandardMaterial({color:0x253b54,emissive:0x142a42}),rug:new THREE.MeshStandardMaterial({color:0xb6c3bd})};
+function box(w,h,d,mat,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function label(text,x,z,color='#33465a'){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='rgba(255,255,255,.88)';ctx.roundRect(12,15,488,98,18);ctx.fill();ctx.fillStyle=color;ctx.font='bold  forty 40px sans-serif';ctx.font='bold 40px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,64);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));s.position.set(x,3.0,z);s.scale.set(5.0,1.25,1);scene.add(s);return s}
+box(30,.5,23,mats.floor,0,-.3,0);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x8299a7}));ground.rotation.x=-Math.PI/2;ground.position.y=-.62;ground.receiveShadow=true;scene.add(ground);
+// outer low walls
+box(30,2.8,.35,mats.wall,0,1.1,-11.5);box(30,2.8,.35,mats.wall,0,1.1,11.5);box(.35,2.8,23,mats.wall,-15,1.1,0);box(.35,2.8,23,mats.wall,15,1.1,0);
+function partition(x,z,w,d,glass=true){const mat=glass?mats.glass:mats.wall;if(w>.5)box(w,2.2,.12,mat,x,1.05,z);else box(.12,2.2,d,mat,x,1.05,z)}
+// office zones and glass dividers
+partition(-7,-4,0,7);partition(0,-4,0,7);partition(7,-4,0,7);partition(-7,1,0,4);partition(0,1,0,4);partition(7,1,0,4);partition(-7,4,16,0);partition(7,4,16,0);
+label('피터 대표이사실',-11,-8);label('알렉스 본부장실',-4,-8);label('대회의실',3,-8);label('기술·IT팀',11,-3);label('경영관리팀',-11,1.8);label('법무팀',-4,1.8);label('IR팀',3,1.8);label('총무팀',-11,8);label('전략기획팀',-4,8);label('회의 · 휴게 공간',8,8);
+// furniture helper
+function desk(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;box(1.65,.16,.85,mats.wood,0,1.05,0,g);box(.12,1,.12,mats.darkwood,-.65,.5,-.3,g);box(.12,1,.12,mats.darkwood,.65,.5,-.3,g);box(.12,1,.12,mats.darkwood,-.65,.5,.3,g);box(.12,1,.12,mats.darkwood,.65,.5,.3,g);box(.55,.42,.08,mats.metal,0,1.36,-.2,g);box(.45,.27,.025,mats.screen,0,1.37,-.145,g);scene.add(g);return g}
+function chair(x,z){const g=new THREE.Group();g.position.set(x,0,z);box(.55,.12,.55,mats.metal,0,.55,0,g);box(.55,.65,.12,mats.metal,0,.88,-.22,g);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.5,8),mats.metal);leg.position.y=.25;g.add(leg);scene.add(g)}
+function table(x,z,w=3,d=1.3){box(w,.18,d,mats.wood,x,.9,z);for(let dx of [-w*.38,w*.38])for(let dz of [-d*.3,d*.3])box(.12,.85,.12,mats.darkwood,x+dx,.42,z+dz)}
+function plant(x,z){const pot=new THREE.Mesh(new THREE.CylinderGeometry(.22,.28,.45,10),mats.wood);pot.position.set(x,.23,z);scene.add(pot);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),mats.green);leaf.position.set(x,.85,z);leaf.scale.y=1.25;scene.add(leaf)}
+// CEO room
+desk(-11,-8.6);chair(-11,-9.8);box(2.1,.55,.65,mats.metal,-12.4,-.0,-6.1);table(-10,-5.9,1.8,1.5);chair(-10,-4.9);chair(-9,-5.9);chair(-11,-5.9);plant(-13,-10);
+// COO room
+table(-3.8,-7,3.3,1.5);for(let i=0;i<4;i++){const a=i*Math.PI/2;chair(-3.8+Math.cos(a)*2.1,-7+Math.sin(a)*1.2)}
+// big meeting room
+table(3.5,-7,5.1,1.8);for(let i=0;i<6;i++)chair(1.1+i*.9,-5.6);for(let i=0;i<6;i++)chair(1.1+i*.9,-8.4);
+// IT desks
+for(let i=0;i<5;i++){desk(10.1+(i%2)*2.1,-1.2+Math.floor(i/2)*2.0);chair(10.1+(i%2)*2.1,-2.0+Math.floor(i/2)*2.0)}
+// team areas workstations
+const teamCenters=[[-11,2.4],[-4,2.4],[3,2.4],[-11,8.5],[-4,8.5],[10,3.5]];
+for(const [cx,cz] of teamCenters){for(let i=0;i<4;i++){const x=cx+(i%2)*1.9-.9,z=cz+Math.floor(i/2)*1.8;desk(x,z);chair(x,z+.72)}}
+table(8.8,8.2,2.8,1.5);for(let i=0;i<4;i++)chair(7.5+i*.85,9.3);plant(13,9);plant(-13,9);
+// avatar meshes
+const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632];const shirtColors=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
+const avatarGroup=new THREE.Group();scene.add(avatarGroup);const avatars=[];
+function makeAvatar(person,index,x,z){const g=new THREE.Group();g.position.set(x,0,z);g.userData.person=person;const shirt=new THREE.MeshStandardMaterial({color:shirtColors[index%shirtColors.length],roughness:.85});const hair=new THREE.MeshStandardMaterial({color:hairColors[index%hairColors.length]});const skin=new THREE.MeshStandardMaterial({color:0xe6bd9c});const pants=new THREE.MeshStandardMaterial({color:0x344256});const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.24,.48,4,8),shirt);torso.position.y=.83;torso.castShadow=true;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),skin);head.position.y=1.42;head.castShadow=true;g.add(head);const cap=new THREE.Mesh(new THREE.SphereGeometry(.225,12,7,0,Math.PI*2,0,Math.PI*.52),hair);cap.position.y=1.5;cap.castShadow=true;g.add(cap);for(const side of [-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.075,.07,.42,8),pants);leg.position.set(side*.12,.25,0);g.add(leg);const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.3,3,6),shirt);arm.position.set(side*.28,.9,0);arm.rotation.z=side*.18;g.add(arm)}const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.035,6,20),new THREE.MeshBasicMaterial({color:0x8ecaff}));marker.rotation.x=Math.PI/2;marker.position.y=.04;marker.visible=false;g.add(marker);g.userData.marker=marker;g.userData.baseY=Math.random()*6.28;g.userData.home=new THREE.Vector3(x,0,z);g.userData.person=person;g.traverse(o=>{if(o.isMesh){o.userData.avatar=g;o.castShadow=true}});avatarGroup.add(g);avatars.push(g);return g}
+const peter={id:'CEO',name:'피터',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
+const staff=[peter,...directory];
+const slots=[[-11,-7.7],[-3.8,-7.8],[1.6,-6.2],[2.8,-6.2],[4,-6.2],[5.2,-6.2],[10,-1.5],[12,-1.5],[10,1],[12,1],[-11,2.5],[-9,2.5],[-11,4],[-9,4],[-4,2.5],[-2,2.5],[-4,4],[-2,4],[3,2.5],[5,2.5],[3,4],[5,4],[-11,8],[-9,8],[-11,9.5],[-9,9.5],[-4,8],[-2,8],[-4,9.5],[-2,9.5],[9,5],[11,5],[9,7]];
+staff.forEach((p,i)=>makeAvatar(p,i,...(slots[i]||[0,0])));
+document.getElementById('staffCount').textContent=staff.length;
+const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let selected=null;const modal=document.getElementById('modal');
+renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=(e.clientX/innerWidth)*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(avatarGroup.children,true);if(!hits.length)return;const avatar=hits[0].object.userData.avatar;if(!avatar)return;selectAvatar(avatar)});
+function selectAvatar(a){if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;document.getElementById('selectedCount').textContent='1';const p=a.userData.person;document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 SW AI OFFICE 직원입니다.';document.getElementById('taskText').value='';modal.classList.add('show')}
+document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
+document.getElementById('taskButton').onclick=()=>{const text=document.getElementById('taskText').value.trim();const p=selected?.userData.person;if(!p)return;const url=new URL('./index.html',location.href);url.searchParams.set('employee',p.id);if(text)url.searchParams.set('task',text);location.href=url.toString()};
+document.getElementById('dashboard').onclick=()=>location.href='./index.html';
+document.getElementById('home').onclick=()=>{controls.target.set(0,0,0);camera.position.set(25,24,30);controls.update()};
+let autoRotate=false;document.getElementById('rotate').onclick=e=>{autoRotate=!autoRotate;controls.autoRotate=autoRotate;controls.autoRotateSpeed=.65;e.target.textContent=autoRotate?'자동 회전 끄기':'자동 회전 켜기'};
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();for(const a of avatars){a.position.y=Math.sin(t*1.5+a.userData.baseY)*.025;a.rotation.y=Math.sin(t*.55+a.userData.baseY)*.07}controls.update();renderer.render(scene,camera)}animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+document.getElementById('loading').style.display='none';
+</script>
+</body>
+</html>
