@@ -157,7 +157,7 @@ function makeAvatar(person,index,x,z){
  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex,depthTest:false,transparent:true}));
  label.position.set(0,1.12,0);label.scale.set(1.8,.45,1);label.userData.avatar=sprite;sprite.add(label);
  const marker=new THREE.Mesh(new THREE.TorusGeometry(.48,.035,6,20),new THREE.MeshBasicMaterial({color:0x7fd0ff}));
- marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;sprite.add(marker);sprite.userData.marker=marker;
+ marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;marker.userData.avatar=sprite;sprite.add(marker);sprite.userData.marker=marker;
  const ph=sprite.userData.phase;
  sprite.userData.route=[
   new THREE.Vector3(x,.82,z),
@@ -195,7 +195,7 @@ function makeStaffCard(p,detail=false){
  const face=document.createElement('span');face.className='staffFace';face.textContent='👤';
  const meta=document.createElement('span');meta.className='staffMeta';meta.innerHTML='<b></b><small></small>';
  meta.querySelector('b').textContent=p.name;meta.querySelector('small').textContent=(p.department||'')+' · '+(p.position||'');
- el.append(face,meta);el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a)};return el;
+ el.append(face,meta);el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a,true)};return el;
 }
 avatars.map(a=>a.userData.person).forEach(p=>{document.getElementById('staffStrip').appendChild(makeStaffCard(p));document.getElementById('detailEmployeeList').appendChild(makeStaffCard(p,true))});
 const detailToggle=document.getElementById('detailToggle');let detailMode=false;
@@ -206,7 +206,7 @@ document.getElementById('resetView').onclick=()=>{controls.target.set(0,0,0);cam
 
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null;
 renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
-function selectAvatar(a){
+function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
  document.getElementById('chatName').textContent=p.name;document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원');
@@ -214,7 +214,8 @@ function selectAvatar(a){
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
  document.getElementById('detailMessages').innerHTML='<div class="chatBubble">'+(p.instruction||'담당 업무를 수행하는 직원입니다.')+'</div>';
- document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';
+ document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent='직원 코드: '+(p.id||'-')+'\n소속: '+(p.department||'-')+'\n직책: '+(p.position||'-')+'\n\n담당 업무 및 전문 분야\n'+(p.instruction||'담당 업무를 수행하는 직원입니다.');
+ if(showProfile){document.getElementById('taskText').value='';modal.classList.add('show');}
 }
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 function submitSelectedTask(value){const task=(value||'').trim(),p=selected?.userData.person;if(!p||!task)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);u.searchParams.set('task',task);location.href=u.toString()}
@@ -257,7 +258,6 @@ viewButton.onclick=()=>{
   }
   controls.update();
 };
-document.getElementById('dashboard').onclick=()=>location.href='./index.html';
 document.getElementById('home').onclick=()=>{
   controls.target.set(0,0,0);
   camera.position.copy(is2D?new THREE.Vector3(0,76,0.01):new THREE.Vector3(37,34,43));
@@ -267,7 +267,7 @@ let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;for(const a of avatars){if(a.userData.wait>0){a.userData.wait-=dt}else{const route=a.userData.route,target=route[(a.userData.routeIndex+1)%route.length],dx=target.x-a.position.x,dz=target.z-a.position.z,dist=Math.hypot(dx,dz);if(dist<.06){a.userData.routeIndex=(a.userData.routeIndex+1)%route.length;a.userData.wait=1.4+(Math.floor(a.userData.phase*10)%5)*.55}else{a.position.x+=dx/dist*Math.min(dist,.62*dt);a.position.z+=dz/dist*Math.min(dist,.62*dt)}const f=Math.floor(t*7+a.userData.phase)%4;if(f!==a.userData.frame){a.userData.texture.offset.x=f*.25;a.userData.frame=f}}if(a.userData.wait>0)a.userData.texture.offset.x=0}controls.update();renderer.render(scene,camera)}animate();
 function resizeOffice(){const w=mount.clientWidth||innerWidth,h=mount.clientHeight||innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 addEventListener('resize',resizeOffice);if('ResizeObserver' in window)new ResizeObserver(resizeOffice).observe(document.getElementById('officeStage'));
-const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex);
+const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex,false);
 document.getElementById('loading').style.display='none';
 </script>
 </body></html>
