@@ -268,6 +268,7 @@ async function submitSelectedTask(value){
  appendChat('나',task);
  document.getElementById('taskInput').value='';
  const pending=appendChat(p.name,'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
+ const states=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');states[p.id]={...(states[p.id]||{}),status:'업무 중',updatedAt:new Date().toISOString()};localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards();
  const taskId=crypto.randomUUID();
  const payload={task,taskId,idempotencyKey:taskId,employee:p.name,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory};
  try{
@@ -278,10 +279,12 @@ async function submitSelectedTask(value){
    if(response.ok&&data.reply&&data.workflow)break;
    if(response.status===202&&data.status==='PROCESSING'){pending.textContent='처리 중 · '+(data.currentStage||'업무 수행 및 검수')+'\n진행 상황을 확인하고 있습니다.';await new Promise(r=>setTimeout(r,Math.max(1200,Number(data.resumeDelayMs)||1200)));continue}
    if(response.status===409&&data.status==='PROCESSING'){pending.textContent='기존 실행이 완료되기를 기다리고 있습니다.';await new Promise(r=>setTimeout(r,2500));continue}
+   if(data.status==='WAITING_FOR_API_QUOTA'){const waitMs=Math.max(30000,Number(data.quotaRetryAfterMs)||300000);pending.textContent='AI 사용 한도 회복을 기다리는 중입니다. 기존 업무는 보존됩니다.';await new Promise(r=>setTimeout(r,waitMs));continue}
    throw new Error(data.error||'업무 처리에 실패했습니다.');
   }
   if(!data?.reply)throw new Error('서버 응답이 완료되지 않았습니다. 업무 ID: '+taskId);
   pending.textContent=data.reply;
+  const finalStates=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');finalStates[p.id]={...(finalStates[p.id]||{}),status:'완료',updatedAt:new Date().toISOString()};localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(finalStates));
   localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify({...JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}'),...(data.employeeStates||{})}));
   refreshStaffCards();
  }catch(error){pending.textContent='처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId}
