@@ -324,6 +324,22 @@ const headOfOffice = employeeDirectory.find(
 const responseBox = document.getElementById('response');
 const sendButton = document.getElementById('sendButton');
 const requestBox = document.getElementById('request');
+// 3D 가상 사무실에서 선택한 직원과 업무 지시를 기존 업무 화면으로 전달
+const officeParams = new URLSearchParams(window.location.search);
+const officeEmployeeId = officeParams.get('employee');
+const officeTask = officeParams.get('task') || '';
+if (officeEmployeeId) {
+  const officeEmployee = officeEmployeeId === 'CEO'
+    ? { name: '피터', position: '대표이사' }
+    : employeeDirectory.find(item => item.id === officeEmployeeId);
+  if (officeEmployee) {
+    requestBox.value = '[가상 사무실 직원 선택 업무 요청]\\n'
+      + '우선 담당 직원: ' + officeEmployee.name + ' (' + officeEmployee.position + ')\\n'
+      + '선택한 직원이 직접 수행하도록 배정하고, 불가능하면 그 사유를 보고해 주세요.\\n\\n'
+      + officeTask;
+    requestBox.focus();
+  }
+}
 const accessTokenBox = document.getElementById('officeAccessToken');
 const representativeAccessTokenBox = document.getElementById('representativeAccessToken');
 let currentWorkflowReviewData = null;
