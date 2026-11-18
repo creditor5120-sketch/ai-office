@@ -267,6 +267,7 @@ let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;for(const a of avatars){if(a.userData.wait>0){a.userData.wait-=dt}else{const route=a.userData.route,target=route[(a.userData.routeIndex+1)%route.length],dx=target.x-a.position.x,dz=target.z-a.position.z,dist=Math.hypot(dx,dz);if(dist<.06){a.userData.routeIndex=(a.userData.routeIndex+1)%route.length;a.userData.wait=1.4+(Math.floor(a.userData.phase*10)%5)*.55}else{a.position.x+=dx/dist*Math.min(dist,.62*dt);a.position.z+=dz/dist*Math.min(dist,.62*dt)}const f=Math.floor(t*7+a.userData.phase)%4;if(f!==a.userData.frame){a.userData.texture.offset.x=f*.25;a.userData.frame=f}}if(a.userData.wait>0)a.userData.texture.offset.x=0}controls.update();renderer.render(scene,camera)}animate();
 function resizeOffice(){const w=mount.clientWidth||innerWidth,h=mount.clientHeight||innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 addEventListener('resize',resizeOffice);if('ResizeObserver' in window)new ResizeObserver(resizeOffice).observe(document.getElementById('officeStage'));
+const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex);
 document.getElementById('loading').style.display='none';
 </script>
 </body></html>
