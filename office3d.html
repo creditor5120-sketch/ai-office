@@ -125,8 +125,8 @@ sofa(18,-10);sofa(23,-13,Math.PI/2);table(21,-9.5,2.2,1.2);chair(19.7,-7.7);chai
 cube(3.2,.9,1.2,M.wood,17,.45,-16);
 const cafeBall=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),mat(0xe4a52c));cafeBall.position.set(24,.45,-15);scene.add(cafeBall);
 const cafeBall2=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),mat(0xc95c62));cafeBall2.position.set(26,.45,-12);scene.add(cafeBall2);
-// 사업본부는 하나의 넓은 오픈 사무실. 팀 사이에는 벽이나 빈 방을 두지 않고 책상 구역만 구분
-cube(28,.12,16,M.rug,0,-.06,-11);
+// 사업본부는 하나의 넓은 오픈 사무실. 팀 사이에는 낮은 유리 파티션만 두고 빈 공간 없이 연속 배치
+cube(28,.12,16,M.rug,0,-.06,-11);wallSign('사업본부',0,-18.75);
 const businessTeams=[
  {name:'경영관리팀',x:-11.2,slots:[[-13,-15],[-11.2,-15],[-9.4,-15],[-13,-9],[-11.2,-9],[-9.4,-9]]},
  {name:'법무팀',x:-5.6,slots:[[-7.4,-15],[-5.6,-15],[-3.8,-15],[-7.4,-9],[-5.6,-9],[-3.8,-9]]},
@@ -135,6 +135,8 @@ const businessTeams=[
  {name:'전략기획팀',x:11.2,slots:[[9.4,-15],[11.2,-15],[13,-15],[9.4,-9],[11.2,-9],[13,-9]]}
 ];
 for(const t of businessTeams){
+ // 팀별 구역은 낮은 유리 파티션으로만 구분해 하나의 오픈 사무실을 유지
+ cube(.12,1.35,12,M.glass,t.x-2.8,.675,-11);
  // 3D: 팀명은 각 팀 구역의 왼쪽 벽면
  wallTeamSign(t.name,t.x-2.65,-11);
  // 2D: 팀명은 해당 팀 책상 구역의 하단
