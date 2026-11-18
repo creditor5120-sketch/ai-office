@@ -1,92 +1,99 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SW AI OFFICE | 3D 가상 사무실</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
 <style>
-:root{color-scheme:dark;--bg:#0c1422;--panel:#17243a;--line:#344762;--muted:#9eb0c8;--accent:#9ed2ff}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family: 'NanumSquare',sans-serif;color:#edf4ff}
-#scene{position:fixed;inset:0}
-header{position:fixed;z-index:5;left:18px;right:18px;top:15px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}
-.brand,.tools{pointer-events:auto;background:#111e31eF;border:1px solid #3a506d;border-radius:12px;box-shadow:0 10px 35px #0005;backdrop-filter:blur(12px)}
-.brand{padding:12px 16px;font-weight:900;letter-spacing:1.1px;color:#b9dcff}.brand small{display:block;font-size:10px;letter-spacing:2px;color:#9eafc6;margin-top:4px}
-.tools{display:flex;gap:8px;padding:8px}.tools button,.action{border:1px solid #526a89;background:#243954;color:#eff6ff;padding:9px 12px;border-radius:8px;font:inherit;cursor:pointer}.tools button:hover,.action:hover{background:#345477}
-.hud{position:fixed;z-index:4;left:18px;bottom:18px;width:min(310px,calc(100vw - 36px));background:#111e31ed;border:1px solid #3a506d;border-radius:13px;padding:14px;box-shadow:0 10px 35px #0006;backdrop-filter:blur(12px)}
-.hud h2{font-size:14px;margin:0 0 10px;color:#dcecff}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.count{background:#1b2b43;border:1px solid #354a65;border-radius:8px;padding:8px}.count b{display:block;font-size:19px}.count span{font-size:10px;color:#aebed2}
-.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px;color:#b6c5d8;font-size:11px}.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;background:#56c58a}
-.hint{position:fixed;right:18px;bottom:18px;z-index:4;color:#d6e4f5;background:#111e31d9;border:1px solid #3a506d;border-radius:10px;padding:10px 13px;font-size:12px}
-.modal{display:none;position:fixed;z-index:10;inset:0;background:#050b14bb;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.dialog{width:min(430px,100%);background:#17243a;border:1px solid #4b6381;border-radius:15px;padding:20px;box-shadow:0 24px 70px #0009}.dialog h2{margin:0 0 5px;font-size:21px}.dialog .sub{color:#9eb0c8;font-size:13px}.dialog p{line-height:1.6;color:#d3deec;font-size:14px}.dialog textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #4b6381;border-radius:9px;background:#0e1929;color:white;padding:11px;font:inherit}.dialog .row{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.secondary{background:#1b2b43!important}
-#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#0c1422;color:#dcecff;font-size:14px}
-@media(max-width:600px){header{left:10px;right:10px;top:10px}.brand{font-size:13px;padding:10px}.tools{gap:4px;padding:5px}.tools button{font-size:11px;padding:8px}.hud{left:10px;bottom:10px;width:245px}.hint{right:10px;bottom:10px;font-size:10px;max-width:130px}}
+:root{color-scheme:dark;--panel:#142238;--line:#49617d;--muted:#b8c8da}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#9eafbb;font-family:NanumSquare,sans-serif;color:#f4f8ff}#scene{position:fixed;inset:0}
+header{position:fixed;z-index:5;left:16px;right:16px;top:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}.brand,.tools,.hud,.hint{pointer-events:auto;background:#142238ed;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px #10203355;backdrop-filter:blur(10px)}.brand{padding:12px 16px;font-weight:900;letter-spacing:1px;color:#d8ebff}.brand small{display:block;margin-top:4px;font-size:10px;color:#a9bfd8;letter-spacing:1.5px}.tools{display:flex;gap:7px;padding:7px}.tools button,.action{border:1px solid #607b99;background:#29435f;color:white;border-radius:8px;padding:9px 12px;font:inherit;cursor:pointer}.tools button:hover,.action:hover{background:#3a5d7d}
+.hud{position:fixed;z-index:4;left:16px;bottom:16px;padding:13px;width:270px}.hud h2{font-size:14px;margin:0 0 10px}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.count{padding:8px;background:#20334d;border-radius:8px}.count b{display:block;font-size:18px}.count span{font-size:10px;color:#c2d0df}.hint{position:fixed;right:16px;bottom:16px;padding:10px 13px;font-size:11px;color:#dbe8f7}
+.modal{display:none;position:fixed;z-index:10;inset:0;background:#07111dcc;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.dialog{width:min(430px,100%);background:#172940;border:1px solid #59728f;border-radius:15px;padding:20px}.dialog h2{margin:0 0 5px}.sub{color:#b4c5d8;font-size:13px}.dialog p{line-height:1.55;color:#e0e9f3}.dialog textarea{width:100%;min-height:105px;background:#0d1929;border:1px solid #526a86;border-radius:9px;color:white;padding:10px;font:inherit}.row{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.secondary{background:#1b2b40!important}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#9eafbb;color:#17283b;font-weight:700}
+@media(max-width:650px){header{left:8px;right:8px;top:8px}.brand{font-size:12px;padding:9px}.tools{gap:3px;padding:4px}.tools button{font-size:10px;padding:7px}.hud{left:8px;bottom:8px;width:220px}.hint{right:8px;bottom:8px;max-width:125px;font-size:9px}}
 </style>
 </head>
 <body>
-<div id="scene"></div><div id="loading">3D 가상 사무실을 불러오는 중...</div>
-<header><div class="brand">SW AI OFFICE<small>AI VIRTUAL COMPANY · FLOOR 01</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전 켜기</button><button id="dashboard">업무 화면</button></div></header>
-<section class="hud"><h2>실시간 가상 사무실</h2><div class="counts"><div class="count"><b id="staffCount">33</b><span>전체 구성원</span></div><div class="count"><b id="teamCount">6</b><span>팀</span></div><div class="count"><b id="selectedCount">0</b><span>선택 직원</span></div></div><div class="legend"><span><i></i>근무 공간</span><span>클릭하여 직원 선택</span></div></section>
-<div class="hint">마우스 드래그: 회전 · 휠: 확대/축소</div>
-<div class="modal" id="modal"><div class="dialog"><h2 id="personName">직원</h2><div class="sub" id="personRole"></div><p id="personInfo"></p><textarea id="taskText" placeholder="이 직원에게 지시할 업무를 입력하세요."></textarea><div class="row"><button class="action secondary" id="close">닫기</button><button class="action" id="taskButton">업무지시 화면 열기</button></div></div></div>
+<div id="scene"></div><div id="loading">SW AI OFFICE 3D 공간을 준비하고 있습니다...</div>
+<header><div class="brand">SW AI OFFICE<small>가상 본사 · 3D OFFICE</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="dashboard">업무 화면</button></div></header>
+<section class="hud"><h2>가상 사무실 현황</h2><div class="counts"><div class="count"><b id="staffCount">-</b><span>구성원</span></div><div class="count"><b>6</b><span>팀</span></div><div class="count"><b id="selectedCount">0</b><span>선택 직원</span></div></div></section>
+<div class="hint">드래그: 시점 회전 · 휠: 확대/축소 · 직원 클릭: 업무 지시</div>
+<div class="modal" id="modal"><div class="dialog"><h2 id="personName">직원</h2><div class="sub" id="personRole"></div><p id="personInfo"></p><textarea id="taskText" placeholder="이 직원에게 지시할 업무를 입력하세요."></textarea><div class="row"><button class="action secondary" id="close">닫기</button><button class="action" id="taskButton">업무 지시하기</button></div></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import directory from './employees.js';
-const mount=document.getElementById('scene');
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb4c8);scene.fog=new THREE.Fog(0x9eb4c8,34,75);
-const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,150);camera.position.set(25,24,30);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;mount.appendChild(renderer.domElement);
-const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.48;controls.minDistance=15;controls.maxDistance=55;
-scene.add(new THREE.HemisphereLight(0xeaf4ff,0x887c68,2.0));const sun=new THREE.DirectionalLight(0xfff2dc,3.1);sun.position.set(-12,25,15);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-25;sun.shadow.camera.right=25;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;scene.add(sun);
-const mats={floor:new THREE.MeshStandardMaterial({color:0xd9d2c4,roughness:.92}),wall:new THREE.MeshStandardMaterial({color:0xe9e5dc,roughness:.9}),wood:new THREE.MeshStandardMaterial({color:0x98704e,roughness:.8}),darkwood:new THREE.MeshStandardMaterial({color:0x634a39}),glass:new THREE.MeshStandardMaterial({color:0x8fc2d0,transparent:true,opacity:.24,roughness:.15}),metal:new THREE.MeshStandardMaterial({color:0x52677b,roughness:.55}),green:new THREE.MeshStandardMaterial({color:0x54835e}),screen:new THREE.MeshStandardMaterial({color:0x253b54,emissive:0x142a42}),rug:new THREE.MeshStandardMaterial({color:0xb6c3bd})};
-function box(w,h,d,mat,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
-function label(text,x,z,color='#33465a'){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='rgba(255,255,255,.88)';ctx.roundRect(12,15,488,98,18);ctx.fill();ctx.fillStyle=color;ctx.font='bold  forty 40px sans-serif';ctx.font='bold 40px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,64);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));s.position.set(x,3.0,z);s.scale.set(5.0,1.25,1);scene.add(s);return s}
-box(30,.5,23,mats.floor,0,-.3,0);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x8299a7}));ground.rotation.x=-Math.PI/2;ground.position.y=-.62;ground.receiveShadow=true;scene.add(ground);
-// outer low walls
-box(30,2.8,.35,mats.wall,0,1.1,-11.5);box(30,2.8,.35,mats.wall,0,1.1,11.5);box(.35,2.8,23,mats.wall,-15,1.1,0);box(.35,2.8,23,mats.wall,15,1.1,0);
-function partition(x,z,w,d,glass=true){const mat=glass?mats.glass:mats.wall;if(w>.5)box(w,2.2,.12,mat,x,1.05,z);else box(.12,2.2,d,mat,x,1.05,z)}
-// office zones and glass dividers
-partition(-7,-4,0,7);partition(0,-4,0,7);partition(7,-4,0,7);partition(-7,1,0,4);partition(0,1,0,4);partition(7,1,0,4);partition(-7,4,16,0);partition(7,4,16,0);
-label('피터 대표이사실',-11,-8);label('알렉스 본부장실',-4,-8);label('대회의실',3,-8);label('기술·IT팀',11,-3);label('경영관리팀',-11,1.8);label('법무팀',-4,1.8);label('IR팀',3,1.8);label('총무팀',-11,8);label('전략기획팀',-4,8);label('회의 · 휴게 공간',8,8);
-// furniture helper
-function desk(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;box(1.65,.16,.85,mats.wood,0,1.05,0,g);box(.12,1,.12,mats.darkwood,-.65,.5,-.3,g);box(.12,1,.12,mats.darkwood,.65,.5,-.3,g);box(.12,1,.12,mats.darkwood,-.65,.5,.3,g);box(.12,1,.12,mats.darkwood,.65,.5,.3,g);box(.55,.42,.08,mats.metal,0,1.36,-.2,g);box(.45,.27,.025,mats.screen,0,1.37,-.145,g);scene.add(g);return g}
-function chair(x,z){const g=new THREE.Group();g.position.set(x,0,z);box(.55,.12,.55,mats.metal,0,.55,0,g);box(.55,.65,.12,mats.metal,0,.88,-.22,g);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.5,8),mats.metal);leg.position.y=.25;g.add(leg);scene.add(g)}
-function table(x,z,w=3,d=1.3){box(w,.18,d,mats.wood,x,.9,z);for(let dx of [-w*.38,w*.38])for(let dz of [-d*.3,d*.3])box(.12,.85,.12,mats.darkwood,x+dx,.42,z+dz)}
-function plant(x,z){const pot=new THREE.Mesh(new THREE.CylinderGeometry(.22,.28,.45,10),mats.wood);pot.position.set(x,.23,z);scene.add(pot);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),mats.green);leaf.position.set(x,.85,z);leaf.scale.y=1.25;scene.add(leaf)}
-// CEO room
-desk(-11,-8.6);chair(-11,-9.8);box(2.1,.55,.65,mats.metal,-12.4,-.0,-6.1);table(-10,-5.9,1.8,1.5);chair(-10,-4.9);chair(-9,-5.9);chair(-11,-5.9);plant(-13,-10);
-// COO room
-table(-3.8,-7,3.3,1.5);for(let i=0;i<4;i++){const a=i*Math.PI/2;chair(-3.8+Math.cos(a)*2.1,-7+Math.sin(a)*1.2)}
-// big meeting room
-table(3.5,-7,5.1,1.8);for(let i=0;i<6;i++)chair(1.1+i*.9,-5.6);for(let i=0;i<6;i++)chair(1.1+i*.9,-8.4);
-// IT desks
-for(let i=0;i<5;i++){desk(10.1+(i%2)*2.1,-1.2+Math.floor(i/2)*2.0);chair(10.1+(i%2)*2.1,-2.0+Math.floor(i/2)*2.0)}
-// team areas workstations
-const teamCenters=[[-11,2.4],[-4,2.4],[3,2.4],[-11,8.5],[-4,8.5],[10,3.5]];
-for(const [cx,cz] of teamCenters){for(let i=0;i<4;i++){const x=cx+(i%2)*1.9-.9,z=cz+Math.floor(i/2)*1.8;desk(x,z);chair(x,z+.72)}}
-table(8.8,8.2,2.8,1.5);for(let i=0;i<4;i++)chair(7.5+i*.85,9.3);plant(13,9);plant(-13,9);
-// avatar meshes
-const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632];const shirtColors=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
-const avatarGroup=new THREE.Group();scene.add(avatarGroup);const avatars=[];
-function makeAvatar(person,index,x,z){const g=new THREE.Group();g.position.set(x,0,z);g.userData.person=person;const shirt=new THREE.MeshStandardMaterial({color:shirtColors[index%shirtColors.length],roughness:.85});const hair=new THREE.MeshStandardMaterial({color:hairColors[index%hairColors.length]});const skin=new THREE.MeshStandardMaterial({color:0xe6bd9c});const pants=new THREE.MeshStandardMaterial({color:0x344256});const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.24,.48,4,8),shirt);torso.position.y=.83;torso.castShadow=true;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),skin);head.position.y=1.42;head.castShadow=true;g.add(head);const cap=new THREE.Mesh(new THREE.SphereGeometry(.225,12,7,0,Math.PI*2,0,Math.PI*.52),hair);cap.position.y=1.5;cap.castShadow=true;g.add(cap);for(const side of [-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.075,.07,.42,8),pants);leg.position.set(side*.12,.25,0);g.add(leg);const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.3,3,6),shirt);arm.position.set(side*.28,.9,0);arm.rotation.z=side*.18;g.add(arm)}const marker=new THREE.Mesh(new THREE.TorusGeometry(.38,.035,6,20),new THREE.MeshBasicMaterial({color:0x8ecaff}));marker.rotation.x=Math.PI/2;marker.position.y=.04;marker.visible=false;g.add(marker);g.userData.marker=marker;g.userData.baseY=Math.random()*6.28;g.userData.home=new THREE.Vector3(x,0,z);g.userData.person=person;g.traverse(o=>{if(o.isMesh){o.userData.avatar=g;o.castShadow=true}});avatarGroup.add(g);avatars.push(g);return g}
+const mount=document.getElementById('scene'),scene=new THREE.Scene();
+scene.background=new THREE.Color(0xaebfca);scene.fog=new THREE.Fog(0xaebfca,48,100);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,180);camera.position.set(37,34,43);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;mount.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=19;controls.maxDistance=82;
+scene.add(new THREE.HemisphereLight(0xf2f7ff,0x81796d,2.15));const sun=new THREE.DirectionalLight(0xfff1dc,3.2);sun.position.set(-22,34,22);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;scene.add(sun);
+const mat=(color,opts={})=>new THREE.MeshStandardMaterial({color,roughness:.82,...opts});
+const M={floor:mat(0xd8d2c6),wall:mat(0xe8e4dc),wood:mat(0x98704e),wood2:mat(0x644a39),glass:mat(0x8ec5d0,{transparent:true,opacity:.28,roughness:.18}),metal:mat(0x607487),screen:mat(0x24394f,{emissive:0x14263a}),fabric:mat(0x718b91),green:mat(0x56815d),rug:mat(0xc1c9c1)};
+function cube(w,h,d,m,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function textSprite(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');q.fillStyle='rgba(250,252,255,.94)';q.beginPath();q.roundRect(8,12,496,104,18);q.fill();q.fillStyle='#34495e';q.font='bold 42px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,65);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false}));s.position.set(x,3.25,z);s.scale.set(6.4,1.6,1);scene.add(s)}
+function room(cx,cz,w,d,name,{glass=true,back=true}={}){cube(w,.28,d,M.floor,cx,-.12,cz);const wallMat=glass?M.glass:M.wall;cube(w,.18,.18,M.wall,cx,.12,cz-d/2);cube(.18,2.8,d,wallMat,cx-w/2,1.45,cz);cube(.18,2.8,d,wallMat,cx+w/2,1.45,cz);if(back)cube(w,2.8,.18,wallMat,cx,1.45,cz+d/2);textSprite(name,cx,cz-d/2+1.1)}
+function desk(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(1.8,.16,.9,M.wood,0,1.03,0,g);for(const a of [-.72,.72])for(const b of [-.32,.32])cube(.12,.94,.12,M.wood2,a,.48,b,g);cube(.62,.42,.08,M.metal,0,1.34,-.2,g);cube(.53,.29,.025,M.screen,0,1.35,-.145,g);scene.add(g)}
+function chair(x,z){const g=new THREE.Group();g.position.set(x,0,z);cube(.58,.12,.58,M.metal,0,.58,0,g);cube(.58,.68,.13,M.metal,0,.91,-.23,g);const stem=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.5,8),M.metal);stem.position.y=.25;g.add(stem);scene.add(g)}
+function table(x,z,w=3,d=1.5,round=false){const top=new THREE.Mesh(round?new THREE.CylinderGeometry(w/2,w/2,.18,32):new THREE.BoxGeometry(w,.18,d),M.wood);top.position.set(x,.94,z);top.castShadow=true;scene.add(top);for(const dx of (round?[-.3,.3]:[-w*.38,w*.38]))for(const dz of (round?[-.3,.3]:[-d*.3,d*.3]))cube(.13,.88,.13,M.wood2,x+dx,.44,z+dz)}
+function sofa(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(2.4,.48,.85,M.fabric,0,.48,0,g);cube(2.4,.75,.18,M.fabric,0,.92,-.34,g);for(const dx of [-1.02,1.02])cube(.2,.7,.85,M.fabric,dx,.72,0,g);scene.add(g)}
+function plant(x,z){const p=new THREE.Mesh(new THREE.CylinderGeometry(.24,.3,.42,12),M.wood);p.position.set(x,.21,z);scene.add(p);const l=new THREE.Mesh(new THREE.SphereGeometry(.55,12,9),M.green);l.position.set(x,.85,z);l.scale.y=1.25;scene.add(l)}
+// 넓은 단일 평면과 외곽 구조
+cube(50,.55,37,M.floor,0,-.38,0);const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),mat(0x849aa6));ground.rotation.x=-Math.PI/2;ground.position.y=-.68;ground.receiveShadow=true;scene.add(ground);
+cube(50,3,.28,M.wall,0,1.1,-18.5);cube(50,3,.28,M.wall,0,1.1,18.5);cube(.28,3,37,M.wall,-25,1.1,0);cube(.28,3,37,M.wall,25,1.1,0);
+// 상단 임원·회의 공간: 대표이사실 / 본부장실 / 대회의실 / 소회의실
+room(-18,-12,12,12,'대표이사실 · 피터');room(-5,-12,12,12,'본부장실 · 알렉스');room(8,-12,13,12,'대회의실');room(19.5,-12,9,12,'소회의실');
+sofa(-20,-14.7);sofa(-16,-14.7);desk(-19,-9.5);chair(-19,-10.8);table(-17,-9.2,2,2,true);for(let i=0;i<3;i++){const a=i*Math.PI*2/3;chair(-17+Math.cos(a)*1.55,-9.2+Math.sin(a)*1.55)}
+table(-5,-12,4.2,2);for(let i=0;i<4;i++){const a=i*Math.PI/2;chair(-5+Math.cos(a)*2.55,-12+Math.sin(a)*1.45)}
+table(8,-12,7,2.3);for(let i=0;i<6;i++){chair(5+i*1.2,-9.8);chair(5+i*1.2,-14.2)}
+table(19.5,-12,4,1.7);for(let i=0;i<4;i++)chair(18+i,-9.8);
+plant(-23,-16);plant(-.5,-16);
+// 아래쪽 6개 팀을 3열 x 2행으로 독립 배치
+const teams=[
+{name:'경영관리팀',dept:'경영관리',cx:-16,cz:-2},
+{name:'법무팀',dept:'법무',cx:0,cz:-2},
+{name:'IR팀',dept:'IR',cx:16,cz:-2},
+{name:'총무팀',dept:'총무',cx:-16,cz:8},
+{name:'전략기획팀',dept:'전략기획',cx:0,cz:8},
+{name:'기술·IT팀',dept:'기술·IT',cx:16,cz:8}
+];
+for(const t of teams){room(t.cx,t.cz,15,9,t.name);for(let i=0;i<3;i++){const x=t.cx-4.2+(i%2)*4.2,z=t.cz-.3+Math.floor(i/2)*2.2;desk(x,z);chair(x,z+1.05)}}
+// 팀 사이 유리 파티션 강조
+for(const x of [-8,8])cube(.12,2.35,27,M.glass,x,1.18,3);
+for(const z of [3])cube(47,.12,.12,M.glass,0,1.18,z);
+// 하단 휴게·카페 구역은 우측 팀 공간 바깥의 코너에 배치
+cube(7,.18,3.2,M.rug,20, -.02,15.7);table(20,15.4,2.4,1.3);for(let i=0;i<3;i++)chair(18.7+i*1.25,16.7);sofa(22.1,15.1);plant(23,17);textSprite('카페테리아 · 휴게 공간',19.5,14.2);
+// 직원 아바타: 부서별 구역 안에 배치
+const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
+const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
+function makeAvatar(person,index,x,z){const g=new THREE.Group();g.position.set(x,0,z);g.userData.person=person;const shirt=mat(shirts[index%shirts.length]),hair=mat(hairColors[index%hairColors.length]),skin=mat(0xe6bd9c),pants=mat(0x344256);const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.25,.48,4,9),shirt);torso.position.y=.84;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.22,14,12),skin);head.position.y=1.45;g.add(head);const cap=new THREE.Mesh(new THREE.SphereGeometry(.228,14,9,0,Math.PI*2,0,Math.PI*.52),hair);cap.position.y=1.53;g.add(cap);for(const side of [-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.075,.07,.42,8),pants);leg.position.set(side*.12,.25,0);g.add(leg);const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.3,3,7),shirt);arm.position.set(side*.29,.9,0);arm.rotation.z=side*.18;g.add(arm)}const ring=new THREE.Mesh(new THREE.TorusGeometry(.4,.035,7,24),new THREE.MeshBasicMaterial({color:0x7fd0ff}));ring.rotation.x=Math.PI/2;ring.position.y=.04;ring.visible=false;g.add(ring);g.userData.marker=ring;g.userData.phase=index*.73;g.traverse(o=>{if(o.isMesh){o.userData.avatar=g;o.castShadow=true}});avatarRoot.add(g);avatars.push(g)}
 const peter={id:'CEO',name:'피터',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
 const staff=[peter,...directory];
-const slots=[[-11,-7.7],[-3.8,-7.8],[1.6,-6.2],[2.8,-6.2],[4,-6.2],[5.2,-6.2],[10,-1.5],[12,-1.5],[10,1],[12,1],[-11,2.5],[-9,2.5],[-11,4],[-9,4],[-4,2.5],[-2,2.5],[-4,4],[-2,4],[3,2.5],[5,2.5],[3,4],[5,4],[-11,8],[-9,8],[-11,9.5],[-9,9.5],[-4,8],[-2,8],[-4,9.5],[-2,9.5],[9,5],[11,5],[9,7]];
-staff.forEach((p,i)=>makeAvatar(p,i,...(slots[i]||[0,0])));
+const zoneSlots={
+'본부장실':[[-5,-10.3]],
+'경영관리':[[-19,-2],[-15,-2],[-19,0],[-15,0],[-11,-2]],
+'법무':[[-3,-2],[1,-2],[-3,0],[1,0],[4,-2]],
+'IR':[[13,-2],[17,-2],[13,0],[17,0],[20,-2],[20,0]],
+'총무':[[-19,8],[-15,8],[-19,10],[-15,10],[-11,8]],
+'전략기획':[[-3,8],[1,8],[-3,10],[1,10],[4,8]],
+'기술·IT':[[13,8],[17,8],[13,10],[17,10],[20,8]]
+};
+const used={};function nextSlot(dept){const a=zoneSlots[dept]||[[0,0]];const n=used[dept]||0;used[dept]=n+1;return a[n%a.length]}
+makeAvatar(peter,0,-19,-8.1);
+for(const p of directory){if(p.id==='COO'){makeAvatar(p,1,-5,-8.5);continue}const [x,z]=nextSlot(p.department);makeAvatar(p,avatars.length,x,z)}
 document.getElementById('staffCount').textContent=staff.length;
-const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let selected=null;const modal=document.getElementById('modal');
-renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=(e.clientX/innerWidth)*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(avatarGroup.children,true);if(!hits.length)return;const avatar=hits[0].object.userData.avatar;if(!avatar)return;selectAvatar(avatar)});
-function selectAvatar(a){if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;document.getElementById('selectedCount').textContent='1';const p=a.userData.person;document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 SW AI OFFICE 직원입니다.';document.getElementById('taskText').value='';modal.classList.add('show')}
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null;
+renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=e.clientX/innerWidth*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
+function selectAvatar(a){if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;document.getElementById('selectedCount').textContent='1';const p=a.userData.person;document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';document.getElementById('taskText').value='';modal.classList.add('show')}
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
-document.getElementById('taskButton').onclick=()=>{const text=document.getElementById('taskText').value.trim();const p=selected?.userData.person;if(!p)return;const url=new URL('./index.html',location.href);url.searchParams.set('employee',p.id);if(text)url.searchParams.set('task',text);location.href=url.toString()};
-document.getElementById('dashboard').onclick=()=>location.href='./index.html';
-document.getElementById('home').onclick=()=>{controls.target.set(0,0,0);camera.position.set(25,24,30);controls.update()};
-let autoRotate=false;document.getElementById('rotate').onclick=e=>{autoRotate=!autoRotate;controls.autoRotate=autoRotate;controls.autoRotateSpeed=.65;e.target.textContent=autoRotate?'자동 회전 끄기':'자동 회전 켜기'};
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();for(const a of avatars){a.position.y=Math.sin(t*1.5+a.userData.baseY)*.025;a.rotation.y=Math.sin(t*.55+a.userData.baseY)*.07}controls.update();renderer.render(scene,camera)}animate();
+document.getElementById('taskButton').onclick=()=>{const task=document.getElementById('taskText').value.trim(),p=selected?.userData.person;if(!p)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);if(task)u.searchParams.set('task',task);location.href=u.toString()};
+document.getElementById('dashboard').onclick=()=>location.href='./index.html';document.getElementById('home').onclick=()=>{controls.target.set(0,0,0);camera.position.set(37,34,43);controls.update()};
+let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls.autoRotate=spin;controls.autoRotateSpeed=.55;e.target.textContent=spin?'회전 끄기':'자동 회전'};
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();for(const a of avatars){a.position.y=Math.sin(t*1.5+a.userData.phase)*.022;a.rotation.y=Math.sin(t*.45+a.userData.phase)*.035}controls.update();renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 document.getElementById('loading').style.display='none';
 </script>
-</body>
-</html>
+</body></html>
