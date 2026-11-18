@@ -40,7 +40,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 #detailInput{width:100%;height:105px;resize:vertical;padding:12px;border:1px solid #c8b995;background:#fffdf7;font:inherit}
 #detailSend{margin-top:8px;float:right;background:var(--brown);color:white;border:0;padding:9px 16px;cursor:pointer}
 #loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#e9dfc8;color:#17283b;font-weight:700}
-.modal{display:none;position:fixed;z-index:10;inset:58px 0 0;background:#07111d99;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.dialog{width:min(430px,100%);background:#fbf6e8;border:1px solid #c9b995;border-radius:8px;padding:20px;color:#26354a}.dialog textarea{width:100%;min-height:105px;border:1px solid #c8b995;padding:10px;font:inherit}
+.modal{display:none;position:fixed;z-index:10;inset:58px 0 0;background:#07111d99;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.dialog{width:min(350px,100%);background:#fbf6e8;border:1px solid #c9b995;border-radius:8px;padding:18px;color:#26354a}.profileDialog h2{margin:0 0 13px;font-size:21px}.profileInfo{font-size:14px;line-height:1.9;white-space:pre-line;border-top:1px solid #e1d5bd;border-bottom:1px solid #e1d5bd;padding:10px 2px}.profileActions{display:flex;justify-content:flex-end;margin-top:13px}
 @media(max-width:850px){#appMain{grid-template-columns:minmax(0,1fr) minmax(270px,.85fr)}.staffCard{flex-basis:160px}}
 @media(max-width:650px){header{height:52px;padding:0 8px}.brand{font-size:12px}.brand small{font-size:9px}.tools button{font-size:10px;padding:6px 7px}#appMain{top:52px;bottom:92px;padding:6px;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 180px;gap:6px}#chatHead{min-height:48px;padding:6px 9px}#chatAvatar{width:32px;height:32px;font-size:19px}#chatHistory{padding:7px;font-size:11px}#taskComposer{padding:7px}#taskInput{height:45px}#staffStrip{height:84px;padding:6px}.staffCard{flex-basis:145px;padding:5px}.staffFace{width:34px;height:40px}#detailView{inset:52px 0 0;grid-template-columns:116px minmax(0,1fr)}#detailEmployees{padding:6px}.detailPerson{padding:6px;font-size:10px;gap:5px}.detailPerson .staffFace{width:28px;height:34px}#detailTop{padding:10px;font-size:13px}#detailMessages{padding:10px;font-size:12px}#detailComposer{padding:8px}#detailInput{height:80px}#officeTools button{font-size:10px;padding:5px 7px}}
 
@@ -56,7 +56,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 <div id="staffStrip"></div>
 <section id="detailView"><aside id="detailEmployees"><h3>AI 직원 목록</h3><div id="detailEmployeeList"></div></aside><section id="detailConversation"><div id="detailTop">알렉스 · 본부장</div><div id="detailMessages"><div class="chatBubble">직원을 선택하면 해당 직원의 상세 업무 화면이 표시됩니다. 업무 지시를 입력하면 기존 업무 처리 화면으로 연결됩니다.</div></div><div id="detailComposer"><textarea id="detailInput" placeholder="업무 내용을 입력하세요."></textarea><button id="detailSend">업무 지시하기 →</button></div></section></section>
 <div class="hint" style="display:none"> </div>
-<div class="modal" id="modal"><div class="dialog"><h2 id="personName">직원</h2><div class="sub" id="personRole"></div><p id="personInfo"></p><textarea id="taskText" placeholder="이 직원에게 지시할 업무를 입력하세요."></textarea><div class="row"><button class="action secondary" id="close">닫기</button><button class="action" id="taskButton">업무 지시하기</button></div></div></div>
+<div class="modal" id="modal"><div class="dialog profileDialog"><h2 id="personName">직원</h2><div id="personInfo" class="profileInfo"></div><div class="profileActions"><button class="action secondary" id="close">닫기</button></div></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -181,9 +181,17 @@ const zoneSlots={
 };
 const used={};function nextSlot(dept){const a=zoneSlots[dept]||[[0,0]];const n=used[dept]||0;used[dept]=n+1;return a[n%a.length]}
 makeAvatar(peter,0,-19,-8.1);
-const characterNames={'COO':'알렉스','MA-01':'데니스','LE-01':'단테','IR-01':'라이언','GA-01':'에이든','SP-01':'에릭'};
+const characterNames={
+ 'COO':'알렉스',
+ 'MA-01':'제니','MA-02':'카리나','MA-03':'이던','MA-04':'클로이','MA-05':'루카스',
+ 'LE-01':'단테','LE-02':'앤','LE-03':'소피아','LE-04':'줄리안','LE-05':'민준',
+ 'IR-01':'라이언','IR-02':'수지','IR-03':'케빈','IR-04':'해나','IR-05':'노아',
+ 'GA-01':'에이든','GA-02':'로라','GA-03':'브라이언','GA-04':'미아','GA-05':'오웬',
+ 'SP-01':'에릭','SP-02':'노라','SP-03':'제이슨','SP-04':'이사벨라','SP-05':'아담',
+ 'IT-01':'테오','IT-02':'아바','IT-03':'레오','IT-04':'조이','IT-05':'토니'
+};
 for(const p of directory){
-  const displayPerson={...p,name:characterNames[p.id]||p.name};
+  const displayPerson={...p,jobTitle:p.name,name:characterNames[p.id]||p.name};
   if(p.id==='COO'){makeAvatar(displayPerson,1,-5,-8.5);continue}
   const [x,z]=nextSlot(p.department);
   makeAvatar(displayPerson,avatars.length,x,z)
@@ -214,12 +222,15 @@ function selectAvatar(a,showProfile=true){
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
  document.getElementById('detailMessages').innerHTML='<div class="chatBubble">'+(p.instruction||'담당 업무를 수행하는 직원입니다.')+'</div>';
- document.getElementById('personName').textContent=p.name;document.getElementById('personRole').textContent=(p.department||'')+' · '+(p.position||'직원');document.getElementById('personInfo').textContent='직원 코드: '+(p.id||'-')+'\n소속: '+(p.department||'-')+'\n직책: '+(p.position||'-')+'\n\n담당 업무 및 전문 분야\n'+(p.instruction||'담당 업무를 수행하는 직원입니다.');
- if(showProfile){document.getElementById('taskText').value='';modal.classList.add('show');}
+ document.getElementById('personName').textContent=p.name;
+ const teamName=p.department==='본부장실'?'본부장실':(p.department||'')+'팀';
+ const jobTitle=p.jobTitle||(p.position==='팀장'?p.position:p.name);
+ const workStatus=p.currentTask?'업무 중 ('+p.currentTask+')':(p.workStatus||'업무 대기');
+ document.getElementById('personInfo').textContent='직원 코드: '+(p.id||'-')+'\n소속팀: '+teamName+'\n담당 직무: '+jobTitle+'\n상태: '+workStatus;
+ if(showProfile){modal.classList.add('show');}
 }
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 function submitSelectedTask(value){const task=(value||'').trim(),p=selected?.userData.person;if(!p||!task)return;const u=new URL('./index.html',location.href);u.searchParams.set('employee',p.id);u.searchParams.set('task',task);location.href=u.toString()}
-document.getElementById('taskButton').onclick=()=>submitSelectedTask(document.getElementById('taskText').value);
 document.getElementById('sendTask').onclick=()=>submitSelectedTask(document.getElementById('taskInput').value);
 document.getElementById('detailSend').onclick=()=>submitSelectedTask(document.getElementById('detailInput').value);
 document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitSelectedTask(e.target.value)}});
