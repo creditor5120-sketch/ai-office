@@ -188,7 +188,7 @@ for(const p of directory){
   const [x,z]=nextSlot(p.department);
   makeAvatar(displayPerson,avatars.length,x,z)
 }
-document.getElementById('staffCount').textContent=staff.length;
+const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
 function makeStaffCard(p,detail=false){
  const el=document.createElement('button');el.className=detail?'detailPerson':'staffCard';el.dataset.emp=p.id;
@@ -197,7 +197,7 @@ function makeStaffCard(p,detail=false){
  meta.querySelector('b').textContent=p.name;meta.querySelector('small').textContent=(p.department||'')+' · '+(p.position||'');
  el.append(face,meta);el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a)};return el;
 }
-staff.forEach(p=>{document.getElementById('staffStrip').appendChild(makeStaffCard(p));document.getElementById('detailEmployeeList').appendChild(makeStaffCard(p,true))});
+avatars.map(a=>a.userData.person).forEach(p=>{document.getElementById('staffStrip').appendChild(makeStaffCard(p));document.getElementById('detailEmployeeList').appendChild(makeStaffCard(p,true))});
 const detailToggle=document.getElementById('detailToggle');let detailMode=false;
 detailToggle.onclick=()=>{detailMode=!detailMode;document.getElementById('appMain').style.display=detailMode?'none':'grid';document.getElementById('staffStrip').style.display=detailMode?'none':'flex';document.getElementById('detailView').style.display=detailMode?'grid':'none';detailToggle.textContent=detailMode?'↙ 사무실로':'↗ 업무 상세';if(detailMode&&!selected){const alex=avatars.find(v=>v.userData.person.id==='COO');if(alex)selectAvatar(alex)}};
 document.getElementById('zoomIn').onclick=()=>{camera.position.multiplyScalar(.85);controls.update()};
