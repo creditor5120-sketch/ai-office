@@ -90,49 +90,43 @@ function chair(x,z){const g=new THREE.Group();g.position.set(x,0,z);cube(.58,.12
 function table(x,z,w=3,d=1.5,round=false){const top=new THREE.Mesh(round?new THREE.CylinderGeometry(w/2,w/2,.18,32):new THREE.BoxGeometry(w,.18,d),M.wood);top.position.set(x,.94,z);top.castShadow=true;scene.add(top);for(const dx of (round?[-.3,.3]:[-w*.38,w*.38]))for(const dz of (round?[-.3,.3]:[-d*.3,d*.3]))cube(.13,.88,.13,M.wood2,x+dx,.44,z+dz)}
 function sofa(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(2.4,.48,.85,M.fabric,0,.48,0,g);cube(2.4,.75,.18,M.fabric,0,.92,-.34,g);for(const dx of [-1.02,1.02])cube(.2,.7,.85,M.fabric,dx,.72,0,g);scene.add(g)}
 function plant(x,z){const p=new THREE.Mesh(new THREE.CylinderGeometry(.24,.3,.42,12),M.wood);p.position.set(x,.21,z);scene.add(p);const l=new THREE.Mesh(new THREE.SphereGeometry(.55,12,9),M.green);l.position.set(x,.85,z);l.scale.y=1.25;scene.add(l)}
-// 넓은 단일 평면과 외곽 구조
-cube(54,.55,48,M.floor,0,-.38,0);const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),mat(0x849aa6));ground.rotation.x=-Math.PI/2;ground.position.y=-.68;ground.receiveShadow=true;scene.add(ground);
+// 캡처 화면 기준: 하나의 큰 사무실 안에 업무·회의·서버·휴게 공간을 배치
+cube(54,.55,48,M.floor,0,-.38,0);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),mat(0x849aa6));ground.rotation.x=-Math.PI/2;ground.position.y=-.68;ground.receiveShadow=true;scene.add(ground);
 cube(54,3,.28,M.wall,0,1.1,-24);cube(54,3,.28,M.wall,0,1.1,24);cube(.28,3,48,M.wall,-27,1.1,0);cube(.28,3,48,M.wall,27,1.1,0);
-// 상단: 넓은 대표이사실, 본부장실, 대회의실, 소회의실을 한 줄로 배치
-room(-18,-12,13,13,'대표이사실 · 피터');
-room(-4,-12,10,12,'본부장실 · 알렉스');
-room(9,-12,12,12,'대회의실');
-room(20,-12,9,12,'소회의실');
-// 대표이사실: 왼쪽 소파는 유지하고 오른쪽에는 원형 테이블과 의자 3개 배치
-sofa(-20.7,-14.7);desk(-19,-9.5);chair(-19,-10.8);table(-15.2,-14.3,2.1,2.1,true);
-for(let i=0;i<3;i++){const a=i*Math.PI*2/3;chair(-15.2+Math.cos(a)*1.55,-14.3+Math.sin(a)*1.55)}
-// 본부장실: 4인용 타원형 회의 테이블
-function ovalTable(x,z,w=4,d=2){const top=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w/2,.18,32),M.wood);top.scale.z=d/w;top.position.set(x,.94,z);top.castShadow=true;scene.add(top);for(const dx of [-w*.38,w*.38])for(const dz of [-d*.22,d*.22])cube(.13,.88,.13,M.wood2,x+dx,.44,z+dz)}
-ovalTable(-4,-12,4.2,2.1);chair(-4,-10.25);chair(-4,-13.75);chair(-6.6,-12);chair(-1.4,-12);
-table(9,-12,7,2.3);for(let i=0;i<6;i++){chair(6+i*1.2,-9.8);chair(6+i*1.2,-14.2)}
-table(20,-12,4,1.7);for(let i=0;i<4;i++)chair(18.5+i,-9.8);
-plant(-23,-16);plant(-.5,-16);
-// 하단은 5개 팀의 오픈형 업무 공간, 기술·IT팀만 별도 통유리 사무실
-const teams=[
-{name:'경영관리팀',dept:'경영관리',cx:-17,cz:-1},
-{name:'법무팀',dept:'법무',cx:-3,cz:-1},
-{name:'IR팀',dept:'IR',cx:11,cz:-1},
-{name:'총무팀',dept:'총무',cx:-10,cz:9},
-{name:'전략기획팀',dept:'전략기획',cx:4,cz:9}
-];
-function openTeamZone(t){
-  cube(12.4,.12,9.2,M.rug,t.cx,-.02,t.cz);
-  // 낮은 파티션으로 팀 영역만 구분하고 앞쪽은 개방
-  cube(12.4,1.18,.16,M.glass,t.cx,.59,t.cz+4.48);
-  cube(.16,1.18,9.2,M.glass,t.cx-6.12,.59,t.cz);
-  cube(.16,1.18,9.2,M.glass,t.cx+6.12,.59,t.cz);
-  wallSign(t.name,t.cx,t.cz+4.38);
-  // 팀장 1석과 전문 직원석을 T자형 7석으로 구성
-  const seats=[[t.cx,t.cz-3.05],[t.cx-4.1,t.cz-.55],[t.cx,t.cz-.55],[t.cx+4.1,t.cz-.55],[t.cx-4.1,t.cz+2],[t.cx,t.cz+2],[t.cx+4.1,t.cz+2]];
-  for(const [x,z] of seats){desk(x,z);chair(x,z+1.02)}
-}
-for(const t of teams)openTeamZone(t);
-// 기술·IT팀은 별도의 통유리 사무실로 배치
-room(19,8,12,10,'');wallSign('기술·IT팀',19,12.38);
-for(const [x,z] of [[19,4.7],[15,7],[19,7],[23,7],[15,9.5],[19,9.5],[23,9.5]]){desk(x,z);chair(x,z+1.02)}
-// 카페테리아와 휴게공간은 사무실 오른쪽 아래 코너에 분리 배치
-cube(7,.18,3.2,M.rug,20,-.02,18);table(19,17.5,2.4,1.3);for(let i=0;i<3;i++)chair(17.7+i*1.25,18.8);sofa(22.1,17.2);plant(24,19);textSprite('카페테리아 · 휴게 공간',19.5,15.8);
-// 직원 아바타: 부서별 구역 안에 배치
+// 뒤쪽: 하나로 이어진 직원 업무공간. 낮은 파티션과 벽면 팀 표지로 구분
+cube(32,.18,18,M.rug,-7,-.02,-13);
+cube(32,2.8,.18,M.wall,-7,1.4,-22);
+cube(.18,2.8,18,M.wall,-23,1.4,-13);
+cube(.18,1.25,18,M.glass,9, .625,-13);
+wallSign('경영관리팀',-18,-21.82);wallSign('법무팀',-10,-21.82);wallSign('IR팀',-2,-21.82);wallSign('총무팀',6,-21.82);
+wallSign('전략기획팀',-15,-4.05);
+// 직원 책상은 여러 줄의 반복 배치로 구성
+for(const z of [-18,-14,-10,-6])for(const x of [-19,-12,-5,2]){desk(x,z);chair(x,z+1.05)}
+// 왼쪽 앞: 대표이사실
+room(-18,5,14,14,'대표이사실 · 피터');
+sofa(-20.7,2.1);desk(-19,9);chair(-19,7.7);table(-15.2,2.4,2.1,2.1,true);
+for(let i=0;i<3;i++){const a=i*Math.PI*2/3;chair(-15.2+Math.cos(a)*1.55,2.4+Math.sin(a)*1.55)}
+// 중앙 앞: 열린 공용 라운지 및 원형 협업 테이블
+cube(12,.16,11,M.rug,-4,-.02,8);
+table(-5,6.5,2.2,2.2,true);
+for(let i=0;i<5;i++){const a=i*Math.PI*2/5;chair(-5+Math.cos(a)*2.05,6.5+Math.sin(a)*2.05)}
+wallSign('공용 업무 공간',-4,13.1);
+// 중앙: 서버실 및 IT 인프라
+room(5,10,12,11,'서버실 · 기술·IT팀',{glass:true});
+for(const [x,z] of [[1,7],[4,7],[7,7],[1,11],[4,11],[7,11]]){cube(.95,2.6,.95,M.metal,x,1.3,z);for(let k=0;k<5;k++)cube(.72,.035,.025,M.screen,x,0.55+k*.38,z+.49)}
+wallSign('기술·IT팀',5,15.45);
+// 오른쪽 위: 대회의실
+room(15,-5,13,13,'대회의실');
+table(15,-5,6.8,2.5);for(let i=0;i<5;i++){chair(12+i*1.5,-2.9);chair(12+i*1.5,-7.1)}
+// 오른쪽 아래: 휴게실·카페테리아
+room(19,11,14,12,'휴게 공간',{glass:true});
+sofa(16,10.2);sofa(21,7.5,Math.PI/2);table(18.8,10.3,2.2,1.2);chair(17.5,12);chair(20,12);
+const cafeBall=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),mat(0xe4a52c));cafeBall.position.set(22, .45,14);scene.add(cafeBall);
+const cafeBall2=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),mat(0xc95c62));cafeBall2.position.set(25,.45,11.5);scene.add(cafeBall2);
+cube(3.2,.9,1.2,M.wood,12, .45,18);wallSign('카페테리아',19,16.45);
+plant(-24,-20);plant(-22,10);plant(8,-20);plant(25,16);plant(10,17);
+// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
 function makePixelSheet(person,index){
