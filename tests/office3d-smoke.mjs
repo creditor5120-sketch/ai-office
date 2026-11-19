@@ -93,6 +93,8 @@ try {
     const actual = (await page.locator('#chatName').innerText()).trim();
     throw new Error(`Selecting COO did not update the active employee. Expected 알렉스, found ${actual || '(empty)'}`);
   });
+  await page.locator('#detailToggle').click();
+  await page.locator('#detailView').waitFor({ state: 'visible' });
   const restoredItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
   await restoredItem.waitFor({ state: 'visible', timeout: 10000 });
   await restoredItem.click();
@@ -107,8 +109,6 @@ try {
   if (!refreshedChat.includes('서버 원본 이력 확인')) throw new Error('Server audit history was not reloaded');
   if (!refreshedChat.includes('서버 대표 승인')) throw new Error('Server representative decision was not reloaded');
 
-  await page.locator('#detailToggle').click();
-  await page.locator('#detailView').waitFor({ state: 'visible' });
   const detailCount = await page.locator('#detailEmployeeList .detailPerson').count();
   if (detailCount < 30) throw new Error(`Expected at least 30 employees in detail view, found ${detailCount}`);
 
