@@ -1,0 +1,36 @@
+name: SW AI OFFICE 3D browser smoke test
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'office3d.html'
+      - 'employees.js'
+      - 'tests/office3d-smoke.mjs'
+      - '.github/workflows/office3d-smoke.yml'
+  push:
+    branches: [work/office3d-integration]
+    paths:
+      - 'office3d.html'
+      - 'employees.js'
+      - 'tests/office3d-smoke.mjs'
+      - '.github/workflows/office3d-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run 3D office browser checks
+        run: node tests/office3d-smoke.mjs
