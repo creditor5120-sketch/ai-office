@@ -37,7 +37,15 @@ class FakeD1 {
         return null;
       },
       async all() {
-        if (sql.includes('FROM task_events')) return { results: db.events.map(x => ({ ...x })) };
+        if (sql.includes('FROM task_events')) {
+          const rows = db.events
+            .map((event, index) => ({ ...event, __rowid: index }))
+            .filter(event => event.task_id === args[0])
+            .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)) || b.__rowid - a.__rowid)
+            .slice(0, 301)
+            .map(({ __rowid, ...event }) => event);
+          return { results: rows };
+        }
         return { results: [] };
       },
       async run() {
@@ -237,4 +245,27 @@ test('preserves malformed audit JSON as a visible parse error', async () => {
   const result = await call({ action: 'get_task_history', taskId: 'test-task-001' }, { db });
   assert.equal(result.status, 200);
   assert.equal(result.body.events[0].detail.parseError, '이력 상세 JSON을 해석하지 못했습니다.');
+});
+
+
+test('returns only the newest 300 audit events in chronological order', async () => {
+  const db = new FakeD1();
+  for (let i = 0; i < 305; i++) {
+    db.events.push({
+      event_id: 'evt-' + String(i).padStart(3, '0'),
+      task_id: 'test-task-001',
+      event_type: 'WORKFLOW_STAGE_STARTED',
+      actor: 'tester',
+      stage: '단계 ' + i,
+      detail_json: JSON.stringify({ sequence: i }),
+      created_at: new Date(Date.UTC(2026, 10, 19, 0, 0, i)).toISOString()
+    });
+  }
+  const result = await call({ action: 'get_task_history', taskId: 'test-task-001' }, { db });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.eventCount, 300);
+  assert.equal(result.body.truncated, true);
+  assert.equal(result.body.events[0].detail.sequence, 5);
+  assert.equal(result.body.events.at(-1).detail.sequence, 304);
+  assert.equal(result.body.events[0].createdAt <= result.body.events.at(-1).createdAt, true);
 });
