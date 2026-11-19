@@ -464,7 +464,8 @@ function renderRepresentativeDecision(record=null){
  const hint=document.getElementById('decisionTaskHint'),approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');
  const taskId=record?.taskId||'';const decision=record?.representativeDecision||record?.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.detail||null;
  hint.textContent=taskId?(decision?`업무 ${taskId} · ${decision.decisionLabel||decision.decision||'결정 기록됨'} (${decision.recordedAt||record.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.createdAt||'시각 미확인'})`:`선택 업무 ID: ${taskId}`):'업무 기록을 선택하면 승인 또는 반려를 기록할 수 있습니다.';
- const allowed=!!taskId&&!decision;approve.disabled=!allowed;reject.disabled=!allowed;
+ const allowed=!!taskId&&!decision,releaseAllowed=record?.workflow?.reviewGate?.finalReleaseAllowed===true;approve.disabled=!allowed||!releaseAllowed;reject.disabled=!allowed;
+ if(taskId&&!decision&&!releaseAllowed)hint.textContent+= ' · 최종 검수 승인 조건이 확인되지 않아 대표 승인은 잠겨 있습니다. 반려 기록은 가능합니다.';
 }
 async function submitRepresentativeDecision(decision){
  const record=selectedTaskForDecision,taskId=record?.taskId,token=document.getElementById('representativeAccessToken').value.trim(),reason=document.getElementById('representativeDecisionReason').value.trim();
@@ -478,7 +479,7 @@ async function submitRepresentativeDecision(decision){
   if(!response.ok)throw new Error(data.error||`대표 결정 기록 실패 (HTTP ${response.status})`);
   record.representativeDecision={...data};
   if(record.audit){record.audit.events=Array.isArray(record.audit.events)?record.audit.events:[];record.audit.events.push({eventType:'REPRESENTATIVE_DECISION',stage:data.decisionLabel||decision,detail:data,createdAt:data.recordedAt||new Date().toISOString()})}
-  const history=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=record;localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(history))}
+  try{const history=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=record;localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(history))}}catch(storageError){appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록 갱신은 실패했습니다: '+(storageError.message||String(storageError)))}
   document.getElementById('representativeAccessToken').value='';renderRepresentativeDecision(record);
   appendChat('대표 결정',`${data.decisionLabel||decision} 기록 완료\n업무 ID: ${taskId}\n${data.message||''}\n${data.attributionNote||''}`);
  }catch(error){appendChat('대표 결정 오류',error.message||String(error));approve.disabled=false;reject.disabled=false}
