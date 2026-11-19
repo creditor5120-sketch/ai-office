@@ -276,6 +276,7 @@ function selectAvatar(a,showProfile=true){
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
  document.getElementById('chatName').textContent=p.name;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
  renderEmployeeChat(p.id);
+ renderTaskHistory();
  document.getElementById('chatAvatar').textContent='👤';document.getElementById('chatIntro').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
@@ -336,9 +337,9 @@ async function submitSelectedTask(value){
   const finalStates=readEmployeeStates();
   finalStates[p.id]={...(finalStates[p.id]||{}),status:'완료',detail:task,taskId,updatedAt:new Date().toISOString()};
   localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(finalStates));recordEmployeeHistory(p.id,finalStates[p.id]);
-  saveTaskHistory(task,taskId,data.reply,data.deliverables||[],data.workflow||{},data.finalReviewResults||[],audit);
+  saveTaskHistory(task,taskId,data.reply,data.deliverables||[],data.workflow||{},data.finalReviewResults||[],audit,p);
   renderTaskHistory();
-  renderWorkflowSummary(data,audit);
+  renderWorkflowSummary(data,audit,p.id);
   refreshStaffCards();
  }catch(error){
   const failedStates=readEmployeeStates();
@@ -373,10 +374,10 @@ function updateChatBubble(element,message){
 function fetchTaskAuditHistory(taskId,token){
  return fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'get_task_history',taskId})}).then(async response=>{const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error(raw||'상세 이력 응답을 해석할 수 없습니다.')}if(!response.ok)throw new Error(data.error||'상세 이력 조회에 실패했습니다.');return data});
 }
-function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults,audit){
+function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults,audit,employee){
  let history=[];
  try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed}catch(_){}
- const record={taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit:audit||null,savedAt:new Date().toISOString()};
+ const record={taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit:audit||null,employeeId:employee?.id||null,employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()};
  const next=[record,...history.filter(item=>item.taskId!==taskId)].slice(0,10);
  localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(next));
 }
@@ -397,10 +398,10 @@ function renderTaskHistory(){
  let history=[];try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed}catch(_){}
  list.replaceChildren();
  if(!history.length){list.textContent='저장된 업무 기록이 없습니다.';return}
- history.slice(0,5).forEach(record=>{
+ history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id).slice(0,5).forEach(record=>{
   const item=document.createElement('button');item.type='button';item.className='historyItem';
   const date=new Date(record.savedAt),stamp=Number.isNaN(date.getTime())?'':date.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-  item.textContent=(record.task||'업무 내용 미기재').slice(0,72)+' · '+stamp;
+  item.textContent=(record.employeeName?record.employeeName+' · ':'')+(record.task||'업무 내용 미기재').slice(0,72)+' · '+stamp;
   item.addEventListener('click',()=>{
    appendChat('이전 업무 지시',record.task||'');
    appendChat('이전 업무 결과',record.reply||'결과가 저장되지 않았습니다.');
@@ -409,7 +410,7 @@ function renderTaskHistory(){
   list.appendChild(item);
  });
 }
-function renderWorkflowSummary(data,audit=null){
+function renderWorkflowSummary(data,audit=null,employeeId=selected?.userData.person.id){
  const workflow=data.workflow||{},reviews=Array.isArray(data.finalReviewResults)?data.finalReviewResults:[];
  const lines=[];
  if(workflow.currentStage)lines.push('현재 단계: '+workflow.currentStage);
@@ -419,7 +420,7 @@ function renderWorkflowSummary(data,audit=null){
  reviews.forEach((item,index)=>lines.push((item.name||('검수 '+(index+1)))+' · '+(item.judgment||'판정 미기재')+' · '+(item.details?.summary||item.review||'')));
  if(audit?.task){lines.push('서버 업무 상태: '+(audit.task.status||'미기재'));if(audit.task.currentStage)lines.push('서버 현재 단계: '+audit.task.currentStage)}
  if(Array.isArray(audit?.events)){audit.events.filter(event=>event.eventType==='WORKFLOW_STAGE_STARTED'||event.eventType==='WORKFLOW_STAGE_COMPLETED').slice(-12).forEach(event=>{const stamp=event.createdAt?new Date(event.createdAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';lines.push((event.eventType==='WORKFLOW_STAGE_STARTED'?'시작':'완료')+' · '+(event.stage||'단계 미기재')+(stamp?' · '+stamp:''))})}
- if(lines.length)appendChat('업무 진행·검수 기록',lines.join('\n'));
+ if(lines.length)appendChat('업무 진행·검수 기록',lines.join('\n'),employeeId);
 }
 function refreshStaffCards(){const states=readEmployeeStates();document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>{const p=avatars.find(a=>a.userData.person.id===el.dataset.emp)?.userData.person;if(!p)return;const status=el.querySelector('.staffStatus');if(status)status.textContent='상태: '+(states[p.id]?.status||p.workStatus||'업무 대기')});syncAvatarWorkStates(true);if(selected)selectAvatar(selected,false)}
 document.getElementById('sendTask').onclick=()=>submitSelectedTask(document.getElementById('taskInput').value);
