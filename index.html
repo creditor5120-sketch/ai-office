@@ -135,6 +135,7 @@ body.detail-open .main-grid {
   height: 100%;
   display: block;
   cursor: grab;
+  touch-action: none;
 }
 
 #officeCanvas:active {
@@ -586,8 +587,7 @@ body.detail-open .detail-drawer {
   <div class="top-right">
     <span class="info-pill" id="headerStaffCount">● 직원 33명</span>
     <span class="info-pill">● 온라인</span>
-    <button type="button" class="top-btn" id="autoRotateBtn">자동 회전</button>
-    <button type="button" class="top-btn" id="toggleDetailBtn">업무 상세</button>
+    <button type="button" class="top-btn" id="toggleDetailBtn">↗ 업무상세</button>
     <button type="button" class="top-btn" id="resetViewBtn">초기화</button>
   </div>
 </header>
@@ -599,7 +599,7 @@ body.detail-open .detail-drawer {
     <div class="stage-bottom-bar">
       <div class="stage-hints">
         <span class="hint-chip">캐릭터/이름 클릭: 대화</span>
-        <span class="hint-chip">드래그: 회전 · 우클릭/Shift: 이동</span>
+        <span class="hint-chip">드래그·터치: 화면 이동</span>
         <span class="hint-chip">휠: 확대/축소</span>
       </div>
       <div class="view-group">
@@ -795,7 +795,6 @@ const actors = employeeDirectory.map((emp, idx) => {
 
 let selectedEmployee = employeeDirectory.find(e => e.id === 'COO') || employeeDirectory[0];
 let view2D = false;
-let autoRotate = false;
 let yaw = 0.56;
 let pitch = 0.56;
 let zoom = 41;
@@ -1033,9 +1032,6 @@ let lastFrameTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
   lastFrameTime = now;
-  if (autoRotate && !view2D && !dragging && !panning) {
-    yaw += dt * 0.14;
-  }
   updateActors(dt);
   renderScene(now / 1000);
   requestAnimationFrame(loop);
@@ -1050,19 +1046,57 @@ function resizeOfficeCanvas() {
 
 officeCanvas.addEventListener('contextmenu', e => e.preventDefault());
 
-officeCanvas.addEventListener('mousedown', e => {
+// 마우스 드래그·터치 이동 및 두 손가락 확대/축소
+const activePointers = new Map();
+let pointerStartX = 0;
+let pointerStartY = 0;
+let pointerMoved = false;
+let pinchDistance = 0;
+
+function distanceBetweenPointers() {
+  const pts = [...activePointers.values()];
+  if (pts.length < 2) return 0;
+  return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+}
+
+officeCanvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  officeCanvas.setPointerCapture(e.pointerId);
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  pointerStartX = e.clientX;
+  pointerStartY = e.clientY;
+  pointerMoved = false;
   lastX = e.clientX;
   lastY = e.clientY;
-  if (e.button === 2 || e.shiftKey || view2D) {
-    panning = true;
+  dragging = true;
+  panning = true;
+  if (activePointers.size === 2) pinchDistance = distanceBetweenPointers();
+});
+
+officeCanvas.addEventListener('pointermove', e => {
+  if (!activePointers.has(e.pointerId)) return;
+  e.preventDefault();
+  const previous = activePointers.get(e.pointerId);
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activePointers.size >= 2) {
+    const nextDistance = distanceBetweenPointers();
+    if (pinchDistance > 0 && nextDistance > 0) {
+      zoom = Math.max(24, Math.min(95, zoom * (nextDistance / pinchDistance)));
+    }
+    pinchDistance = nextDistance;
+    pointerMoved = true;
   } else {
-    dragging = true;
+    const dx = e.clientX - previous.x;
+    const dy = e.clientY - previous.y;
+    if (Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY) > 4) pointerMoved = true;
+    panX += dx;
+    panY += dy;
   }
 });
 
-window.addEventListener('mouseup', e => {
-  const moved = Math.hypot(e.clientX - lastX, e.clientY - lastY);
-  if (dragging && moved < 5) {
+function finishPointer(e) {
+  if (!activePointers.has(e.pointerId)) return;
+  if (activePointers.size === 1 && !pointerMoved) {
     const rect = officeCanvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
@@ -1076,27 +1110,17 @@ window.addEventListener('mouseup', e => {
       renderRosterStrip();
     }
   }
-  dragging = false;
-  panning = false;
-});
-
-window.addEventListener('mousemove', e => {
-  if (!dragging && !panning) return;
-  const dx = e.clientX - lastX;
-  const dy = e.clientY - lastY;
-  lastX = e.clientX;
-  lastY = e.clientY;
-  if (panning) {
-    panX += dx;
-    panY += dy;
-  } else {
-    autoRotate = false;
-    document.getElementById('autoRotateBtn').classList.remove('active');
-    yaw += dx * 0.008;
-    pitch = Math.max(0.22, Math.min(1.15, pitch + dy * 0.006));
+  activePointers.delete(e.pointerId);
+  pinchDistance = activePointers.size === 2 ? distanceBetweenPointers() : 0;
+  if (activePointers.size === 0) {
+    dragging = false;
+    panning = false;
+    pointerMoved = false;
   }
-});
+}
 
+officeCanvas.addEventListener('pointerup', finishPointer);
+officeCanvas.addEventListener('pointercancel', finishPointer);
 officeCanvas.addEventListener('wheel', e => {
   e.preventDefault();
   zoom = Math.max(24, Math.min(95, zoom - e.deltaY * 0.035));
@@ -1126,10 +1150,6 @@ document.getElementById('view3dBtn').addEventListener('click', () => {
   view2D = false;
   document.getElementById('view2dBtn').classList.remove('active');
   document.getElementById('view3dBtn').classList.add('active');
-});
-document.getElementById('autoRotateBtn').addEventListener('click', e => {
-  autoRotate = !autoRotate;
-  e.currentTarget.classList.toggle('active', autoRotate);
 });
 document.getElementById('toggleDetailBtn').addEventListener('click', e => {
   const open = document.body.classList.toggle('detail-open');
