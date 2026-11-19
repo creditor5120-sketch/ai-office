@@ -1078,17 +1078,26 @@ function renderScene(nowSec) {
   const sorted = [...actors].sort((a, b) => (a.x + a.z) - (b.x + b.z));
   sorted.forEach(ac => {
     const isSel = selectedEmployee && String(selectedEmployee.id) === String(ac.emp.id);
-    const walkBob = Math.abs(Math.sin(nowSec * 6 + ac.phase)) * 0.09;
-    const armSwing = Math.sin(nowSec * 6.5 + ac.phase) * 0.15;
+    const seated = ac.state === 'working';
+    const walkBob = seated ? 0 : Math.abs(Math.sin(nowSec * 6 + ac.phase)) * 0.09;
+    const armSwing = seated ? Math.sin(nowSec * 2.4 + ac.phase) * 0.035 : Math.sin(nowSec * 6.5 + ac.phase) * 0.15;
 
-    // 입체 박스 캐릭터 대신 얼굴·몸통·팔·다리가 구분되는 사람형 아바타
+    // 이동 중에는 걷고, 책상에 도착하면 의자에 앉아 컴퓨터로 일하는 자세
     const foot = project(ac.x, walkBob, ac.z);
-    const head = project(ac.x, walkBob + 0.88, ac.z);
-    const shoulder = project(ac.x, walkBob + 0.58, ac.z);
-    const leftArm = project(ac.x - 0.23 + armSwing * 0.18, walkBob + 0.48, ac.z);
-    const rightArm = project(ac.x + 0.23 - armSwing * 0.18, walkBob + 0.48, ac.z);
-    const leftFoot = project(ac.x - 0.11, walkBob + 0.04, ac.z);
-    const rightFoot = project(ac.x + 0.11, walkBob + 0.04, ac.z);
+    const head = project(ac.x, walkBob + (seated ? 0.72 : 0.88), ac.z);
+    const shoulder = project(ac.x, walkBob + (seated ? 0.46 : 0.58), ac.z);
+    const leftArm = seated
+      ? project(ac.x - 0.18, 0.39 + armSwing, ac.z - 0.16)
+      : project(ac.x - 0.23 + armSwing * 0.18, walkBob + 0.48, ac.z);
+    const rightArm = seated
+      ? project(ac.x + 0.18, 0.39 - armSwing, ac.z - 0.16)
+      : project(ac.x + 0.23 - armSwing * 0.18, walkBob + 0.48, ac.z);
+    const leftFoot = seated
+      ? project(ac.x - 0.12, 0.10, ac.z + 0.10)
+      : project(ac.x - 0.11, walkBob + 0.04, ac.z);
+    const rightFoot = seated
+      ? project(ac.x + 0.12, 0.10, ac.z + 0.10)
+      : project(ac.x + 0.11, walkBob + 0.04, ac.z);
     const scale = Math.max(0.62, Math.min(1.25, zoom / 41));
     const bodyW = 12 * scale;
     const bodyH = 19 * scale;
@@ -1101,12 +1110,21 @@ function renderScene(nowSec) {
     ctx.strokeStyle = '#273449';
     ctx.lineWidth = 4.2 * scale;
     ctx.beginPath();
-    ctx.moveTo(shoulder.x - 3 * scale, shoulder.y + bodyH * 0.55);
-    ctx.lineTo(leftFoot.x, leftFoot.y - 1 * scale);
-    ctx.moveTo(shoulder.x + 3 * scale, shoulder.y + bodyH * 0.55);
-    ctx.lineTo(rightFoot.x, rightFoot.y - 1 * scale);
+    if (seated) {
+      ctx.moveTo(shoulder.x - 3 * scale, shoulder.y + bodyH * 0.48);
+      ctx.lineTo(shoulder.x - 8 * scale, shoulder.y + bodyH * 0.78);
+      ctx.lineTo(leftFoot.x, leftFoot.y);
+      ctx.moveTo(shoulder.x + 3 * scale, shoulder.y + bodyH * 0.48);
+      ctx.lineTo(shoulder.x + 8 * scale, shoulder.y + bodyH * 0.78);
+      ctx.lineTo(rightFoot.x, rightFoot.y);
+    } else {
+      ctx.moveTo(shoulder.x - 3 * scale, shoulder.y + bodyH * 0.55);
+      ctx.lineTo(leftFoot.x, leftFoot.y - 1 * scale);
+      ctx.moveTo(shoulder.x + 3 * scale, shoulder.y + bodyH * 0.55);
+      ctx.lineTo(rightFoot.x, rightFoot.y - 1 * scale);
+    }
     ctx.stroke();
-    // 팔
+    // 팔: 앉아 있을 때는 책상 위 키보드 쪽으로 손을 뻗는다.
     ctx.strokeStyle = '#e7b995';
     ctx.lineWidth = 4.5 * scale;
     ctx.beginPath();
