@@ -23,11 +23,16 @@ await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
 const browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
 const pageErrors = [];
-page.on('pageerror', error => pageErrors.push(error.message));
+page.on('pageerror', error => pageErrors.push(error.stack || error.message));
 
 try {
   await page.goto('http://127.0.0.1:4173/office3d.html', { waitUntil: 'commit', timeout: 15000 });
-  await page.locator('#loading').waitFor({ state: 'hidden', timeout: 45000 });
+  try {
+    await page.locator('#loading').waitFor({ state: 'hidden', timeout: 45000 });
+  } catch {
+    const loadingText = await page.locator('#loading').innerText().catch(() => 'loading element unavailable');
+    throw new Error('3D initialization did not finish. Loading panel: ' + loadingText + '\\nBrowser errors: ' + pageErrors.join('\\n'));
+  }
   await page.locator('#scene canvas').waitFor({ state: 'attached', timeout: 10000 });
 
   const staffCount = await page.locator('#staffStrip .staffCard').count();
