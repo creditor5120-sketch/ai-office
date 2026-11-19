@@ -242,9 +242,10 @@ const characterNames={
 };
 for(const p of directory){
   const displayPerson={...p,jobTitle:p.name,name:characterNames[p.id]||p.name};
-  if(p.id==='COO'){makeAvatar(displayPerson,1,18,-10);continue}
+  if(p.id==='COO'){makeAvatar(displayPerson,1,18,-11.7);continue}
   const [x,z]=nextSlot(p.department);
-  makeAvatar(displayPerson,avatars.length,x,z)
+  const seatOffset=p.department==='기술·IT'?1.05:1.02;
+  makeAvatar(displayPerson,avatars.length,x,z+seatOffset)
 }
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
