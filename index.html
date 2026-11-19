@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SW AI OFFICE</title>
+<title>SW AI 사무실</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
 <style>
 * {
@@ -14,19 +14,19 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #e9dec8;
-  color: #2e261d;
+  background: #ece3d2;
+  color: #2b241b;
   font-family: 'NanumSquare', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* 상단 헤더 */
+/* 상단 바 */
 .top-bar {
-  height: 52px;
-  background: #f5ede0;
-  border-bottom: 1px solid #d5c6ad;
+  height: 54px;
+  background: #f6efe2;
+  border-bottom: 1px solid #d4c5ab;
   padding: 0 14px;
   display: flex;
   align-items: center;
@@ -35,84 +35,95 @@ html, body {
   flex-shrink: 0;
 }
 
-.brand-wrap {
+.top-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.brand-mark {
-  width: 30px;
-  height: 30px;
+.brand-pill {
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
   border-radius: 6px;
-  background: #8c5a2b;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  color: #3a3025;
 }
 
-.brand-main {
-  font-size: 16px;
+.brand-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.3px;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .brand-sub {
   font-size: 11px;
-  color: #786956;
-  line-height: 1.1;
+  color: #7c6d59;
+  line-height: 1.15;
 }
 
-.top-controls {
+.top-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.top-btn {
-  background: #fbf6ec;
-  color: #3a3025;
-  border: 1px solid #cbbba0;
+.status-chip {
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 5px 10px;
   font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
+  color: #4b3f31;
 }
 
-.top-btn.active {
+.icon-btn {
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a3025;
+  cursor: pointer;
+}
+
+.icon-btn.active {
   background: #8c5a2b;
   color: #fff;
   border-color: #8c5a2b;
 }
 
-/* 메인 분할 영역 */
-.main-workspace {
+/* 메인 2분할 영역 */
+.main-grid {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1.45fr 1fr;
+  grid-template-columns: 1.52fr 1fr;
   gap: 10px;
   padding: 10px;
 }
 
-body.detail-open .floor-panel {
+body.detail-open .office-stage {
   display: none;
 }
 
-body.detail-open .main-workspace {
+body.detail-open .main-grid {
   grid-template-columns: 1fr;
 }
 
-.floor-panel {
+.office-stage {
   position: relative;
-  background: #dfd3bc;
+  background: #e6dcc8;
   border: 1px solid #cbbba0;
   border-radius: 8px;
   overflow: hidden;
@@ -130,53 +141,80 @@ body.detail-open .main-workspace {
   cursor: grabbing;
 }
 
-.active-badge {
+.stage-top-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(251, 246, 236, 0.94);
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 250, 240, 0.95);
   border: 1px solid #cbbba0;
-  color: #2e7d32;
+  border-radius: 999px;
+  padding: 5px 12px;
   font-size: 12px;
   font-weight: 800;
-  padding: 5px 10px;
-  border-radius: 6px;
+  color: #26734d;
   pointer-events: none;
 }
 
-.floor-controls {
+.stage-bottom-bar {
   position: absolute;
-  left: 10px;
+  left: 12px;
+  right: 12px;
   bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(251, 246, 236, 0.94);
-  border: 1px solid #cbbba0;
-  border-radius: 6px;
-  padding: 4px 6px;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
 }
 
-.floor-mini-btn {
-  background: #fffaf0;
+.stage-hints {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  pointer-events: auto;
+}
+
+.hint-pill {
+  background: rgba(255, 250, 240, 0.94);
   border: 1px solid #cbbba0;
-  border-radius: 4px;
-  color: #3a3025;
+  border-radius: 6px;
+  padding: 5px 9px;
   font-size: 11px;
   font-weight: 700;
+  color: #4b3f31;
+}
+
+.floor-view-toggles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 250, 240, 0.95);
+  border: 1px solid #cbbba0;
+  border-radius: 6px;
+  padding: 3px;
+  pointer-events: auto;
+}
+
+.toggle-pill-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
   padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #4b3f31;
   cursor: pointer;
 }
 
-.floor-hint {
-  font-size: 11px;
-  color: #6f604d;
-  padding: 0 4px;
+.toggle-pill-btn.active {
+  background: #3a3025;
+  color: #fff;
 }
 
-/* 우측 직원 지침 및 업무 창 */
-.side-panel {
-  background: #f5ede0;
+/* 우측 대화 및 업무 패널 */
+.chat-panel {
+  background: #f6efe2;
   border: 1px solid #cbbba0;
   border-radius: 8px;
   padding: 12px 14px;
@@ -184,250 +222,340 @@ body.detail-open .main-workspace {
   flex-direction: column;
   gap: 8px;
   min-height: 0;
-  overflow-y: auto;
 }
 
-.profile-row {
+.chat-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 8px;
   padding-bottom: 8px;
   border-bottom: 1px solid #dfd3bc;
 }
 
-.profile-icon {
+.chat-agent-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.agent-avatar-box {
   width: 38px;
   height: 38px;
   border-radius: 8px;
-  background: #8c5a2b;
+  background: #334e68;
   color: #fff;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.profile-name {
-  font-size: 16px;
+.agent-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agent-name {
+  font-size: 15px;
   font-weight: 900;
 }
 
-.profile-meta {
-  font-size: 12px;
-  color: #786956;
+.agent-role-tag {
+  background: #ebe0ca;
+  color: #5c4d3c;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-.principle-box {
-  background: #fbf6ec;
-  border: 1px solid #dfd3bc;
+.agent-sub {
+  font-size: 11px;
+  color: #7c6d59;
+  margin-top: 2px;
+}
+
+.principle-toggle {
+  font-size: 11px;
+  color: #6b5b47;
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
+  border-radius: 5px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.principle-sheet {
+  display: none;
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
   border-radius: 6px;
-  padding: 10px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #3a3025;
-  max-height: 190px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  max-height: 120px;
   overflow-y: auto;
   white-space: pre-wrap;
 }
 
-.response-box {
-  background: #fbf6ec;
+.principle-sheet.open {
+  display: block;
+}
+
+.chat-stream {
+  flex: 1;
+  min-height: 90px;
+  background: #fffdf9;
   border: 1px solid #dfd3bc;
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-y: auto;
   font-size: 13px;
   line-height: 1.55;
-  min-height: 92px;
-  max-height: 240px;
-  overflow-y: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.input-row-2 {
+.auth-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
+}
+
+.composer-card {
+  background: #fffdf9;
+  border: 1px solid #cbbba0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.composer-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #6b5b47;
 }
 
 input[type="password"],
 input[type="text"],
 textarea {
   width: 100%;
-  background: #fffdf9;
-  border: 1px solid #cbbba0;
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
   border-radius: 6px;
-  color: #2e261d;
+  color: #2b241b;
   font-family: inherit;
-  font-size: 13px;
-  padding: 8px 10px;
+  font-size: 12px;
+  padding: 7px 9px;
 }
 
 textarea#request {
-  min-height: 64px;
-  resize: vertical;
+  background: transparent;
+  border: 0;
+  padding: 2px 0;
+  min-height: 46px;
+  resize: none;
+  font-size: 13px;
 }
 
-.submit-row {
+textarea#request:focus,
+input:focus {
+  outline: none;
+}
+
+.composer-footer {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid #efe6d6;
+}
+
+.composer-hint {
+  font-size: 11px;
+  color: #8a7a66;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-btn {
+  background: #f3ead8;
+  border: 1px solid #cbbba0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a3025;
+  cursor: pointer;
 }
 
 .send-btn {
-  background: #8c5a2b;
-  color: #fff;
-  border: 0;
+  background: #e6dcc8;
+  color: #3a3025;
+  border: 1px solid #c5b396;
   border-radius: 6px;
-  padding: 9px 16px;
-  font-family: inherit;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }
 
+.send-btn.ready,
 .send-btn:hover {
-  background: #734820;
-}
-
-.send-btn:disabled {
-  background: #b5a68e;
-  cursor: wait;
+  background: #8c5a2b;
+  color: #fff;
+  border-color: #8c5a2b;
 }
 
 .retry-btn {
-  background: #35684b;
+  background: #2f6f4e;
   color: #fff;
   border: 0;
   border-radius: 6px;
-  padding: 9px 14px;
-  font-family: inherit;
-  font-size: 13px;
+  padding: 6px 11px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }
 
-/* 하단 직원 스트립 */
-.roster-strip {
-  height: 76px;
-  background: #f5ede0;
-  border-top: 1px solid #d5c6ad;
+/* 하단 직원 카드 스트립 */
+.bottom-strip {
+  height: 92px;
+  background: #f6efe2;
+  border-top: 1px solid #d4c5ab;
   padding: 6px 10px;
   display: flex;
-  gap: 6px;
+  align-items: stretch;
+  gap: 8px;
   overflow-x: auto;
   flex-shrink: 0;
 }
 
-.roster-card {
-  min-width: 112px;
-  background: #fbf6ec;
-  border: 1px solid #d5c6ad;
-  border-radius: 6px;
-  padding: 5px 8px;
+.staff-card {
+  min-width: 146px;
+  background: #fffdf9;
+  border: 1px solid #d4c5ab;
+  border-radius: 8px;
+  padding: 6px 8px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 2px;
+  justify-content: space-between;
   flex-shrink: 0;
 }
 
-.roster-card.selected {
+.staff-card.selected {
   border: 2px solid #8c5a2b;
-  background: #fff2d8;
+  background: #fff4df;
 }
 
-.roster-name {
+.staff-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.staff-name {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.roster-dept {
+.staff-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #e8f5e9;
+  color: #256d3b;
+}
+
+.staff-mid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 10px;
-  color: #786956;
+  color: #7c6d59;
+}
+
+.staff-dept {
+  font-size: 10px;
+  color: #5c4d3c;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.roster-state {
-  font-size: 10px;
-  font-weight: 700;
-  color: #2e7d32;
+.add-staff-card {
+  min-width: 72px;
+  background: #fffaf0;
+  border: 1px dashed #c5b396;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #5c4d3c;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-/* 업무 상세/결과/이력 패널 */
+/* 업무 상세 드로어 */
 .detail-drawer {
   display: none;
-  background: #f5ede0;
-  border: 1px solid #cbbba0;
+  background: #fffaf0;
+  border: 1px solid #d4c5ab;
   border-radius: 8px;
-  padding: 12px 14px;
-  margin-top: 6px;
+  padding: 10px 12px;
 }
 
 body.detail-open .detail-drawer {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
-.detail-section {
-  background: #fbf6ec;
-  border: 1px solid #dfd3bc;
+.detail-box {
+  background: #fffdf9;
+  border: 1px solid #e3d6be;
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
-.detail-section h4 {
-  margin: 0 0 8px;
-  font-size: 14px;
+.detail-box h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
 }
 
 .tool-row {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.tool-btn {
-  background: #efe5d3;
-  border: 1px solid #cbbba0;
-  border-radius: 5px;
-  color: #2e261d;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 10px;
-  cursor: pointer;
+  margin-bottom: 6px;
 }
 
 .history-item-btn {
   width: 100%;
   text-align: left;
-  background: #fffdf9;
+  background: #fffaf0;
   border: 1px solid #dfd3bc;
   border-radius: 6px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  font-size: 12px;
+  padding: 6px 8px;
+  margin-bottom: 5px;
+  font-size: 11px;
   cursor: pointer;
-}
-
-.structured-report section {
-  background: #fffdf9;
-  border: 1px solid #e3d6be;
-  border-radius: 6px;
-  padding: 8px 10px;
-  margin: 6px 0;
-}
-
-.structured-item {
-  border-left: 3px solid #8c5a2b;
-  padding-left: 8px;
-  margin: 6px 0;
 }
 
 @media (max-width: 900px) {
@@ -435,13 +563,13 @@ body.detail-open .detail-drawer {
     height: auto;
     overflow: auto;
   }
-  .main-workspace {
+  .main-grid {
     grid-template-columns: 1fr;
   }
-  .floor-panel {
+  .office-stage {
     height: 360px;
   }
-  .input-row-2 {
+  .auth-bar {
     grid-template-columns: 1fr;
   }
 }
@@ -449,87 +577,106 @@ body.detail-open .detail-drawer {
 </head>
 <body>
 <header class="top-bar">
-  <div class="brand-wrap">
-    <div class="brand-mark">SW</div>
-    <div>
-      <div class="brand-main">SW AI OFFICE</div>
-      <div class="brand-sub">AI 가상 사무실 · 단층</div>
+  <div class="top-left">
+    <div class="brand-pill">TEAM.AI.ID</div>
+    <div class="brand-title-wrap">
+      <div class="brand-title">SW AI 사무실</div>
+      <div class="brand-sub">AI 가상 사무실</div>
     </div>
   </div>
-  <div class="top-controls">
-    <button type="button" class="top-btn" id="resetViewBtn">전체 보기</button>
-    <button type="button" class="top-btn active" id="autoRotateBtn">자동 회전</button>
-    <button type="button" class="top-btn" id="view2dBtn">2D 보기</button>
-    <button type="button" class="top-btn" id="toggleDetailBtn">↗ 업무 상세</button>
+  <div class="top-right">
+    <span class="status-chip" id="headerStaffCount">● 직원 33명</span>
+    <span class="status-chip">● 온라인</span>
+    <button type="button" class="icon-btn" id="autoRotateBtn">자동 회전</button>
+    <button type="button" class="icon-btn" id="toggleDetailBtn">업무 상세</button>
+    <button type="button" class="icon-btn" id="resetViewBtn">초기화</button>
   </div>
 </header>
 
-<main class="main-workspace">
-  <section class="floor-panel" aria-label="단층 3D 가상 사무실">
-    <div class="active-badge" id="activeStaffBadge">● 활성 직원 33명</div>
+<main class="main-grid">
+  <section class="office-stage" aria-label="AI 가상 사무실">
+    <div class="stage-top-badge" id="activeStaffBadge">● 활성 직원 33명</div>
     <canvas id="officeCanvas"></canvas>
-    <div class="floor-controls">
-      <button type="button" class="floor-mini-btn" id="zoomOutBtn">-</button>
-      <button type="button" class="floor-mini-btn" id="zoomInBtn">+</button>
-      <button type="button" class="floor-mini-btn" id="fitFloorBtn">전체 보기</button>
-      <span class="floor-hint">드래그: 회전 · 휠: 확대/축소 · 캐릭터 클릭: 선택</span>
+    <div class="stage-bottom-bar">
+      <div class="stage-hints">
+        <span class="hint-pill">캐릭터/이름 클릭: 대화</span>
+        <span class="hint-pill">드래그: 회전 · 우클릭/Shift: 이동</span>
+        <span class="hint-pill">휠: 확대/축소</span>
+      </div>
+      <div class="floor-view-toggles">
+        <button type="button" class="toggle-pill-btn active" id="floor1Btn">1층</button>
+        <button type="button" class="toggle-pill-btn" id="view2dBtn">2D</button>
+        <button type="button" class="toggle-pill-btn active" id="view3dBtn">3D</button>
+      </div>
     </div>
   </section>
 
-  <section class="side-panel" aria-label="직원 지침 및 업무 창">
-    <div class="profile-row">
-      <div class="profile-icon" id="profileAvatar">알</div>
-      <div>
-        <div class="profile-name" id="profileName">알렉스</div>
-        <div class="profile-meta" id="profileMeta">소속 본부장실 · 직급 본부장</div>
+  <section class="chat-panel" aria-label="직원 대화 및 업무 지시">
+    <div class="chat-header">
+      <div class="chat-agent-info">
+        <div class="agent-avatar-box" id="profileAvatar">알</div>
+        <div>
+          <div class="agent-name-row">
+            <span class="agent-name" id="profileName">알렉스</span>
+            <span class="agent-role-tag" id="profileRoleTag">관리자 / 본부장</span>
+          </div>
+          <div class="agent-sub" id="profileMeta">Idle - 도와드릴 준비가 되어 있습니다</div>
+        </div>
       </div>
+      <button type="button" class="principle-toggle" id="togglePrincipleBtn">업무 지침 보기</button>
     </div>
 
-    <div class="principle-box" id="principleBox"></div>
+    <div class="principle-sheet" id="principleBox"></div>
 
-    <div class="response-box" id="response">업무 지시·답변은 이 창에 표시</div>
+    <div class="chat-stream" id="response">업무 지시와 답변이 이 창에 표시됩니다. 직원을 선택하고 메시지를 입력해 주세요.</div>
 
-    <div class="input-row-2">
+    <div class="auth-bar">
       <input id="officeAccessToken" type="password" autocomplete="off" placeholder="서버 접속 인증 값 입력">
       <input id="representativeAccessToken" type="password" autocomplete="off" placeholder="대표 승인 인증 값 입력">
     </div>
 
-    <textarea id="request" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea>
-
-    <div class="submit-row">
-      <button id="retryTaskButton" type="button" class="retry-btn" style="display:none;">보존된 업무 재처리</button>
-      <button id="sendButton" type="button" class="send-btn">입력 전송 →</button>
+    <div class="composer-card">
+      <div class="composer-label">메시지</div>
+      <textarea id="request" placeholder="알렉스에게 메시지를 작성하십시오..."></textarea>
+      <div class="composer-footer">
+        <span class="composer-hint">입력 전송 · Shift+새 줄 입력</span>
+        <div class="composer-actions">
+          <button id="retryTaskButton" type="button" class="retry-btn" style="display:none;">보존된 업무 재처리</button>
+          <button type="button" class="sub-btn" id="attachSampleBtn">+ 첨부</button>
+          <button id="sendButton" type="button" class="send-btn">보내기 →</button>
+        </div>
+      </div>
     </div>
 
     <div class="detail-drawer" id="detailDrawer">
-      <div class="detail-section" id="deliverableCard" style="display:none;">
+      <div class="detail-box" id="deliverableCard" style="display:none;">
         <div class="tool-row">
-          <button id="copyDeliverable" type="button" class="tool-btn">전체 복사</button>
-          <button id="downloadWord" type="button" class="tool-btn">Word 다운로드</button>
-          <button id="downloadPdf" type="button" class="tool-btn">PDF 다운로드</button>
+          <button id="copyDeliverable" type="button" class="sub-btn">전체 복사</button>
+          <button id="downloadWord" type="button" class="sub-btn">Word 다운로드</button>
+          <button id="downloadPdf" type="button" class="sub-btn">PDF 다운로드</button>
         </div>
         <div id="deliverableContent"></div>
       </div>
 
-      <div class="detail-section">
+      <div class="detail-box">
         <h4>최근 업무 기록</h4>
         <div id="taskHistoryList">저장된 업무 기록이 없습니다.</div>
       </div>
 
-      <div class="detail-section">
+      <div class="detail-box">
         <h4>서버 업무 이력 조회</h4>
-        <div class="input-row-2">
+        <div class="auth-bar">
           <input id="serverHistoryTaskId" type="text" autocomplete="off" placeholder="조회할 업무 ID 입력">
-          <button id="loadServerHistoryButton" type="button" class="tool-btn">서버 이력 조회</button>
+          <button id="loadServerHistoryButton" type="button" class="sub-btn">서버 이력 조회</button>
         </div>
-        <p id="serverHistoryStatus" class="profile-meta" aria-live="polite">업무 ID를 입력해 이력을 조회하세요.</p>
-        <ol id="serverHistoryEvents" class="profile-meta"></ol>
+        <p id="serverHistoryStatus" class="agent-sub" aria-live="polite">업무 ID를 입력해 이력을 조회하세요.</p>
+        <ol id="serverHistoryEvents" class="agent-sub"></ol>
       </div>
     </div>
   </section>
 </main>
 
-<footer class="roster-strip" id="rosterStrip" aria-label="직원 목록"></footer>
+<footer class="bottom-strip" id="rosterStrip" aria-label="직원 카드 목록"></footer>
 
 <script type="module">
 let employeeDirectory = [];
@@ -542,21 +689,26 @@ try {
 
 if (!employeeDirectory.length) {
   employeeDirectory = [
-    { id: 'CEO', name: '피터', department: '대표이사실', position: '대표이사', instruction: '최종 의사결정 및 승인을 담당한다.' },
-    { id: 'COO', name: '알렉스', department: '본부장실', position: '본부장', instruction: '업무 분석, 담당 팀과 직원 배정, 진행 총괄 및 최종 보고를 담당한다.' },
-    { id: 'MGMT_1', name: '베니', department: '경영관리', position: '매니저', instruction: '경영관리 및 운영 조율을 담당한다.' },
-    { id: 'MGMT_2', name: '카리나', department: '경영관리', position: '담당', instruction: '경영관리 현황 집계 및 보고를 담당한다.' },
-    { id: 'MGMT_3', name: '이든', department: '경영관리', position: '담당', instruction: '예산 및 자원 관리를 담당한다.' },
-    { id: 'MGMT_4', name: '클로이', department: '경영관리', position: '담당', instruction: '일정 및 리스크 점검을 담당한다.' },
-    { id: 'MGMT_5', name: '루카스', department: '경영관리', position: '담당', instruction: '운영 프로세스 정비를 담당한다.' },
-    { id: 'LEGAL_1', name: '안나', department: '법무', position: '매니저', instruction: '계약 검토 및 법률 자문을 담당한다.' },
-    { id: 'LEGAL_2', name: '벤', department: '법무', position: '담당', instruction: '규제 및 컴플라이언스 검토를 담당한다.' },
-    { id: 'LEGAL_3', name: '소피아', department: '법무', position: '담당', instruction: '분쟁 및 약관 검토를 담당한다.' }
+    { id: 'COO', name: '알렉스', department: '본부장실 · 본부장', position: '관리자', instruction: '업무 분석, 담당 팀과 직원 배정, 진행 총괄 및 최종 보고를 담당한다.' },
+    { id: 'CEO', name: '피터', department: '대표이사실 · 대표이사', position: '임원', instruction: '최종 의사결정 및 승인을 담당한다.' },
+    { id: 'DEV_1', name: '유진', department: 'IT 및 소프트웨어 개발', position: '시니어', instruction: '시스템 개발 및 기술 검토를 담당한다.' },
+    { id: 'OPS_1', name: '에이든', department: '관리 및 운영', position: '매니저', instruction: '운영 총괄 및 일정 조율을 담당한다.' },
+    { id: 'LEG_1', name: '단테', department: '법무 및 컴플라이언스', position: '리드', instruction: '계약 검토 및 법적 리스크 점검을 담당한다.' },
+    { id: 'FIN_1', name: '제니', department: '재무 및 회계', position: '매니저', instruction: '예산 검토 및 정산 관리를 담당한다.' },
+    { id: 'DEV_2', name: '민준', department: 'IT 및 소프트웨어 개발', position: '담당', instruction: '데이터 파이프라인 및 자동화를 담당한다.' },
+    { id: 'DEV_3', name: '해나', department: 'IT 및 소프트웨어 개발', position: '담당', instruction: '인터페이스 및 화면 구성을 담당한다.' },
+    { id: 'MKT_1', name: '로라', department: '브랜드 및 커뮤니케이션', position: '매니저', instruction: '대외 메시지 및 홍보 자료를 담당한다.' },
+    { id: 'SLS_1', name: '브라이언', department: '사업개발 및 영업', position: '매니저', instruction: '제휴 및 거래선 협의를 담당한다.' },
+    { id: 'OPS_2', name: '클로이', department: '관리 및 운영', position: '담당', instruction: '문서 관리 및 행정 지원을 담당한다.' },
+    { id: 'OPS_3', name: '루카스', department: '관리 및 운영', position: '담당', instruction: '현장 점검 및 자원 배치를 담당한다.' },
+    { id: 'CS_1', name: '소피아', department: '고객 지원', position: '매니저', instruction: '고객 문의 응대 및 이슈 해결을 담당한다.' },
+    { id: 'CS_2', name: '줄리안', department: '고객 지원', position: '담당', instruction: '서비스 품질 개선 및 피드백 정리를 담당한다.' },
+    { id: 'LEG_2', name: '앤', department: '법무 및 컴플라이언스', position: '담당', instruction: '약관 및 규정 준수 검토를 담당한다.' }
   ];
 }
 
 const COMMON_PRINCIPLES = [
-  '너는 SW AI OFFICE의 정식 AI 직원이다.',
+  '너는 SW AI 사무실의 정식 AI 직원이다.',
   '',
   '[공통 업무 원칙]',
   '1. 사용자의 업무 목적과 핵심 요구사항을 정확히 파악한다.',
@@ -594,88 +746,65 @@ const EMPLOYEE_STATE_KEY = 'swAIOfficeEmployeeStates';
 const employeeById = new Map(employeeDirectory.map(e => [String(e.id), e]));
 const employeeByName = new Map(employeeDirectory.map(e => [String(e.name), e]));
 
-// 단층 사무실 구역 (2층 없음)
-const ROOMS = [
-  { name: '대회의실', x1: -7.2, z1: -4.4, x2: -2.4, z2: -1.4, floor: '#efe3cb' },
-  { name: '업무홀', x1: -7.2, z1: -1.2, x2: -1.8, z2: 2.2, floor: '#f4ead6' },
-  { name: '임원실', x1: -7.2, z1: 2.4, x2: -2.2, z2: 4.6, floor: '#ede0c6' },
-  { name: '라운지', x1: -1.6, z1: -4.4, x2: 2.4, z2: -1.6, floor: '#f2e6cf' },
-  { name: '집무실', x1: -1.6, z1: -1.4, x2: 2.4, z2: 2.2, floor: '#f6ede0' },
-  { name: '회의실', x1: -2.0, z1: 2.4, x2: 2.4, z2: 4.6, floor: '#efe3cb' },
-  { name: '카페테리아', x1: 2.6, z1: -4.4, x2: 7.2, z2: -0.6, floor: '#f5e4c3' },
-  { name: '스튜디오', x1: 2.6, z1: -0.4, x2: 7.2, z2: 4.6, floor: '#f2e7d2' }
+// 캡처 화면 스타일의 1층 아이소메트릭 오피스 구역 & 가구
+const ZONES = [
+  { name: '개발·운영존', x1: -7.6, z1: -4.6, x2: -1.6, z2: 0.4, color: '#f3e8d2' },
+  { name: '메인 회의실', x1: -7.6, z1: 0.7, x2: -1.6, z2: 4.8, color: '#efe3ca' },
+  { name: '라운지·휴게', x1: -1.3, z1: -4.6, x2: 2.3, z2: 0.4, color: '#f5ebd6' },
+  { name: '프로젝트룸', x1: -1.3, z1: 0.7, x2: 2.3, z2: 4.8, color: '#f1e5cd' },
+  { name: '비즈니스존', x1: 2.6, z1: -4.6, x2: 7.6, z2: 4.8, color: '#f4e9d3' }
 ];
 
-const DESKS = [
-  { x: -5.4, z: -0.2, w: 1.1, d: 0.55 },
-  { x: -3.6, z: -0.2, w: 1.1, d: 0.55 },
-  { x: -5.4, z: 1.2, w: 1.1, d: 0.55 },
-  { x: -3.6, z: 1.2, w: 1.1, d: 0.55 },
-  { x: -0.3, z: 0.1, w: 1.1, d: 0.55 },
-  { x: 1.3, z: 0.1, w: 1.1, d: 0.55 },
-  { x: 4.1, z: 1.2, w: 1.1, d: 0.55 },
-  { x: 5.7, z: 1.2, w: 1.1, d: 0.55 }
+const WORKSTATIONS = [
+  { x: -6.2, z: -3.2 }, { x: -4.6, z: -3.2 }, { x: -3.0, z: -3.2 },
+  { x: -6.2, z: -1.2 }, { x: -4.6, z: -1.2 }, { x: -3.0, z: -1.2 },
+  { x: 3.9, z: -2.8 }, { x: 5.8, z: -2.8 },
+  { x: 3.9, z: -0.6 }, { x: 5.8, z: -0.6 },
+  { x: 3.9, z: 1.6 },  { x: 5.8, z: 1.6 },
+  { x: 3.9, z: 3.5 },  { x: 5.8, z: 3.5 }
 ];
 
-const SOFAS = [
-  { x: 3.4, z: -3.2, w: 1.1, d: 0.45 },
-  { x: 3.4, z: -1.6, w: 1.1, d: 0.45 },
-  { x: -0.2, z: -3.1, w: 1.2, d: 0.45 }
-];
-
-const PLANTS = [
-  { x: -6.7, z: -3.9 },
-  { x: 2.1, z: -3.9 },
-  { x: 6.7, z: -3.9 },
-  { x: -6.7, z: 4.1 },
-  { x: 2.1, z: 4.1 },
-  { x: 6.7, z: 4.1 }
+const SERVER_RACKS = [
+  { x: -6.8, z: 1.6 }, { x: -5.9, z: 1.6 },
+  { x: -6.8, z: 3.6 }, { x: -5.9, z: 3.6 }
 ];
 
 const WAYPOINTS = [
-  { x: -4.8, z: -2.8 },
-  { x: -5.4, z: -0.8 },
-  { x: -3.6, z: -0.8 },
-  { x: -5.4, z: 0.6 },
-  { x: -3.6, z: 0.6 },
-  { x: -4.7, z: 3.5 },
-  { x: -0.3, z: -0.5 },
-  { x: 1.3, z: -0.5 },
-  { x: 0.2, z: 3.5 },
-  { x: 4.1, z: -2.4 },
-  { x: 5.5, z: -2.2 },
-  { x: 4.1, z: 0.5 },
-  { x: 5.7, z: 0.5 },
-  { x: 4.9, z: 2.8 }
+  ...WORKSTATIONS.map(w => ({ x: w.x, z: w.z + 0.55 })),
+  { x: -4.5, z: 2.7 },
+  { x: 0.4, z: -2.0 },
+  { x: 0.4, z: 2.5 },
+  { x: 4.8, z: 0.4 }
 ];
 
-const PALETTE = ['#2b5876', '#4e4376', '#2c7744', '#8e44ad', '#c0392b', '#16a085', '#d35400', '#2980b9'];
+const PALETTE = ['#2b4c7e', '#3a6b5c', '#7c4d3b', '#52487a', '#8c5a2b', '#2f6f7e', '#6b4c35', '#3e5c76'];
 
 const actors = employeeDirectory.map((emp, idx) => {
   const wp = WAYPOINTS[idx % WAYPOINTS.length];
-  const nextWp = WAYPOINTS[(idx + 3) % WAYPOINTS.length];
+  const nextWp = WAYPOINTS[(idx + 2) % WAYPOINTS.length];
   return {
     emp,
     x: wp.x,
     z: wp.z,
     targetX: nextWp.x,
     targetZ: nextWp.z,
-    speed: 0.55 + (idx % 5) * 0.14,
-    phase: idx * 0.7,
+    speed: 0.65 + (idx % 4) * 0.16,
+    phase: idx * 0.85,
     color: PALETTE[idx % PALETTE.length],
-    pauseTimer: (idx % 4) * 0.6
+    pauseTimer: (idx % 3) * 0.5
   };
 });
 
 let selectedEmployee = employeeDirectory.find(e => e.id === 'COO') || employeeDirectory[0];
 let view2D = false;
-let autoRotate = true;
-let yaw = 0.55;
-let pitch = 0.58;
-let zoom = 42;
+let autoRotate = false;
+let yaw = 0.56;
+let pitch = 0.56;
+let zoom = 41;
 let panX = 0;
-let panY = 18;
+let panY = 14;
 let dragging = false;
+let panning = false;
 let lastX = 0;
 let lastY = 0;
 const canvasHits = [];
@@ -683,12 +812,18 @@ const canvasHits = [];
 const officeCanvas = document.getElementById('officeCanvas');
 const ctx = officeCanvas.getContext('2d');
 
+function updateSendButtonState() {
+  sendButton.classList.toggle('ready', Boolean(requestBox.value.trim()));
+}
+
 function renderRightPanelEmployee() {
   const emp = selectedEmployee || headOfOffice;
   document.getElementById('profileAvatar').textContent = (emp.name || '직').slice(0, 1);
   document.getElementById('profileName').textContent = emp.name;
+  document.getElementById('profileRoleTag').textContent = emp.position || '담당';
   document.getElementById('profileMeta').textContent =
-    `소속 ${emp.department || '본부장실'} · 직급 ${emp.position || '담당'}`;
+    `Idle - ${emp.department || 'AI 가상 사무실'} · 도와드릴 준비가 되어 있습니다`;
+  requestBox.placeholder = `${emp.name}에게 메시지를 작성하십시오...`;
   const individual = emp.instruction
     ? `\n\n[개별 직무 지침]\n${emp.instruction}`
     : '';
@@ -703,39 +838,54 @@ function renderRosterStrip() {
     states = JSON.parse(localStorage.getItem(EMPLOYEE_STATE_KEY) || '{}');
   } catch (_) {}
 
-  employeeDirectory.forEach(emp => {
+  employeeDirectory.forEach((emp, idx) => {
     const isSel = selectedEmployee && String(selectedEmployee.id) === String(emp.id);
-    const st = states[emp.id]?.status || '대기';
+    const st = states[emp.id]?.status || (idx < 4 ? '유휴' : '활성');
     const card = document.createElement('div');
-    card.className = `roster-card ${isSel ? 'selected' : ''}`;
+    card.className = `staff-card ${isSel ? 'selected' : ''}`;
     card.innerHTML = `
-      <div class="roster-name">${emp.name}</div>
-      <div class="roster-dept">${emp.department || ''} · ${emp.position || ''}</div>
-      <div class="roster-state">● ${st}</div>
+      <div class="staff-card-top">
+        <span class="staff-name">${emp.name}</span>
+        <span class="staff-badge">${st}</span>
+      </div>
+      <div class="staff-mid">
+        <span>${emp.position || 'AI'}</span>
+        <span>100%</span>
+      </div>
+      <div class="staff-dept">${emp.department || ''}</div>
     `;
     card.addEventListener('click', () => {
       selectedEmployee = emp;
       renderRightPanelEmployee();
       renderRosterStrip();
-      const targetActor = actors.find(a => String(a.emp.id) === String(emp.id));
-      if (targetActor) {
-        const nextWp = WAYPOINTS[(Math.floor(Math.random() * WAYPOINTS.length))];
-        targetActor.targetX = nextWp.x;
-        targetActor.targetZ = nextWp.z;
-        targetActor.pauseTimer = 0;
+      const act = actors.find(a => String(a.emp.id) === String(emp.id));
+      if (act) {
+        const wp = WAYPOINTS[Math.floor(Math.random() * WAYPOINTS.length)];
+        act.targetX = wp.x;
+        act.targetZ = wp.z;
+        act.pauseTimer = 0;
       }
     });
     strip.appendChild(card);
   });
+
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'add-staff-card';
+  addBtn.textContent = '+ 직원';
+  addBtn.addEventListener('click', () => {
+    document.getElementById('toggleDetailBtn').click();
+  });
+  strip.appendChild(addBtn);
 }
 
 function project(x, y, z) {
   const cx = officeCanvas.width * 0.5 + panX;
-  const cy = officeCanvas.height * 0.54 + panY;
+  const cy = officeCanvas.height * 0.53 + panY;
   if (view2D) {
     return {
-      x: cx + x * zoom * 0.85,
-      y: cy + z * zoom * 0.85 - y * zoom * 0.35
+      x: cx + x * zoom * 0.86,
+      y: cy + z * zoom * 0.86 - y * zoom * 0.35
     };
   }
   const cyaw = Math.cos(yaw), syaw = Math.sin(yaw);
@@ -747,8 +897,8 @@ function project(x, y, z) {
   const isoX = (x1 - z2) * 0.866;
   const isoY = (x1 + z2) * 0.45 - y2;
   return {
-    x: cx + isoX * zoom * 0.65,
-    y: cy + isoY * zoom * 0.65
+    x: cx + isoX * zoom * 0.66,
+    y: cy + isoY * zoom * 0.66
   };
 }
 
@@ -784,58 +934,55 @@ function renderScene(nowSec) {
   canvasHits.length = 0;
   ctx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
 
-  // 단층 바닥 외곽
+  // 1층 바닥 외곽
   drawQuad([
-    project(-7.6, 0, -4.8),
-    project(7.6, 0, -4.8),
-    project(7.6, 0, 5.0),
-    project(-7.6, 0, 5.0)
-  ], '#f6efe2', '#b8a78c', 2);
+    project(-8.0, 0, -5.0),
+    project(8.0, 0, -5.0),
+    project(8.0, 0, 5.2),
+    project(-8.0, 0, 5.2)
+  ], '#f7f1e5', '#b5a387', 2);
 
-  // 각 구역 바닥 & 라벨
   ctx.font = 'bold 11px sans-serif';
   ctx.textAlign = 'center';
-  ROOMS.forEach(r => {
+  ZONES.forEach(z => {
     drawQuad([
-      project(r.x1, 0.01, r.z1),
-      project(r.x2, 0.01, r.z1),
-      project(r.x2, 0.01, r.z2),
-      project(r.x1, 0.01, r.z2)
-    ], r.floor, '#c7b69b', 1.2);
-
-    const lbl = project((r.x1 + r.x2) / 2, 0.04, r.z1 + 0.35);
+      project(z.x1, 0.01, z.z1),
+      project(z.x2, 0.01, z.z1),
+      project(z.x2, 0.01, z.z2),
+      project(z.x1, 0.01, z.z2)
+    ], z.color, '#c8b79c', 1.2);
+    const pt = project((z.x1 + z.x2) / 2, 0.03, z.z1 + 0.35);
     ctx.fillStyle = '#756450';
-    ctx.fillText(r.name, lbl.x, lbl.y);
+    ctx.fillText(z.name, pt.x, pt.y);
   });
 
-  // 가구 (책상, 소파, 화분)
-  DESKS.forEach(dk => {
-    drawBox3D(dk.x, 0, dk.z, dk.w, 0.42, dk.d, '#e7d7bc', '#cbb796', '#b39e7c');
-  });
-  SOFAS.forEach(sf => {
-    drawBox3D(sf.x, 0, sf.z, sf.w, 0.32, sf.d, '#d4794a', '#b55d32', '#964923');
-  });
-  PLANTS.forEach(pl => {
-    drawBox3D(pl.x, 0, pl.z, 0.36, 0.28, 0.36, '#a8643c', '#874c2a', '#6b3b1f');
-    drawBox3D(pl.x, 0.28, pl.z, 0.28, 0.26, 0.28, '#4f9a4b', '#3b7a37', '#2c5e29');
+  // 책상 + 모니터
+  WORKSTATIONS.forEach(ws => {
+    drawBox3D(ws.x, 0, ws.z, 1.15, 0.42, 0.55, '#e8d8bc', '#cbb796', '#b39e7c');
+    drawBox3D(ws.x, 0.42, ws.z - 0.06, 0.48, 0.3, 0.08, '#4a5568', '#2d3748', '#1a202c');
   });
 
-  // 살아 움직이는 캐릭터들 (깊이순 정렬)
-  const sortedActors = [...actors].sort((a, b) => (a.x + a.z) - (b.x + b.z));
-  sortedActors.forEach(ac => {
+  // 메인 회의실 대형 테이블
+  drawBox3D(-4.2, 0, 2.7, 2.2, 0.4, 1.1, '#dfc9a6', '#c5ad88', '#a8906c');
+
+  // 서버 랙
+  SERVER_RACKS.forEach(sr => {
+    drawBox3D(sr.x, 0, sr.z, 0.65, 1.15, 0.55, '#475569', '#334155', '#1e293b');
+  });
+
+  // 움직이는 복셀 캐릭터들
+  const sorted = [...actors].sort((a, b) => (a.x + a.z) - (b.x + b.z));
+  sorted.forEach(ac => {
     const isSel = selectedEmployee && String(selectedEmployee.id) === String(ac.emp.id);
-    const bob = Math.abs(Math.sin(nowSec * 5.5 + ac.phase)) * 0.08;
-    const armSwing = Math.sin(nowSec * 6 + ac.phase) * 0.14;
+    const walkBob = Math.abs(Math.sin(nowSec * 6 + ac.phase)) * 0.09;
+    const armSwing = Math.sin(nowSec * 6.5 + ac.phase) * 0.15;
 
-    // 몸통
-    drawBox3D(ac.x, bob, ac.z, 0.36, 0.56, 0.28, ac.color, ac.color, '#262626');
-    // 양팔 움직임
-    drawBox3D(ac.x - 0.24, bob + 0.32 + armSwing * 0.3, ac.z, 0.1, 0.24, 0.12, '#e6b892', '#cfa07a', '#b58863');
-    drawBox3D(ac.x + 0.24, bob + 0.32 - armSwing * 0.3, ac.z, 0.1, 0.24, 0.12, '#e6b892', '#cfa07a', '#b58863');
-    // 머리
-    drawBox3D(ac.x, bob + 0.56, ac.z, 0.3, 0.3, 0.3, '#f3c6a0', '#dfb089', '#c7966f');
+    drawBox3D(ac.x, walkBob, ac.z, 0.38, 0.56, 0.28, ac.color, ac.color, '#242424');
+    drawBox3D(ac.x - 0.25, walkBob + 0.32 + armSwing * 0.3, ac.z, 0.1, 0.24, 0.12, '#e6b892', '#cfa07a', '#b58863');
+    drawBox3D(ac.x + 0.25, walkBob + 0.32 - armSwing * 0.3, ac.z, 0.1, 0.24, 0.12, '#e6b892', '#cfa07a', '#b58863');
+    drawBox3D(ac.x, walkBob + 0.56, ac.z, 0.32, 0.32, 0.32, '#f5c7a1', '#e0b088', '#c7966f');
 
-    const topPt = project(ac.x, bob + 1.02, ac.z);
+    const topPt = project(ac.x, walkBob + 1.04, ac.z);
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
     const label = ac.emp.name;
@@ -851,7 +998,7 @@ function renderScene(nowSec) {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = isSel ? '#fff' : '#2e261d';
+    ctx.fillStyle = isSel ? '#fff' : '#2b241b';
     ctx.fillText(label, topPt.x, topPt.y - 4);
 
     canvasHits.push({
@@ -877,7 +1024,7 @@ function updateActors(dt) {
     const dz = ac.targetZ - ac.z;
     const dist = Math.hypot(dx, dz);
     if (dist < 0.08) {
-      ac.pauseTimer = 1.1 + (idx % 3) * 0.7;
+      ac.pauseTimer = 1.0 + (idx % 3) * 0.65;
       const nextWp = WAYPOINTS[(Math.floor(Math.random() * WAYPOINTS.length) + idx) % WAYPOINTS.length];
       ac.targetX = nextWp.x;
       ac.targetZ = nextWp.z;
@@ -893,8 +1040,7 @@ let lastFrameTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
   lastFrameTime = now;
-
-  if (autoRotate && !view2D && !dragging) {
+  if (autoRotate && !view2D && !dragging && !panning) {
     yaw += dt * 0.14;
   }
   updateActors(dt);
@@ -909,17 +1055,21 @@ function resizeOfficeCanvas() {
   officeCanvas.height = Math.max(240, parent.clientHeight);
 }
 
+officeCanvas.addEventListener('contextmenu', e => e.preventDefault());
+
 officeCanvas.addEventListener('mousedown', e => {
-  dragging = true;
   lastX = e.clientX;
   lastY = e.clientY;
+  if (e.button === 2 || e.shiftKey || view2D) {
+    panning = true;
+  } else {
+    dragging = true;
+  }
 });
 
 window.addEventListener('mouseup', e => {
-  if (!dragging) return;
   const moved = Math.hypot(e.clientX - lastX, e.clientY - lastY);
-  dragging = false;
-  if (moved < 5) {
+  if (dragging && moved < 5) {
     const rect = officeCanvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
@@ -933,22 +1083,24 @@ window.addEventListener('mouseup', e => {
       renderRosterStrip();
     }
   }
+  dragging = false;
+  panning = false;
 });
 
 window.addEventListener('mousemove', e => {
-  if (!dragging) return;
+  if (!dragging && !panning) return;
   const dx = e.clientX - lastX;
   const dy = e.clientY - lastY;
   lastX = e.clientX;
   lastY = e.clientY;
-  if (view2D || e.shiftKey) {
+  if (panning) {
     panX += dx;
     panY += dy;
   } else {
     autoRotate = false;
     document.getElementById('autoRotateBtn').classList.remove('active');
     yaw += dx * 0.008;
-    pitch = Math.max(0.2, Math.min(1.2, pitch + dy * 0.006));
+    pitch = Math.max(0.22, Math.min(1.15, pitch + dy * 0.006));
   }
 });
 
@@ -957,53 +1109,60 @@ officeCanvas.addEventListener('wheel', e => {
   zoom = Math.max(24, Math.min(95, zoom - e.deltaY * 0.035));
 }, { passive: false });
 
-document.getElementById('zoomInBtn').addEventListener('click', () => {
-  zoom = Math.min(95, zoom + 6);
-});
-document.getElementById('zoomOutBtn').addEventListener('click', () => {
-  zoom = Math.max(24, zoom - 6);
-});
-
 function resetCamera() {
-  yaw = 0.55;
-  pitch = 0.58;
-  zoom = 42;
+  yaw = 0.56;
+  pitch = 0.56;
+  zoom = 41;
   panX = 0;
-  panY = 18;
+  panY = 14;
 }
-document.getElementById('resetViewBtn').addEventListener('click', resetCamera);
-document.getElementById('fitFloorBtn').addEventListener('click', resetCamera);
 
+document.getElementById('resetViewBtn').addEventListener('click', resetCamera);
+document.getElementById('floor1Btn').addEventListener('click', () => {
+  view2D = false;
+  document.getElementById('view2dBtn').classList.remove('active');
+  document.getElementById('view3dBtn').classList.add('active');
+  resetCamera();
+});
+document.getElementById('view2dBtn').addEventListener('click', () => {
+  view2D = true;
+  document.getElementById('view2dBtn').classList.add('active');
+  document.getElementById('view3dBtn').classList.remove('active');
+});
+document.getElementById('view3dBtn').addEventListener('click', () => {
+  view2D = false;
+  document.getElementById('view2dBtn').classList.remove('active');
+  document.getElementById('view3dBtn').classList.add('active');
+});
 document.getElementById('autoRotateBtn').addEventListener('click', e => {
   autoRotate = !autoRotate;
   e.currentTarget.classList.toggle('active', autoRotate);
 });
-
-document.getElementById('view2dBtn').addEventListener('click', e => {
-  view2D = !view2D;
-  e.currentTarget.classList.toggle('active', view2D);
-});
-
 document.getElementById('toggleDetailBtn').addEventListener('click', e => {
   const open = document.body.classList.toggle('detail-open');
   e.currentTarget.classList.toggle('active', open);
   resizeOfficeCanvas();
 });
+document.getElementById('togglePrincipleBtn').addEventListener('click', () => {
+  document.getElementById('principleBox').classList.toggle('open');
+});
+document.getElementById('attachSampleBtn').addEventListener('click', () => {
+  requestBox.value = (requestBox.value ? requestBox.value + '\n' : '') + '[참고자료 첨부]';
+  updateSendButtonState();
+});
+requestBox.addEventListener('input', updateSendButtonState);
+requestBox.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendTask(false);
+  }
+});
 
 window.addEventListener('resize', resizeOfficeCanvas);
 
-const officeParams = new URLSearchParams(window.location.search);
-const officeEmployeeId = officeParams.get('employee');
-const officeTask = officeParams.get('task') || '';
-if (officeEmployeeId) {
-  const found = employeeById.get(String(officeEmployeeId));
-  if (found) {
-    selectedEmployee = found;
-    requestBox.value = `[가상 사무실 직원 선택 업무 요청]\n우선 담당 직원: ${found.name} (${found.position || ''})\n\n${officeTask}`;
-  }
-}
-
-document.getElementById('activeStaffBadge').textContent = `● 활성 직원 ${employeeDirectory.length}명`;
+const staffCountText = `● 활성 직원 ${employeeDirectory.length}명`;
+document.getElementById('activeStaffBadge').textContent = staffCountText;
+document.getElementById('headerStaffCount').textContent = `● 직원 ${employeeDirectory.length}명`;
 renderRightPanelEmployee();
 renderRosterStrip();
 resizeOfficeCanvas();
@@ -1016,7 +1175,7 @@ function normalizeEmployeeStatus(value, stage) {
   if (/협업|collab|coordinate|meeting/.test(raw)) return '협업 중';
   if (/휴식|break/.test(raw)) return '휴식 중';
   if (/완료|complete|done|approved/.test(raw)) return '완료';
-  if (/승인|대기|pending|idle/.test(raw)) return '대기';
+  if (/승인|대기|pending|idle/.test(raw)) return '유휴';
   return '업무 중';
 }
 
@@ -1039,8 +1198,7 @@ function syncEmployeeStates(data, taskId) {
       status: normalizeEmployeeStatus(rawStatus, stage),
       detail: String(detail).slice(0, 500),
       taskId,
-      updatedAt: now,
-      source: 'main-response'
+      updatedAt: now
     };
   }
 
@@ -1063,11 +1221,10 @@ function syncEmployeeStates(data, taskId) {
 
   walk(data);
   states.COO = {
-    status: data.status === 'WAITING_FOR_API_QUOTA' ? '대기' : (data.reply && data.workflow ? '완료' : '업무 중'),
+    status: data.status === 'WAITING_FOR_API_QUOTA' ? '유휴' : (data.reply && data.workflow ? '완료' : '업무 중'),
     detail: String(stage).slice(0, 500),
     taskId,
-    updatedAt: now,
-    source: 'main-response'
+    updatedAt: now
   };
   localStorage.setItem(EMPLOYEE_STATE_KEY, JSON.stringify(states));
   renderRosterStrip();
@@ -1085,23 +1242,19 @@ function renderWorkflowReview(data) {
 
   const panel = document.createElement('div');
   panel.id = 'workflowReviewPanel';
-  panel.className = 'structured-report';
-
-  const heading = document.createElement('h4');
-  heading.textContent = '업무 진행 및 최종 검수';
-  panel.appendChild(heading);
+  panel.style.marginTop = '10px';
+  panel.style.paddingTop = '8px';
+  panel.style.borderTop = '1px solid #e3d6be';
 
   if (workflow.status || workflow.resultStatus || workflow.resultStatusReason) {
-    const sec = document.createElement('section');
-    sec.textContent =
-      `상태: ${workflow.status || '-'} | 판정: ${workflow.resultStatus || '-'} | 사유: ${workflow.resultStatusReason || '-'}`;
-    panel.appendChild(sec);
+    const p = document.createElement('p');
+    p.textContent = `상태: ${workflow.status || '-'} | 판정: ${workflow.resultStatus || '-'} | 사유: ${workflow.resultStatusReason || '-'}`;
+    panel.appendChild(p);
   }
-
   reviews.forEach((rv, i) => {
-    const sec = document.createElement('section');
-    sec.textContent = `${rv.name || `검수 ${i + 1}`}: ${rv.judgment || ''} · ${rv.details?.summary || rv.review || ''}`;
-    panel.appendChild(sec);
+    const p = document.createElement('p');
+    p.textContent = `${rv.name || `검수 ${i + 1}`}: ${rv.judgment || ''} · ${rv.details?.summary || rv.review || ''}`;
+    panel.appendChild(p);
   });
 
   responseBox.appendChild(panel);
@@ -1146,13 +1299,13 @@ function renderTaskHistory() {
     list.textContent = '저장된 업무 기록이 없습니다.';
     return;
   }
-  history.forEach((item, index) => {
+  history.forEach(item => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'history-item-btn';
     btn.textContent = `${new Date(item.savedAt).toLocaleString('ko-KR')} · ${String(item.task || '').slice(0, 80)}`;
     btn.addEventListener('click', () => {
-      responseBox.innerHTML = renderResponseContent(item.reply || '');
+      responseBox.innerHTML = renderMarkdown(item.reply || '');
       renderWorkflowReview(item);
       const delivs = Array.isArray(item.deliverables) ? item.deliverables : [];
       const text = delivs.map((d, i) => `# ${d.title || `결과물 ${i + 1}`}\n\n${d.content || ''}`).join('\n\n---\n\n');
@@ -1221,10 +1374,6 @@ function renderMarkdown(text) {
     .replace(/^# (.*)$/gm, '<h1>$1</h1>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\n/g, '<br>');
-}
-
-function renderResponseContent(text) {
-  return renderMarkdown(String(text || ''));
 }
 
 async function sendTask(reusePending = false) {
@@ -1386,7 +1535,7 @@ async function sendTask(reusePending = false) {
     }
 
     const fullReply = data.reply || '응답 내용이 없습니다.';
-    responseBox.innerHTML = renderResponseContent(fullReply);
+    responseBox.innerHTML = renderMarkdown(fullReply);
     renderWorkflowReview({ taskId, workflow: data.workflow, finalReviewResults: data.finalReviewResults || [] });
 
     const deliverables = Array.isArray(data.deliverables) ? data.deliverables : [];
@@ -1431,6 +1580,7 @@ retryTaskButton.addEventListener('click', () => {
   savedTask.updatedAt = new Date().toISOString();
   localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(savedTask));
   requestBox.value = savedTask.task;
+  updateSendButtonState();
   sendTask(true);
 });
 </script>
