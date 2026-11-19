@@ -185,3 +185,22 @@ test('rejects unknown explicit API actions without starting a task', async () =>
   assert.match(result.body.error, /지원하지 않는 API action/);
   assert.equal(result.db.events.length, 0);
 });
+
+test('returns HTTP 400 for malformed JSON without entering task execution', async () => {
+  const request = new Request('https://worker.test/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + ACCESS
+    },
+    body: '{"action":'
+  });
+  const response = await worker.fetch(request, {
+    OFFICE_ACCESS_TOKEN: ACCESS,
+    REPRESENTATIVE_ACCESS_TOKEN: REPRESENTATIVE,
+    DB: new FakeD1()
+  });
+  assert.equal(response.status, 400);
+  const body = await response.json();
+  assert.match(body.error, /올바른 JSON 형식/);
+});
