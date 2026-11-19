@@ -417,12 +417,17 @@ function compactTaskHistoryRecord(record){
   employeeId:record.employeeId||null,employeeName:record.employeeName||null,department:record.department||null,savedAt:record.savedAt||new Date().toISOString()
  };
 }
+function loadCombinedTaskHistory(){
+ const read=key=>{try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch(_){return []}};
+ const merged=new Map();read('swAIOfficeTaskHistory').forEach(item=>{if(item?.taskId)merged.set(item.taskId,item)});read('swAIOffice3DTaskHistory').forEach(item=>{if(item?.taskId)merged.set(item.taskId,item)});
+ return [...merged.values()].sort((a,b)=>new Date(b.savedAt||0)-new Date(a.savedAt||0)).slice(0,20);
+}
 function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults,audit,employee){
  let history=[];
- try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed.map(compactTaskHistoryRecord)}catch(_){}
+ try{const parsed=JSON.parse(localStorage.getItem('swAIOffice3DTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed.map(compactTaskHistoryRecord)}catch(_){}
  const record=compactTaskHistoryRecord({taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit,employeeId:employee?.id||null,employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()});
  const next=[record,...history.filter(item=>item.taskId!==taskId)].slice(0,10);
- localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(next));
+ localStorage.setItem('swAIOffice3DTaskHistory',JSON.stringify(next));
 }
 function mergeEmployeeStates(incoming,taskId){
  if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))return;
@@ -438,7 +443,7 @@ function mergeEmployeeStates(incoming,taskId){
 }
 function renderTaskHistory(){
  const list=document.getElementById('taskHistoryList');if(!list)return;
- let history=[];try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed}catch(_){}
+ const history=loadCombinedTaskHistory();
  list.replaceChildren();
  const visibleHistory=history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id);
  if(!visibleHistory.length){list.textContent='이 직원의 저장된 업무 기록이 없습니다.';return}
