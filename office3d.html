@@ -358,7 +358,7 @@ function renderEmployeeChat(employeeId){
 }
 function appendChat(who,message,employeeId=selected?.userData.person.id||'SYSTEM'){
  const id=crypto.randomUUID(),key=String(employeeId),chats=readEmployeeChats(),entries=Array.isArray(chats[key])?chats[key]:[];
- entries.push({id,who:String(who||''),message:String(message??''),createdAt:new Date().toISOString()});chats[key]=entries.slice(-100);
+ entries.push({id,who:String(who||''),message:String(message??'').slice(0,30000),createdAt:new Date().toISOString()});chats[key]=entries.slice(-40);
  try{localStorage.setItem('swAIOfficeChatHistory',JSON.stringify(chats))}catch(_){ }
  const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=id;el.dataset.employeeId=key;el.textContent=who+'\n'+message;
  if(selected&&String(selected.userData.person.id)===key){const host=document.getElementById('chatHistory');host.appendChild(el);host.scrollTop=host.scrollHeight}
@@ -399,10 +399,21 @@ function applyFinalWorkStates(data,taskId,task,requestedEmployeeId){
  if(requestedEmployeeId&&!activeIds.has(requestedEmployeeId)){const person=directory.find(entry=>entry.id===requestedEmployeeId);if(person){states[person.id]={...(states[person.id]||{}),status:'업무 결과 확인',location:'책상',detail:'최종 담당자 및 검수 결과는 업무 보고에서 확인',taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}}
  localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards();
 }
+function compactTaskHistoryRecord(record){
+ const audit=record.audit||null;
+ return {
+  taskId:record.taskId||null,task:String(record.task||'').slice(0,12000),reply:String(record.reply||'').slice(0,50000),
+  deliverables:(Array.isArray(record.deliverables)?record.deliverables:[]).slice(0,5).map(item=>({id:item.id||null,title:item.title||'',department:item.department||'',teamLeader:item.teamLeader||'',status:item.status||'',content:String(item.content||'').slice(0,10000),errors:(item.errors||[]).slice(0,5)})),
+  workflow:{currentStage:record.workflow?.currentStage||'',status:record.workflow?.status||'',resultStatus:record.workflow?.resultStatus||'',resultStatusReason:String(record.workflow?.resultStatusReason||'').slice(0,3000)},
+  finalReviewResults:(Array.isArray(record.finalReviewResults)?record.finalReviewResults:[]).slice(0,5).map(item=>({id:item.id||null,name:item.name||'',status:item.status||'',judgment:item.judgment||'',review:String(item.review||'').slice(0,3000),details:item.details?.summary?{summary:String(item.details.summary).slice(0,1500)}:null})),
+  audit:audit?{task:{taskId:audit.task?.taskId||record.taskId||null,status:audit.task?.status||'',currentStage:audit.task?.currentStage||'',createdAt:audit.task?.createdAt||null,completedAt:audit.task?.completedAt||null},events:(Array.isArray(audit.events)?audit.events:[]).slice(-100).map(event=>({eventType:event.eventType||'',stage:event.stage||'',createdAt:event.createdAt||null}))}:null,
+  employeeId:record.employeeId||null,employeeName:record.employeeName||null,department:record.department||null,savedAt:record.savedAt||new Date().toISOString()
+ };
+}
 function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults,audit,employee){
  let history=[];
- try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed}catch(_){}
- const record={taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit:audit||null,employeeId:employee?.id||null,employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()};
+ try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed.map(compactTaskHistoryRecord)}catch(_){}
+ const record=compactTaskHistoryRecord({taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit,employeeId:employee?.id||null,employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()});
  const next=[record,...history.filter(item=>item.taskId!==taskId)].slice(0,10);
  localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(next));
 }
