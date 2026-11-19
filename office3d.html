@@ -482,6 +482,8 @@ async function submitRepresentativeDecision(decision){
  if(!apiToken){appendChat('시스템','일반 서버 API 인증값도 입력해 주세요.');return}
  if(!token){appendChat('시스템','대표 승인 전용 인증값을 입력해 주세요.');return}
  if(decision==='REJECT'&&!reason){appendChat('시스템','반려 사유를 입력해야 합니다.');return}
+ const confirmText=decision==='APPROVE'?'이 업무를 대표 승인으로 확정해 D1에 기록할까요? 외부 시스템 실행은 하지 않습니다.':'이 업무를 대표 반려로 확정해 D1에 기록할까요? 기존 결정은 변경할 수 없습니다.';
+ if(!window.confirm(confirmText))return;
  const approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');approve.disabled=true;reject.disabled=true;
  try{
   const response=await fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiToken,'X-Representative-Authorization':'Bearer '+token},body:JSON.stringify({action:'representative_decision',taskId,decision,reason})});
