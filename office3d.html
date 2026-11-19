@@ -444,7 +444,18 @@ function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResu
  try{const parsed=JSON.parse(localStorage.getItem('swAIOffice3DTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed.map(compactTaskHistoryRecord)}catch(_){}
  const record=compactTaskHistoryRecord({taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit,employeeId:employee?.id||null,employeeIds:[...new Set([employee?.id,...(deliverables||[]).map(item=>item?.id)].filter(Boolean))],employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()});
  const next=[record,...history.filter(item=>item.taskId!==taskId)].slice(0,10);
- localStorage.setItem('swAIOffice3DTaskHistory',JSON.stringify(next));
+ // 저장 공간이 부족해도 새 업무 결과를 먼저 보존하도록 오래된 3D 이력부터 단계적으로 정리한다.
+ let saved=false,lastError=null;
+ for(const keepCount of [10,7,5,3,1]){
+  try{
+   localStorage.setItem('swAIOffice3DTaskHistory',JSON.stringify(next.slice(0,keepCount)));
+   saved=true;break;
+  }catch(storageError){lastError=storageError}
+ }
+ if(!saved){
+  console.error('업무 결과 로컬 저장 실패:',lastError);
+  appendChat('시스템','주의: 업무 결과는 서버에 처리되었지만 이 기기의 저장 공간 부족으로 사무실 업무 기록에 저장하지 못했습니다. 업무 ID: '+taskId);
+ }
 }
 function mergeEmployeeStates(incoming,taskId){
  if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))return;
