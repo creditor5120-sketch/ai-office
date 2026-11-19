@@ -275,9 +275,9 @@ function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
  document.getElementById('chatName').textContent=p.name;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
- renderEmployeeChat(p.id);
+ renderEmployeeChat(p.id,p.instruction||'담당 업무를 수행하는 직원입니다.');
  renderTaskHistory();selectedTaskForDecision=null;renderRepresentativeDecision(null);
- document.getElementById('chatAvatar').textContent='👤';document.getElementById('chatIntro').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';
+ document.getElementById('chatAvatar').textContent='👤';
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
  document.getElementById('detailMessages').innerHTML='<div class="chatBubble">'+(p.instruction||'담당 업무를 수행하는 직원입니다.')+'</div>';
@@ -351,10 +351,10 @@ async function submitSelectedTask(value){
  }
 }
 function readEmployeeChats(){try{const value=JSON.parse(localStorage.getItem('swAIOfficeChatHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}}
-function renderEmployeeChat(employeeId){
+function renderEmployeeChat(employeeId,introText='이 직원과의 대화가 여기에 기록됩니다. 간단한 대화나 업무 지시를 입력할 수 있습니다.'){
  const host=document.getElementById('chatHistory');if(!host)return;host.replaceChildren();
  const entries=readEmployeeChats()[String(employeeId)]||[];
- if(!entries.length){const intro=document.createElement('div');intro.className='chatBubble';intro.textContent='이 직원과의 대화가 여기에 기록됩니다. 간단한 대화나 업무 지시를 입력할 수 있습니다.';host.appendChild(intro);return}
+ if(!entries.length){const intro=document.createElement('div');intro.className='chatBubble';intro.textContent=introText;host.appendChild(intro);return}
  entries.forEach(item=>{const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=item.id||'';el.dataset.employeeId=String(employeeId);el.textContent=(item.who||'')+'\n'+(item.message||'');host.appendChild(el)});
  host.scrollTop=host.scrollHeight;
 }
