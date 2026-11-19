@@ -26,7 +26,7 @@ const pageErrors = [];
 page.on('pageerror', error => pageErrors.push(error.message));
 
 try {
-  await page.goto('http://127.0.0.1:4173/office3d.html', { waitUntil: 'domcontentloaded' });
+  await page.goto('http://127.0.0.1:4173/office3d.html', { waitUntil: 'commit', timeout: 15000 });
   await page.locator('#loading').waitFor({ state: 'hidden', timeout: 45000 });
   await page.locator('#scene canvas').waitFor({ state: 'attached', timeout: 10000 });
 
