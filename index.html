@@ -1192,7 +1192,8 @@ function updateThreeOffice(){
     g.rotation.y=ac.state==='walking'?Math.atan2(ac.targetX-ac.x,ac.targetZ-ac.z):0;
     const ring=g.userData.ring; if(ring)ring.visible=!!(selectedEmployee&&String(selectedEmployee.id)===String(ac.emp.id));
     const status=String(ac.status || ac.activityStatus || '');
-    const seated=ac.state==='working' && (status==='업무 중' || status==='검수 중' || status==='협업 중');
+    // 책상이나 회의 좌석에 도착한 직원은 기본적으로 착석한다. 휴식 상태만 예외로 둔다.
+    const seated=ac.state==='working' && status!=='휴식 중';
     const pose=g.userData.pose;
     if(pose){
       // 책상·회의 위치에 도착하면 앉고, 이동 중에는 자연스럽게 선 자세로 복귀한다.
@@ -1225,6 +1226,9 @@ function updateThreeOffice(){
         } else if(meeting){
           arm.rotation.x=-.72+Math.max(0,Math.sin(nowMotionClock*2.4+ac.phase))*.20;
           arm.rotation.z=i===0?-.10:.10;
+        } else if(seated){
+          arm.rotation.x=-.82+Math.sin(nowMotionClock*1.8+ac.phase+i)*.025;
+          arm.rotation.z=i===0?-.07:.07;
         } else {
           arm.rotation.x=Math.sin(nowMotionClock*4+ac.phase)*.025;
           arm.rotation.z=0;
