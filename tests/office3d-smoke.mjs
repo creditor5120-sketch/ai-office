@@ -86,6 +86,7 @@ try {
     const panel = document.querySelector('#loading');
     return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
   }, { timeout: 45000 });
+  await page.locator('#officeChatToken').fill('smoke-test-api-token');
   const managerCard = page.locator('#staffStrip .staffCard[data-emp="COO"]');
   await managerCard.waitFor({ state: 'visible', timeout: 10000 });
   await managerCard.click();
