@@ -297,3 +297,22 @@ test('concurrent opposite representative decisions preserve exactly one immutabl
   assert.ok(['APPROVE', 'REJECT'].includes(stored.decision));
   assert.equal(stored.decision, approve.status === 200 ? 'APPROVE' : 'REJECT');
 });
+
+test('returns an explicit empty representative decision before a decision is recorded', async () => {
+  const result = await call({ action: 'get_representative_decision', taskId: 'test-task-001' });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.taskId, 'test-task-001');
+  assert.equal(result.body.decision, null);
+  assert.equal(result.body.recordedAt, null);
+});
+
+test('returns the immutable representative decision from the audit event', async () => {
+  const db = new FakeD1({ releaseAllowed: true });
+  const saved = await call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'REJECT', reason: '근거 보완 필요' }, { db });
+  assert.equal(saved.status, 200);
+  const fetched = await call({ action: 'get_representative_decision', taskId: 'test-task-001' }, { db });
+  assert.equal(fetched.status, 200);
+  assert.equal(fetched.body.decision, 'REJECT');
+  assert.equal(fetched.body.reason, '근거 보완 필요');
+  assert.equal(fetched.body.recordedAt, saved.body.recordedAt);
+});
