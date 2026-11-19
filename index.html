@@ -1426,6 +1426,7 @@ if (data.modelUnavailableResumable || data.timeoutResumable) {
       `Gemini ${retryType === 'modelUnavailable' ? '서버 과부하' : '응답 시간 초과'}가 ${retryCount}회 반복되어 자동 재시도를 중단했습니다.\n` +
       '업무와 체크포인트는 보존되어 있습니다.\n' +
       '서버 상태를 확인한 후 보존된 업무 재처리를 이용해 주세요.';
+    retryTaskButton.style.display = 'block';
     return;
   }
 
