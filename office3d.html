@@ -472,7 +472,7 @@ function animate(){
    if(u.frame!==0){u.texture.offset.x=0;u.frame=0}
   }
   const active=u.workStatus==='업무 중'||u.workStatus==='검수 중';
-  const shouldSit=!moving&&u.workStatus!=='휴식 중';
+  const shouldSit=!moving;
   if(shouldSit!==u.isSeated){
    const nextTexture=shouldSit?u.seatedTexture:u.walkTexture;
    avatar.material.map=nextTexture;avatar.material.needsUpdate=true;u.texture=nextTexture;u.isSeated=shouldSit;u.frame=0;nextTexture.offset.x=0;
