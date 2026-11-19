@@ -421,7 +421,14 @@ function compactTaskHistoryRecord(record){
 }
 function loadCombinedTaskHistory(){
  const read=key=>{try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch(_){return []}};
- const merged=new Map();read('swAIOfficeTaskHistory').forEach(item=>{if(item?.taskId)merged.set(item.taskId,item)});read('swAIOffice3DTaskHistory').forEach(item=>{if(item?.taskId)merged.set(item.taskId,item)});
+ const merged=new Map();
+ read('swAIOfficeTaskHistory').forEach(item=>{if(item?.taskId)merged.set(item.taskId,item)});
+ read('swAIOffice3DTaskHistory').forEach(item=>{
+  if(!item?.taskId)return;
+  const previous=merged.get(item.taskId);
+  if(!previous){merged.set(item.taskId,item);return}
+  merged.set(item.taskId,{...item,...previous,employeeId:item.employeeId||previous.employeeId||null,employeeIds:[...new Set([...(previous.employeeIds||[]),...(item.employeeIds||[]),item.employeeId,previous.employeeId].filter(Boolean))],employeeName:item.employeeName||previous.employeeName||null,department:item.department||previous.department||null,representativeDecision:item.representativeDecision||previous.representativeDecision||null,audit:item.audit||previous.audit||null});
+ });
  return [...merged.values()].sort((a,b)=>new Date(b.savedAt||0)-new Date(a.savedAt||0)).slice(0,20);
 }
 function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults,audit,employee){
@@ -482,7 +489,7 @@ async function submitRepresentativeDecision(decision){
   if(!response.ok)throw new Error(data.error||`대표 결정 기록 실패 (HTTP ${response.status})`);
   record.representativeDecision={...data};
   if(record.audit){record.audit.events=Array.isArray(record.audit.events)?record.audit.events:[];record.audit.events.push({eventType:'REPRESENTATIVE_DECISION',stage:data.decisionLabel||decision,detail:data,createdAt:data.recordedAt||new Date().toISOString()})}
-  let savedLocally=false;for(const key of ['swAIOfficeTaskHistory','swAIOffice3DTaskHistory']){try{const history=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(history))continue;const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=compactTaskHistoryRecord(record);localStorage.setItem(key,JSON.stringify(history));savedLocally=true}}catch(_){}}if(!savedLocally)appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록에는 저장하지 못했습니다.');
+  let savedLocally=false;for(const key of ['swAIOfficeTaskHistory','swAIOffice3DTaskHistory']){try{const history=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(history))continue;const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){const updated={...history[index],representativeDecision:record.representativeDecision||null,...(record.audit?{audit:record.audit}:{})};history[index]=key==='swAIOffice3DTaskHistory'?compactTaskHistoryRecord(updated):updated;localStorage.setItem(key,JSON.stringify(history));savedLocally=true}}catch(_){}}if(!savedLocally)appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록에는 저장하지 못했습니다.');
   document.getElementById('representativeAccessToken').value='';renderRepresentativeDecision(record);
   appendChat('대표 결정',`${data.decisionLabel||decision} 기록 완료\n업무 ID: ${taskId}\n${data.message||''}\n${data.attributionNote||''}`);
  }catch(error){appendChat('대표 결정 오류',error.message||String(error));approve.disabled=false;reject.disabled=false}
