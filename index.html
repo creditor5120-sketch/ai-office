@@ -967,12 +967,80 @@ function renderScene(nowSec) {
     const walkBob = Math.abs(Math.sin(nowSec * 6 + ac.phase)) * 0.09;
     const armSwing = Math.sin(nowSec * 6.5 + ac.phase) * 0.15;
 
-    drawBox3D(ac.x, walkBob, ac.z, 0.38, 0.56, 0.28, ac.color, ac.color, '#242424');
-    drawBox3D(ac.x - 0.25, walkBob + 0.32 + armSwing * 0.3, ac.z, 0.1, 0.24, 0.12, '#e6b892', '#cfa07a', '#b58863');
-    drawBox3D(ac.x + 0.25, walkBob + 0.32 - armSwing * 0.3, ac.z, 0.1, 0.24, 0.12, '#e6b892', '#cfa07a', '#b58863');
-    drawBox3D(ac.x, walkBob + 0.56, ac.z, 0.32, 0.32, 0.32, '#f5c7a1', '#e0b088', '#c7966f');
+    // 입체 박스 캐릭터 대신 얼굴·몸통·팔·다리가 구분되는 사람형 아바타
+    const foot = project(ac.x, walkBob, ac.z);
+    const head = project(ac.x, walkBob + 0.88, ac.z);
+    const shoulder = project(ac.x, walkBob + 0.58, ac.z);
+    const leftArm = project(ac.x - 0.23 + armSwing * 0.18, walkBob + 0.48, ac.z);
+    const rightArm = project(ac.x + 0.23 - armSwing * 0.18, walkBob + 0.48, ac.z);
+    const leftFoot = project(ac.x - 0.11, walkBob + 0.04, ac.z);
+    const rightFoot = project(ac.x + 0.11, walkBob + 0.04, ac.z);
+    const scale = Math.max(0.62, Math.min(1.25, zoom / 41));
+    const bodyW = 12 * scale;
+    const bodyH = 19 * scale;
+    const headR = 7.2 * scale;
 
-    const topPt = project(ac.x, walkBob + 1.04, ac.z);
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    // 다리와 신발
+    ctx.strokeStyle = '#273449';
+    ctx.lineWidth = 4.2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(shoulder.x - 3 * scale, shoulder.y + bodyH * 0.55);
+    ctx.lineTo(leftFoot.x, leftFoot.y - 1 * scale);
+    ctx.moveTo(shoulder.x + 3 * scale, shoulder.y + bodyH * 0.55);
+    ctx.lineTo(rightFoot.x, rightFoot.y - 1 * scale);
+    ctx.stroke();
+    // 팔
+    ctx.strokeStyle = '#e7b995';
+    ctx.lineWidth = 4.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(shoulder.x - bodyW * 0.72, shoulder.y + 2 * scale);
+    ctx.lineTo(leftArm.x, leftArm.y);
+    ctx.moveTo(shoulder.x + bodyW * 0.72, shoulder.y + 2 * scale);
+    ctx.lineTo(rightArm.x, rightArm.y);
+    ctx.stroke();
+    // 상체
+    ctx.fillStyle = ac.color;
+    ctx.strokeStyle = 'rgba(20,28,40,.55)';
+    ctx.lineWidth = 1 * scale;
+    ctx.beginPath();
+    ctx.roundRect(shoulder.x - bodyW / 2, shoulder.y, bodyW, bodyH, 4 * scale);
+    ctx.fill();
+    ctx.stroke();
+    // 목과 얼굴
+    ctx.fillStyle = '#e7b995';
+    ctx.fillRect(head.x - 2.5 * scale, head.y + headR * 0.55, 5 * scale, 5 * scale);
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, headR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#9b6b50';
+    ctx.lineWidth = 0.8 * scale;
+    ctx.stroke();
+    // 헤어 실루엣과 눈
+    ctx.fillStyle = '#302a29';
+    ctx.beginPath();
+    ctx.arc(head.x, head.y - 1.7 * scale, headR * 0.98, Math.PI, Math.PI * 2);
+    ctx.lineTo(head.x + headR * 0.82, head.y - headR * 0.1);
+    ctx.quadraticCurveTo(head.x, head.y - headR * 0.8, head.x - headR * 0.9, head.y);
+    ctx.fill();
+    ctx.fillStyle = '#342c28';
+    ctx.beginPath();
+    ctx.arc(head.x - 2.5 * scale, head.y + 1.1 * scale, 0.8 * scale, 0, Math.PI * 2);
+    ctx.arc(head.x + 2.5 * scale, head.y + 1.1 * scale, 0.8 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // 선택된 직원 표시
+    if (isSel) {
+      ctx.strokeStyle = '#f0b429';
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.ellipse(foot.x, foot.y + 2 * scale, 13 * scale, 5 * scale, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const topPt = project(ac.x, walkBob + 1.12, ac.z);
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
     const label = ac.emp.name;
