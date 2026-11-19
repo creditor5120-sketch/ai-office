@@ -93,6 +93,7 @@ try {
     const actual = (await page.locator('#chatName').innerText()).trim();
     throw new Error(`Selecting COO did not update the active employee. Expected 알렉스, found ${actual || '(empty)'}`);
   });
+  await page.locator('#close').click();
   await page.locator('#detailToggle').click();
   await page.locator('#detailView').waitFor({ state: 'visible' });
   const restoredItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
