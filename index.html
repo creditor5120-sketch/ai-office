@@ -617,12 +617,12 @@ body.detail-open .detail-drawer {
 <header class="top-bar">
   <div class="top-left">
     <div class="office-title-group">
-      <div class="office-title">SW AI 사무실</div>
-      <div class="office-sub">AI 가상 사무실</div>
+      <div class="office-title">SW AI OFFICE</div>
+      <div class="office-sub">AI 본부장 업무실</div>
     </div>
   </div>
   <div class="top-right">
-    <span class="info-pill" id="headerStaffCount">● 직원 33명</span>
+    <span class="info-pill" id="headerStaffCount">● 직원 0명</span>
     <span class="info-pill">● 온라인</span>
     <button type="button" class="top-btn" id="toggleDetailBtn">↗ 업무상세</button>
     <button type="button" class="top-btn" id="resetViewBtn">초기화</button>
@@ -631,7 +631,7 @@ body.detail-open .detail-drawer {
 
 <main class="main-grid">
   <section class="office-stage" aria-label="AI 가상 사무실">
-    <div class="active-badge" id="activeStaffBadge">● 활성 직원 33명</div>
+    <div class="active-badge" id="activeStaffBadge">● 활성 직원 0명</div>
     <canvas id="officeCanvas"></canvas>
     <div class="stage-bottom-bar">
       <div class="stage-hints">
@@ -741,6 +741,9 @@ if (!employeeDirectory.length) {
     { id: 'LEG_2', name: '앤', department: '법무 및 컴플라이언스', position: '담당', instruction: '약관 및 규정 준수 검토를 담당한다.' }
   ];
 }
+
+document.getElementById('headerStaffCount').textContent = `● 직원 ${employeeDirectory.length}명`;
+document.getElementById('activeStaffBadge').textContent = `● 활성 직원 ${employeeDirectory.length}명`;
 
 const COMMON_PRINCIPLES = [
   '너는 SW AI 사무실의 정식 AI 직원이다.',
