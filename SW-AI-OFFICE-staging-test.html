@@ -55,10 +55,12 @@ const employeeById=new Map(employeeDirectory.map(e=>[String(e.id),e]));
 const employeeByName=new Map(employeeDirectory.map(e=>[String(e.name),e]));
 function normalizeEmployeeStatus(value,stage){
  const raw=String(value||stage||'').toLowerCase();
+ if(/승인|approved/.test(raw))return '검수 승인';
+ if(/완료|complete|done/.test(raw))return '업무 완료';
  if(/검수|review|inspect|qa/.test(raw))return '검수 중';
  if(/협업|collab|coordinate|meeting/.test(raw))return '협업 중';
  if(/휴식|break|休/.test(raw))return '휴식 중';
- if(/완료|승인|complete|done|approved|대기|pending|idle/.test(raw))return '대기';
+ if(/대기|pending|idle/.test(raw))return '대기';
  return '업무 중';
 }
 function syncEmployeeStates(data,taskId){
@@ -69,9 +71,10 @@ function syncEmployeeStates(data,taskId){
  const visited=new Set();
  function applyEmployee(employee,value,role='담당'){
   if(!employee)return;
-  const rawStatus=value.status??value.state??value.currentStatus??value.taskStatus??value.stageStatus??stage;
+  const rawStatus=value.judgment??value.status??value.state??value.currentStatus??value.taskStatus??value.stageStatus??stage;
+  const normalized=normalizeEmployeeStatus(rawStatus,stage);
   const detail=value.detail??value.description??value.task??value.instruction??value.currentTask??(role==='팀장'?'팀장 검수 및 협업':stage);
-  states[employee.id]={status:normalizeEmployeeStatus(rawStatus,stage),detail:String(detail).slice(0,500),taskId,updatedAt:new Date().toISOString(),source:'staging-response'};
+  states[employee.id]={status:role==='팀장'&&normalized==='업무 완료'?'검수 완료':normalized,detail:String(detail).slice(0,500),taskId,updatedAt:new Date().toISOString(),source:'staging-response'};
   seen.add(employee.id);
  }
  function walk(value,depth=0){
@@ -128,8 +131,7 @@ $('send').addEventListener('click',async()=>{
     ? `직원 상태 연결 확인: ${employeeSync.employees.join(', ')} (${employeeSync.count}명)`
     : '서버 응답에서 직원별 배정 정보가 확인되지 않았습니다. 본부장 상태만 표시합니다.';
    if(response.ok&&data.reply&&data.workflow&&['completed','partial','failed'].includes(data.workflow.status)){
-    setStagingEmployeesIdle('업무 처리가 종료되어 대기 중입니다.',taskId);
-    setHeadState('대기','스테이징 업무 처리가 종료되었습니다.');
+    setHeadState('보고 완료','스테이징 업무 처리가 종료되어 대표 최종 결정 대기 상태입니다.');
     localStorage.removeItem(pendingKey);
     localStorage.removeItem(quotaRetryKey);
     $('result').textContent=`업무 처리 종료: ${data.workflow.resultStatus||data.workflow.status}\nHTTP ${response.status}\n\n${JSON.stringify(data,null,2)}`;return;
