@@ -269,3 +269,17 @@ test('returns only the newest 300 audit events in chronological order', async ()
   assert.equal(result.body.events.at(-1).detail.sequence, 304);
   assert.equal(result.body.events[0].createdAt <= result.body.events.at(-1).createdAt, true);
 });
+
+
+test('fails closed when D1 is unavailable for task-history reads', async () => {
+  const result = await call({ action: 'get_task_history', taskId: 'test-task-001' }, { db: null });
+  assert.equal(result.status, 503);
+  assert.match(result.body.error, /D1 DB 바인딩/);
+});
+
+test('rejects invalid representative decisions and unknown task IDs', async () => {
+  const invalid = await call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'MAYBE' });
+  assert.equal(invalid.status, 400);
+  const missing = await call({ action: 'representative_decision', taskId: 'missing-task', decision: 'APPROVE' });
+  assert.equal(missing.status, 404);
+});
