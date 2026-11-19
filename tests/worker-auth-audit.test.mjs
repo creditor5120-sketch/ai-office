@@ -214,3 +214,27 @@ test('rejects non-object JSON bodies and non-string explicit actions', async () 
   assert.equal(numericAction.status, 400);
   assert.match(numericAction.body.error, /지원하지 않는 API action/);
 });
+
+
+test('validates task-history identifiers and reports missing tasks', async () => {
+  const empty = await call({ action: 'get_task_history', taskId: '   ' });
+  assert.equal(empty.status, 400);
+  const missing = await call({ action: 'get_task_history', taskId: 'missing-task' });
+  assert.equal(missing.status, 404);
+});
+
+test('preserves malformed audit JSON as a visible parse error', async () => {
+  const db = new FakeD1();
+  db.events.push({
+    event_id: 'evt-bad-json',
+    task_id: 'test-task-001',
+    event_type: 'WORKFLOW_STAGE_STARTED',
+    actor: 'tester',
+    stage: '검수',
+    detail_json: '{invalid-json',
+    created_at: '2026-11-19T00:00:30.000Z'
+  });
+  const result = await call({ action: 'get_task_history', taskId: 'test-task-001' }, { db });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.events[0].detail.parseError, '이력 상세 JSON을 해석하지 못했습니다.');
+});
