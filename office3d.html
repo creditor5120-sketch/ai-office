@@ -305,7 +305,7 @@ async function submitSelectedTask(value){
  document.getElementById('taskInput').value='';
  const taskId=crypto.randomUUID();
  const pending=appendChat(p.name,'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
- const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
+ const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};writeEmployeeStates(states);recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
  const payload={task,taskId,idempotencyKey:taskId,employee:p.name,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory};
  try{
   let data=null,completed=false,attempt=0;
@@ -400,7 +400,7 @@ function applyLiveAuditStates(audit,taskId,task){
  const role=String(detail.responsibleRole||''),meeting=/협업|회의/.test(stage)||(/검수/.test(stage)&&(/팀장/.test(stage)||/각 담당 팀장/.test(role))),now=new Date().toISOString(),states=readEmployeeStates(),activeIds=new Set(active.map(person=>person.id));
  for(const person of directory){const previous=states[person.id]||{};if(previous.taskId===taskId&&['업무 중','검수 중','협업 중'].includes(previous.status)&&!activeIds.has(person.id)){states[person.id]={...previous,status:'업무 대기',location:'책상',detail:'현재 단계 담당 업무 대기',taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}}
  for(const person of active){const previous=states[person.id]||{};states[person.id]={...previous,status:meeting?'검수 중':'업무 중',location:meeting?'회의실':'책상',detail:stage,taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}
- localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards();
+ writeEmployeeStates(states);refreshStaffCards();
 }
 function applyFinalWorkStates(data,taskId,task,requestedEmployeeId){
  const states=readEmployeeStates(),deliverables=Array.isArray(data.deliverables)?data.deliverables:[],reviews=Array.isArray(data.finalReviewResults)?data.finalReviewResults:[],activeIds=new Set(),now=new Date().toISOString();
@@ -413,7 +413,7 @@ function applyFinalWorkStates(data,taskId,task,requestedEmployeeId){
  }
  const manager=directory.find(entry=>entry.id==='COO');if(manager){activeIds.add(manager.id);states[manager.id]={...(states[manager.id]||{}),status:'보고 완료',location:'본부장실',detail:'최종 보고서 작성 및 제출',taskId,updatedAt:now};recordEmployeeHistory(manager.id,states[manager.id])}
  if(requestedEmployeeId&&!activeIds.has(requestedEmployeeId)){const person=directory.find(entry=>entry.id===requestedEmployeeId);if(person){states[person.id]={...(states[person.id]||{}),status:'업무 결과 확인',location:'책상',detail:'최종 담당자 및 검수 결과는 업무 보고에서 확인',taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}}
- localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards();
+ writeEmployeeStates(states);refreshStaffCards();
 }
 function compactTaskHistoryRecord(record){
  record=record&&typeof record==='object'?record:{};
@@ -467,7 +467,7 @@ function mergeEmployeeStates(incoming,taskId){
   if(previous.status!==states[id].status||previous.detail!==states[id].detail||String(previous.taskId||'')!==String(states[id].taskId||''))recordEmployeeHistory(id,states[id]);
   changed=true;
  }
- if(changed){localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards()}
+ if(changed){writeEmployeeStates(states);refreshStaffCards()}
 }
 async function refreshTaskRecordFromServer(record){
  const apiToken=document.getElementById('officeChatToken')?.value.trim();
@@ -641,13 +641,17 @@ function readEmployeeStates(){
 function readEmployeeHistory(){
  try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}
 }
+function writeEmployeeStates(states){
+ try{writeEmployeeStates(states);return true}
+ catch(error){console.warn('직원 상태 저장 실패:',error);return false}
+}
 function recordEmployeeHistory(id,state){
  if(!id||!state)return;
  const history=readEmployeeHistory(),key=String(id),entries=Array.isArray(history[key])?history[key]:[];
  const latest=entries[0]||{};
  if(latest.status===state.status&&latest.detail===(state.detail||state.task||'')&&String(latest.taskId||'')===String(state.taskId||''))return;
  entries.unshift({status:state.status||'상태 변경',detail:String(state.detail||state.task||'').slice(0,3000),taskId:state.taskId||null,updatedAt:state.updatedAt||new Date().toISOString()});
- history[key]=entries.slice(0,12);localStorage.setItem('swAIOfficeEmployeeHistory',JSON.stringify(history));
+ history[key]=entries.slice(0,12);try{localStorage.setItem('swAIOfficeEmployeeHistory',JSON.stringify(history))}catch(error){console.warn('직원 이력 저장 실패:',error)}
 }
 function syncAvatarWorkStates(force=false){
  const now=performance.now();if(!force&&now-lastStateSync<650)return;lastStateSync=now;
