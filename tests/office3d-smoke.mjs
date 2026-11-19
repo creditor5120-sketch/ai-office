@@ -27,11 +27,13 @@ page.on('pageerror', error => pageErrors.push(error.stack || error.message));
 
 try {
   await page.goto('http://127.0.0.1:4173/office3d.html', { waitUntil: 'commit', timeout: 15000 });
-  try {
-    await page.locator('#loading').waitFor({ state: 'hidden', timeout: 45000 });
-  } catch {
-    const loadingText = await page.locator('#loading').innerText().catch(() => 'loading element unavailable');
-    throw new Error('3D initialization did not finish. Loading panel: ' + loadingText + '\\nBrowser errors: ' + pageErrors.join('\\n'));
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('#loading');
+    return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
+  }, { timeout: 45000 });
+  const loadingText = await page.locator('#loading').innerText().catch(() => '');
+  if (loadingText.includes('초기화 오류')) {
+    throw new Error('3D initialization failed. Loading panel: ' + loadingText + '\\nBrowser errors: ' + pageErrors.join('\\n'));
   }
   await page.locator('#scene canvas').waitFor({ state: 'attached', timeout: 10000 });
 
