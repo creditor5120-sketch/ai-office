@@ -815,6 +815,8 @@ const WAYPOINTS = [
 ];
 
 const PALETTE = ['#2b4c7e', '#3a6b5c', '#7c4d3b', '#52487a', '#8c5a2b', '#2f6f7e', '#6b4c35', '#3e5c76'];
+const SKIN_PALETTE = ['#e7b995', '#d9a47e', '#f0c9a5', '#c98f6b'];
+const HAIR_PALETTE = ['#302a29', '#4b3329', '#1f2937', '#6a4a35'];
 
 const actors = employeeDirectory.map((emp, idx) => {
   const wp = WAYPOINTS[idx % WAYPOINTS.length];
@@ -828,6 +830,9 @@ const actors = employeeDirectory.map((emp, idx) => {
     speed: 0.65 + (idx % 4) * 0.16,
     phase: idx * 0.85,
     color: PALETTE[idx % PALETTE.length],
+    skin: SKIN_PALETTE[idx % SKIN_PALETTE.length],
+    hair: HAIR_PALETTE[idx % HAIR_PALETTE.length],
+    hairStyle: idx % 4,
     pauseTimer: (idx % 3) * 0.5
   };
 });
@@ -1071,7 +1076,7 @@ function renderScene(nowSec) {
     ctx.fill();
     ctx.stroke();
     // 목과 얼굴
-    ctx.fillStyle = '#e7b995';
+    ctx.fillStyle = ac.skin;
     ctx.fillRect(head.x - 2.5 * scale, head.y + headR * 0.55, 5 * scale, 5 * scale);
     ctx.beginPath();
     ctx.arc(head.x, head.y, headR, 0, Math.PI * 2);
@@ -1080,7 +1085,7 @@ function renderScene(nowSec) {
     ctx.lineWidth = 0.8 * scale;
     ctx.stroke();
     // 헤어 실루엣과 눈
-    ctx.fillStyle = '#302a29';
+    ctx.fillStyle = ac.hair;
     ctx.beginPath();
     ctx.arc(head.x, head.y - 1.7 * scale, headR * 0.98, Math.PI, Math.PI * 2);
     ctx.lineTo(head.x + headR * 0.82, head.y - headR * 0.1);
