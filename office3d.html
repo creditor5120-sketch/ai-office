@@ -369,7 +369,13 @@ function updateChatBubble(element,message){
  element.textContent=(element.textContent.split('\n')[0]||'시스템')+'\n'+message;
  const chats=readEmployeeChats(),entries=Array.isArray(chats[key])?chats[key]:[],entry=entries.find(item=>item.id===id);
  if(entry){entry.message=String(message);entry.updatedAt=new Date().toISOString();try{localStorage.setItem('swAIOfficeChatHistory',JSON.stringify(chats))}catch(_){}}
- if(selected&&String(selected.userData.person.id)===key){const host=document.getElementById('chatHistory');if(element.parentNode!==host)host.appendChild(element);host.scrollTop=host.scrollHeight}
+ if(selected&&String(selected.userData.person.id)===key){
+  const host=document.getElementById('chatHistory');
+  const existing=[...host.querySelectorAll('.chatBubble')].find(item=>item.dataset.messageId===id);
+  if(existing&&existing!==element)existing.textContent=element.textContent;
+  else if(element.parentNode!==host)host.appendChild(element);
+  host.scrollTop=host.scrollHeight;
+ }
 }
 function fetchTaskAuditHistory(taskId,token){
  return fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'get_task_history',taskId})}).then(async response=>{const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error(raw||'상세 이력 응답을 해석할 수 없습니다.')}if(!response.ok)throw new Error(data.error||'상세 이력 조회에 실패했습니다.');return data});
