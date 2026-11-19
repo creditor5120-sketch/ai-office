@@ -304,6 +304,7 @@ async function submitSelectedTask(value){
   for(let step=0;step<1000;step++){
    const response=await fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
    const raw=await response.text();try{data=JSON.parse(raw)}catch(_){data={error:raw||'서버 응답을 해석할 수 없습니다.'}}
+   if(data?.employeeStates)mergeEmployeeStates(data.employeeStates,taskId);
    if(response.ok&&data.reply&&data.workflow)break;
    if(response.status===202&&data.status==='PROCESSING'){pending.textContent='처리 중 · '+(data.currentStage||'업무 수행 및 검수')+'\n진행 상황을 확인하고 있습니다.';await new Promise(r=>setTimeout(r,Math.max(1200,Number(data.resumeDelayMs)||1200)));continue}
    if(response.status===409&&data.status==='PROCESSING'){pending.textContent='기존 실행이 완료되기를 기다리고 있습니다.';await new Promise(r=>setTimeout(r,2500));continue}
@@ -314,7 +315,6 @@ async function submitSelectedTask(value){
   pending.textContent=data.reply;
   const finalStates=readEmployeeStates();
   finalStates[p.id]={...(finalStates[p.id]||{}),status:'완료',detail:task,taskId,updatedAt:new Date().toISOString()};
-  Object.assign(finalStates,data.employeeStates||{});
   localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(finalStates));
   saveTaskHistory(task,taskId,data.reply,data.deliverables||[],data.workflow||{},data.finalReviewResults||[]);
   renderTaskHistory();
@@ -329,6 +329,16 @@ function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResu
  const record={taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],savedAt:new Date().toISOString()};
  const next=[record,...history.filter(item=>item.taskId!==taskId)].slice(0,10);
  localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(next));
+}
+function mergeEmployeeStates(incoming,taskId){
+ if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))return;
+ const states=readEmployeeStates(),now=new Date().toISOString();let changed=false;
+ for(const [id,value] of Object.entries(incoming)){
+  if(!value||typeof value!=='object'||Array.isArray(value))continue;
+  states[id]={...(states[id]||{}),...value,taskId:value.taskId||taskId,updatedAt:value.updatedAt||now};
+  changed=true;
+ }
+ if(changed){localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards()}
 }
 function renderTaskHistory(){
  const list=document.getElementById('taskHistoryList');if(!list)return;
