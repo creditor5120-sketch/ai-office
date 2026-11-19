@@ -1086,10 +1086,16 @@ function renderScene(nowSec) {
     ctx.stroke();
     // 헤어 실루엣과 눈
     ctx.fillStyle = ac.hair;
+    const hairLift = ac.hairStyle === 2 ? 3.2 : ac.hairStyle === 3 ? 0.2 : 1.7;
+    const hairWidth = ac.hairStyle === 1 ? 1.12 : ac.hairStyle === 3 ? 1.06 : 0.98;
     ctx.beginPath();
-    ctx.arc(head.x, head.y - 1.7 * scale, headR * 0.98, Math.PI, Math.PI * 2);
-    ctx.lineTo(head.x + headR * 0.82, head.y - headR * 0.1);
-    ctx.quadraticCurveTo(head.x, head.y - headR * 0.8, head.x - headR * 0.9, head.y);
+    ctx.arc(head.x, head.y - hairLift * scale, headR * hairWidth, Math.PI, Math.PI * 2);
+    ctx.lineTo(head.x + headR * (ac.hairStyle === 1 ? 1.0 : 0.82), head.y + (ac.hairStyle === 3 ? 3 : -headR * 0.1));
+    ctx.quadraticCurveTo(head.x, head.y - headR * (ac.hairStyle === 2 ? 1.25 : 0.8), head.x - headR * (ac.hairStyle === 1 ? 1.0 : 0.9), head.y);
+    if (ac.hairStyle === 1 || ac.hairStyle === 3) {
+      ctx.lineTo(head.x - headR * 0.82, head.y + headR * 0.75);
+      ctx.quadraticCurveTo(head.x, head.y + headR * 0.2, head.x + headR * 0.82, head.y + headR * 0.75);
+    }
     ctx.fill();
     ctx.fillStyle = '#342c28';
     ctx.beginPath();
