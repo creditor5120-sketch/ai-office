@@ -63,6 +63,24 @@ try {
   await page.evaluate(record => {
     localStorage.setItem('swAIOffice3DTaskHistory', JSON.stringify([record]));
   }, restoreFixture);
+  await page.route('https://ai-office-api.creditor5120.workers.dev/', async route => {
+    const body = route.request().postDataJSON();
+    if (body.action === 'get_task_history') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+        task: { taskId: body.taskId, status: 'COMPLETED', currentStage: '서버 최종 검수', createdAt: '2026-11-19T09:00:00Z', completedAt: '2026-11-19T09:05:00Z' },
+        eventCount: 2, truncated: false,
+        events: [
+          { eventType: 'WORKFLOW_STAGE_STARTED', stage: '서버 최종 검수', actor: '알렉스', detail: { outcome: '서버 원본 이력 확인' }, createdAt: '2026-11-19T09:04:00Z' },
+          { eventType: 'REPRESENTATIVE_DECISION', stage: '대표 승인', actor: '대표', detail: { decision: 'APPROVE', decisionLabel: '서버 대표 승인', reason: '서버 기록 복원' }, createdAt: '2026-11-19T09:05:00Z' }
+        ]
+      }) });
+    } else if (body.action === 'get_representative_decision') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ taskId: body.taskId, decision: 'APPROVE', decisionLabel: '서버 대표 승인', reason: '서버 기록 복원', recordedAt: '2026-11-19T09:05:00Z' }) });
+    } else {
+      await route.continue();
+    }
+  });
+  await page.locator('#officeChatToken').fill('smoke-test-api-token');
   await page.reload({ waitUntil: 'commit' });
   await page.waitForFunction(() => {
     const panel = document.querySelector('#loading');
@@ -77,6 +95,10 @@ try {
   if (!(await page.locator('#representativeApprove').isDisabled())) throw new Error('Previously recorded representative decision did not lock approval');
   const decisionHint = await page.locator('#decisionTaskHint').innerText();
   if (!decisionHint.includes('대표 승인')) throw new Error('Representative decision was not restored in the decision panel');
+  await page.getByText('서버 원본 감사 이력').waitFor({ state: 'visible', timeout: 10000 });
+  const refreshedChat = await page.locator('#chatHistory').innerText();
+  if (!refreshedChat.includes('서버 원본 이력 확인')) throw new Error('Server audit history was not reloaded');
+  if (!refreshedChat.includes('서버 대표 승인')) throw new Error('Server representative decision was not reloaded');
 
   await page.locator('#detailToggle').click();
   await page.locator('#detailView').waitFor({ state: 'visible' });
