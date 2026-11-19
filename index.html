@@ -1761,7 +1761,13 @@ function syncEmployeeStates(data, taskId) {
       const isCollaboration = status === '협업 중';
       if (isCollaboration) {
         const index = Math.max(0, employeeDirectory.findIndex(item => String(item.id) === String(employee.id)));
-        const meetingPoint = COMMON_WAYPOINTS[index % COMMON_WAYPOINTS.length];
+        // 실제 3D 회의 테이블을 둘러싼 좌석 위치로 이동한다.
+        const meetingSeats = [
+          { x: -1.45, z: -3.35 }, { x: -1.45, z: -2.15 },
+          { x: 0.55, z: -3.35 }, { x: 0.55, z: -2.15 },
+          { x: -0.45, z: -3.65 }, { x: -0.45, z: -1.9 }
+        ];
+        const meetingPoint = meetingSeats[index % meetingSeats.length];
         actor.targetX = meetingPoint.x;
         actor.targetZ = meetingPoint.z;
         actor.activityTarget = 'meeting';
