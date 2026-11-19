@@ -89,6 +89,10 @@ try {
   const managerCard = page.locator('#staffStrip .staffCard[data-emp="COO"]');
   await managerCard.waitFor({ state: 'visible', timeout: 10000 });
   await managerCard.click();
+  await page.locator('#chatName').getByText('알렉스').waitFor({ state: 'visible', timeout: 5000 }).catch(async () => {
+    const actual = (await page.locator('#chatName').innerText()).trim();
+    throw new Error(`Selecting COO did not update the active employee. Expected 알렉스, found ${actual || '(empty)'}`);
+  });
   const restoredItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
   await restoredItem.waitFor({ state: 'visible', timeout: 10000 });
   await restoredItem.click();
