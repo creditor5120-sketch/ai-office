@@ -275,6 +275,7 @@ function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
  document.getElementById('chatName').textContent=p.name;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
+ renderEmployeeChat(p.id);
  document.getElementById('chatAvatar').textContent='👤';document.getElementById('chatIntro').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
@@ -312,26 +313,26 @@ async function submitSelectedTask(value){
    if(data?.employeeStates)mergeEmployeeStates(data.employeeStates,taskId);
    if(response.ok&&data.reply&&data.workflow){completed=true;break}
    if(response.status===202&&data.status==='PROCESSING'){
-    pending.textContent='처리 중 · '+(data.currentStage||'업무 수행 및 검수')+'\n진행 상황을 확인하고 있습니다. ('+attempt+'/1200)';
+    updateChatBubble(pending,'처리 중 · '+(data.currentStage||'업무 수행 및 검수')+'\n진행 상황을 확인하고 있습니다. ('+attempt+'/1200)');
     await new Promise(r=>setTimeout(r,Math.min(10000,Math.max(1200,Number(data.resumeDelayMs)||1200))));
     continue;
    }
    if(response.status===409&&data.status==='PROCESSING'){
-    pending.textContent='기존 실행이 완료되기를 기다리고 있습니다. ('+attempt+'/180)';
+    updateChatBubble(pending,'기존 실행이 완료되기를 기다리고 있습니다. ('+attempt+'/1200)');
     await new Promise(r=>setTimeout(r,2500));continue;
    }
    if(data.status==='WAITING_FOR_API_QUOTA'){
     const remaining=Math.max(0,deadline-Date.now());
     if(!remaining)break;
     const waitMs=Math.min(remaining,Math.max(30000,Number(data.quotaRetryAfterMs)||300000));
-    pending.textContent='AI 사용 한도 회복을 기다리는 중입니다. 기존 업무는 보존됩니다.';
+    updateChatBubble(pending,'AI 사용 한도 회복을 기다리는 중입니다. 기존 업무는 보존됩니다.');
     await new Promise(r=>setTimeout(r,waitMs));continue;
    }
    throw new Error(data.error||'업무 처리에 실패했습니다.');
   }
   if(!completed||!data?.reply)throw new Error('업무 처리 대기 시간이 초과되었거나 완료 응답을 받지 못했습니다. 업무 ID: '+taskId);
-  pending.textContent=data.reply;
-  let audit=null;try{audit=await fetchTaskAuditHistory(taskId,token)}catch(auditError){pending.textContent+='\n\n서버 상세 이력 조회는 실패했습니다: '+(auditError.message||String(auditError))}
+  updateChatBubble(pending,data.reply);
+  let audit=null;try{audit=await fetchTaskAuditHistory(taskId,token)}catch(auditError){updateChatBubble(pending,data.reply+'\n\n서버 상세 이력 조회는 실패했습니다: '+(auditError.message||String(auditError)))}
   const finalStates=readEmployeeStates();
   finalStates[p.id]={...(finalStates[p.id]||{}),status:'완료',detail:task,taskId,updatedAt:new Date().toISOString()};
   localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(finalStates));recordEmployeeHistory(p.id,finalStates[p.id]);
@@ -343,10 +344,32 @@ async function submitSelectedTask(value){
   const failedStates=readEmployeeStates();
   failedStates[p.id]={...(failedStates[p.id]||{}),status:'오류',detail:(error.message||String(error)).slice(0,240),taskId,updatedAt:new Date().toISOString()};
   localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(failedStates));recordEmployeeHistory(p.id,failedStates[p.id]);refreshStaffCards();
-  pending.textContent='처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId;
+  updateChatBubble(pending,'처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId);
  }
 }
-function appendChat(who,message){const el=document.createElement('div');el.className='chatBubble';el.textContent=who+'\n'+message;document.getElementById('chatHistory').appendChild(el);document.getElementById('chatHistory').scrollTop=999999;return el}
+function readEmployeeChats(){try{const value=JSON.parse(localStorage.getItem('swAIOfficeChatHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}}
+function renderEmployeeChat(employeeId){
+ const host=document.getElementById('chatHistory');if(!host)return;host.replaceChildren();
+ const entries=readEmployeeChats()[String(employeeId)]||[];
+ if(!entries.length){const intro=document.createElement('div');intro.className='chatBubble';intro.textContent='이 직원과의 대화가 여기에 기록됩니다. 간단한 대화나 업무 지시를 입력할 수 있습니다.';host.appendChild(intro);return}
+ entries.forEach(item=>{const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=item.id||'';el.dataset.employeeId=String(employeeId);el.textContent=(item.who||'')+'\n'+(item.message||'');host.appendChild(el)});
+ host.scrollTop=host.scrollHeight;
+}
+function appendChat(who,message,employeeId=selected?.userData.person.id||'SYSTEM'){
+ const id=crypto.randomUUID(),key=String(employeeId),chats=readEmployeeChats(),entries=Array.isArray(chats[key])?chats[key]:[];
+ entries.push({id,who:String(who||''),message:String(message??''),createdAt:new Date().toISOString()});chats[key]=entries.slice(-100);
+ try{localStorage.setItem('swAIOfficeChatHistory',JSON.stringify(chats))}catch(_){ }
+ const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=id;el.dataset.employeeId=key;el.textContent=who+'\n'+message;
+ if(selected&&String(selected.userData.person.id)===key){const host=document.getElementById('chatHistory');host.appendChild(el);host.scrollTop=host.scrollHeight}
+ return el;
+}
+function updateChatBubble(element,message){
+ if(!element)return;const id=element.dataset.messageId,key=element.dataset.employeeId||String(selected?.userData.person.id||'SYSTEM');
+ element.textContent=(element.textContent.split('\n')[0]||'시스템')+'\n'+message;
+ const chats=readEmployeeChats(),entries=Array.isArray(chats[key])?chats[key]:[],entry=entries.find(item=>item.id===id);
+ if(entry){entry.message=String(message);entry.updatedAt=new Date().toISOString();try{localStorage.setItem('swAIOfficeChatHistory',JSON.stringify(chats))}catch(_){}}
+ if(selected&&String(selected.userData.person.id)===key){const host=document.getElementById('chatHistory');if(element.parentNode!==host)host.appendChild(element);host.scrollTop=host.scrollHeight}
+}
 function fetchTaskAuditHistory(taskId,token){
  return fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'get_task_history',taskId})}).then(async response=>{const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error(raw||'상세 이력 응답을 해석할 수 없습니다.')}if(!response.ok)throw new Error(data.error||'상세 이력 조회에 실패했습니다.');return data});
 }
