@@ -805,50 +805,64 @@ const EMPLOYEE_STATE_KEY = 'swAIOfficeEmployeeStates';
 const employeeById = new Map(employeeDirectory.map(e => [String(e.id), e]));
 const employeeByName = new Map(employeeDirectory.map(e => [String(e.name), e]));
 
+// 참고 이미지의 한 층짜리 연결형 사무실: 각 공간은 공용 통로를 통해 이어진다.
 const ZONES = [
-  { name: '개발·운영존', x1: -7.6, z1: -4.6, x2: -1.6, z2: 0.4, color: '#f3e8d2' },
-  { name: '메인 회의실', x1: -7.6, z1: 0.7, x2: -1.6, z2: 4.8, color: '#efe3ca' },
-  { name: '라운지·휴게', x1: -1.3, z1: -4.6, x2: 2.3, z2: 0.4, color: '#f5ebd6' },
-  { name: '프로젝트룸', x1: -1.3, z1: 0.7, x2: 2.3, z2: 4.8, color: '#f1e5cd' },
-  { name: '비즈니스존', x1: 2.6, z1: -4.6, x2: 7.6, z2: 4.8, color: '#f4e9d3' }
+  { name: '대표실', x1: -7.6, z1: -4.7, x2: -5.1, z2: -1.0, color: '#e9dfcc' },
+  { name: '본부장실', x1: -4.8, z1: -4.7, x2: -2.3, z2: -1.0, color: '#e6ddca' },
+  { name: '회의실', x1: -2.0, z1: -4.7, x2: 1.1, z2: -1.0, color: '#dce3e5' },
+  { name: '카페테리아', x1: 1.4, z1: -4.7, x2: 4.4, z2: -1.0, color: '#e9e0cf' },
+  { name: '로비', x1: 4.7, z1: -4.7, x2: 7.6, z2: -1.0, color: '#e5d6bd' },
+  { name: '접견실', x1: -7.6, z1: 0.25, x2: -5.1, z2: 4.7, color: '#e7dfd1' },
+  { name: 'IT·기술팀', x1: -4.8, z1: 0.25, x2: -2.0, z2: 4.7, color: '#dce5e6' },
+  { name: '대형사무실', x1: -1.7, z1: 0.25, x2: 2.1, z2: 4.7, color: '#e1e6dc' },
+  { name: '법무팀', x1: 2.4, z1: 0.25, x2: 4.9, z2: 4.7, color: '#e8e0d5' },
+  { name: 'IR팀', x1: 5.2, z1: 0.25, x2: 7.6, z2: 4.7, color: '#e7dfcf' }
 ];
 
 const WORKSTATIONS = [
-  { x: -6.2, z: -3.2 }, { x: -4.6, z: -3.2 }, { x: -3.0, z: -3.2 },
-  { x: -6.2, z: -1.2 }, { x: -4.6, z: -1.2 }, { x: -3.0, z: -1.2 },
-  { x: 3.9, z: -2.8 }, { x: 5.8, z: -2.8 },
-  { x: 3.9, z: -0.6 }, { x: 5.8, z: -0.6 },
-  { x: 3.9, z: 1.6 },  { x: 5.8, z: 1.6 },
-  { x: 3.9, z: 3.5 },  { x: 5.8, z: 3.5 }
+  // 대표실·본부장실
+  { x: -6.35, z: -3.0, room: '대표실' }, { x: -3.55, z: -3.0, room: '본부장실' },
+  // IT·기술팀
+  { x: -4.25, z: 1.2, room: 'IT·기술팀' }, { x: -2.65, z: 1.2, room: 'IT·기술팀' },
+  { x: -4.25, z: 3.1, room: 'IT·기술팀' }, { x: -2.65, z: 3.1, room: 'IT·기술팀' },
+  // 경영관리·총무·전략기획이 함께 사용하는 대형사무실
+  { x: -1.05, z: 1.1, room: '대형사무실' }, { x: 0.35, z: 1.1, room: '대형사무실' },
+  { x: -1.05, z: 2.8, room: '대형사무실' }, { x: 0.35, z: 2.8, room: '대형사무실' },
+  { x: 1.45, z: 1.1, room: '대형사무실' }, { x: 1.45, z: 2.8, room: '대형사무실' },
+  // 법무팀·IR팀
+  { x: 3.05, z: 1.3, room: '법무팀' }, { x: 4.35, z: 3.1, room: '법무팀' },
+  { x: 5.85, z: 1.3, room: 'IR팀' }, { x: 7.0, z: 3.1, room: 'IR팀' }
 ];
 
 const SERVER_RACKS = [
-  { x: -6.8, z: 1.6 }, { x: -5.9, z: 1.6 },
-  { x: -6.8, z: 3.6 }, { x: -5.9, z: 3.6 }
+  { x: -4.45, z: 4.05 }, { x: -3.85, z: 4.05 }, { x: -3.25, z: 4.05 }
 ];
 
-const WAYPOINTS = [
-  ...WORKSTATIONS.map(w => ({ x: w.x, z: w.z + 0.55 })),
-  { x: -4.5, z: 2.7 },
-  { x: 0.4, z: -2.0 },
-  { x: 0.4, z: 2.5 },
-  { x: 4.8, z: 0.4 }
+const COMMON_WAYPOINTS = [
+  { x: -4.0, z: -0.35 }, { x: -1.0, z: -0.35 },
+  { x: 2.0, z: -0.35 }, { x: 5.8, z: -0.35 },
+  { x: -4.0, z: 0.0 }, { x: 0.0, z: 0.0 }, { x: 4.0, z: 0.0 }
 ];
+const WAYPOINTS = [...WORKSTATIONS.map(w => ({ x: w.x, z: w.z + 0.48 })), ...COMMON_WAYPOINTS];
 
 const PALETTE = ['#2b4c7e', '#3a6b5c', '#7c4d3b', '#52487a', '#8c5a2b', '#2f6f7e', '#6b4c35', '#3e5c76'];
 const SKIN_PALETTE = ['#e7b995', '#d9a47e', '#f0c9a5', '#c98f6b'];
 const HAIR_PALETTE = ['#302a29', '#4b3329', '#1f2937', '#6a4a35'];
 
 const actors = employeeDirectory.map((emp, idx) => {
-  const wp = WAYPOINTS[idx % WAYPOINTS.length];
-  const nextWp = WAYPOINTS[(idx + 2) % WAYPOINTS.length];
+  const desk = WORKSTATIONS[idx % WORKSTATIONS.length];
+  const start = COMMON_WAYPOINTS[idx % COMMON_WAYPOINTS.length];
   return {
     emp,
-    x: wp.x,
-    z: wp.z,
-    targetX: nextWp.x,
-    targetZ: nextWp.z,
-    speed: 0.65 + (idx % 4) * 0.16,
+    x: start.x + (idx % 2 ? 0.18 : -0.18),
+    z: start.z,
+    deskX: desk.x,
+    deskZ: desk.z + 0.52,
+    targetX: desk.x,
+    targetZ: desk.z + 0.52,
+    state: 'walking',
+    workTimer: 5 + (idx % 5) * 3,
+    speed: 0.62 + (idx % 4) * 0.12,
     phase: idx * 0.85,
     color: PALETTE[idx % PALETTE.length],
     skin: SKIN_PALETTE[idx % SKIN_PALETTE.length],
@@ -1030,19 +1044,32 @@ function renderScene(nowSec) {
   });
 
   WORKSTATIONS.forEach(ws => {
-    drawBox3D(ws.x, 0, ws.z, 1.15, 0.42, 0.55, '#e8d8bc', '#cbb796', '#b39e7c');
-    drawBox3D(ws.x, 0.42, ws.z - 0.06, 0.48, 0.3, 0.08, '#4a5568', '#2d3748', '#1a202c');
+    // 모든 좌석에 책상·모니터·키보드를 배치
+    drawBox3D(ws.x, 0, ws.z, 0.92, 0.38, 0.52, '#d8bd91', '#b99a70', '#a88760');
+    drawBox3D(ws.x, 0.38, ws.z - 0.10, 0.42, 0.28, 0.07, '#455365', '#2d3748', '#1e293b');
+    drawBox3D(ws.x, 0.39, ws.z + 0.13, 0.30, 0.025, 0.12, '#343b45', '#252b33', '#1c2229');
   });
 
-  // 메인 회의실: 회의 테이블과 6석
-  drawBox3D(-4.2, 0, 2.7, 2.2, 0.4, 1.1, '#dfc9a6', '#c5ad88', '#a8906c');
-  [
-    [-5.55, 2.1], [-5.55, 3.25], [-4.2, 1.9],
-    [-2.85, 2.1], [-2.85, 3.25], [-4.2, 3.55]
-  ].forEach(([x, z]) => {
-    drawBox3D(x, 0, z, 0.42, 0.18, 0.42, '#596779', '#3e4a5b', '#2d3748');
-    drawBox3D(x, 0.18, z, 0.42, 0.52, 0.12, '#68788b', '#4b5b70', '#354256');
+  // 회의실 테이블과 의자, 벽면 프레젠테이션 스크린
+  drawBox3D(-0.45, 0, -2.75, 1.85, 0.38, 0.92, '#d7c29e', '#bda77f', '#9f8966');
+  [[-1.45,-3.35],[-1.45,-2.15],[0.55,-3.35],[0.55,-2.15],[-0.45,-3.65],[-0.45,-1.9]].forEach(([x,z]) => {
+    drawBox3D(x, 0, z, 0.34, 0.16, 0.34, '#566273', '#3e4a5b', '#2d3748');
   });
+  drawBox3D(-0.45, 1.05, -4.55, 1.55, 0.82, 0.08, '#303b4b', '#202a38', '#151d28');
+  // 대표실·본부장실의 임원 책상과 소파
+  drawBox3D(-6.35, 0, -2.0, 1.25, 0.42, 0.62, '#b88c5c', '#9b7047', '#805a39');
+  drawBox3D(-6.7, 0, -4.05, 1.1, 0.34, 0.42, '#8e5948', '#744638', '#60372f');
+  drawBox3D(-3.55, 0, -2.0, 1.25, 0.42, 0.62, '#b88c5c', '#9b7047', '#805a39');
+  drawBox3D(-3.9, 0, -4.05, 1.1, 0.34, 0.42, '#8e5948', '#744638', '#60372f');
+  // 카페테리아 테이블·소파·냉장고·커피머신·정수기
+  [[2.1,-3.6],[3.55,-3.6],[2.1,-2.0],[3.55,-2.0]].forEach(([x,z]) => drawBox3D(x,0,z,0.72,0.32,0.55,'#d7c29e','#bda77f','#9f8966'));
+  drawBox3D(4.0,0,-2.7,0.38,1.0,0.42,'#e5e8e7','#c5cecf','#aeb9bb');
+  drawBox3D(4.0,0,-1.65,0.30,0.55,0.30,'#5c6f82','#46596c','#34465a');
+  // 로비 리셉션 데스크와 안내 로봇, 접견실 소파
+  drawBox3D(6.1,0,-2.0,1.35,0.62,0.52,'#b98b5c','#986d46','#805636');
+  drawBox3D(5.15,0,2.0,1.3,0.36,0.48,'#8e5948','#744638','#60372f');
+  drawBox3D(6.8,0,-3.6,0.32,0.68,0.30,'#d9e4e8','#9fb4c0','#748b9b');
+  // 벽면 스크린은 업무 분위기를 내는 시각 요소로 표현
 
   SERVER_RACKS.forEach(sr => {
     drawBox3D(sr.x, 0, sr.z, 0.65, 1.15, 0.55, '#475569', '#334155', '#1e293b');
@@ -1171,14 +1198,28 @@ function updateActors(dt) {
       ac.pauseTimer -= dt;
       return;
     }
+    if (ac.state === 'working') {
+      ac.workTimer -= dt;
+      if (ac.workTimer <= 0) {
+        const corridor = COMMON_WAYPOINTS[(idx + Math.floor(nowMotionClock / 8)) % COMMON_WAYPOINTS.length];
+        ac.targetX = corridor.x;
+        ac.targetZ = corridor.z;
+        ac.state = 'walking';
+      }
+      return;
+    }
     const dx = ac.targetX - ac.x;
     const dz = ac.targetZ - ac.z;
     const dist = Math.hypot(dx, dz);
-    if (dist < 0.08) {
-      ac.pauseTimer = 1.0 + (idx % 3) * 0.65;
-      const nextWp = WAYPOINTS[(Math.floor(Math.random() * WAYPOINTS.length) + idx) % WAYPOINTS.length];
-      ac.targetX = nextWp.x;
-      ac.targetZ = nextWp.z;
+    if (dist < 0.09) {
+      const atDesk = Math.hypot(ac.x - ac.deskX, ac.z - ac.deskZ) < 0.18;
+      if (atDesk) {
+        ac.state = 'working';
+        ac.workTimer = 7 + (idx % 6) * 3;
+      } else {
+        ac.targetX = ac.deskX;
+        ac.targetZ = ac.deskZ;
+      }
     } else {
       const step = Math.min(dist, ac.speed * dt);
       ac.x += (dx / dist) * step;
@@ -1186,11 +1227,13 @@ function updateActors(dt) {
     }
   });
 }
+let nowMotionClock = 0;
 
 let lastFrameTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
   lastFrameTime = now;
+  nowMotionClock = now / 1000;
   updateActors(dt);
   renderScene(now / 1000);
   requestAnimationFrame(loop);
