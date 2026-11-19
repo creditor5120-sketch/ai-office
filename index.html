@@ -1003,6 +1003,8 @@ const threeScene = new THREE.Scene();
 threeScene.background = new THREE.Color('#dce8fa');
 threeScene.fog = new THREE.Fog('#dce8fa', 22, 42);
 const threeCamera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+const threePlanCamera = new THREE.OrthographicCamera(-10,10,6,-6,.1,100);
+let activeThreeCamera = threeCamera;
 const threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 threeRenderer.domElement.className = 'three-office-renderer';
 threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1136,12 +1138,21 @@ function updateThreeOffice(){
   }
   const target=new THREE.Vector3(-panX/zoom*.12, .35+panY/zoom*.08, 0);
   const radius=Math.max(9,Math.min(30,30-(zoom-24)*.28));
-  if(view2D){threeCamera.position.set(target.x,.35+radius*.9,target.z+.01);threeCamera.up.set(0,0,-1);}
-  else{
+  if(view2D){
+    const aspect=w/h, halfH=12*(41/zoom);
+    threePlanCamera.left=-halfH*aspect; threePlanCamera.right=halfH*aspect;
+    threePlanCamera.top=halfH; threePlanCamera.bottom=-halfH;
+    threePlanCamera.position.set(target.x,25,target.z);
+    threePlanCamera.up.set(0,0,-1);
+    threePlanCamera.lookAt(target);
+    threePlanCamera.updateProjectionMatrix();
+    activeThreeCamera=threePlanCamera;
+  } else {
     threeCamera.up.set(0,1,0);
     threeCamera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);
+    threeCamera.lookAt(target);
+    activeThreeCamera=threeCamera;
   }
-  threeCamera.lookAt(target);
   actors.forEach(ac=>{
     const g=actorObjects.get(String(ac.emp.id)); if(!g)return;
     g.position.set(ac.x,0,ac.z);
@@ -1150,12 +1161,12 @@ function updateThreeOffice(){
     const bob=ac.state==='working'?0:Math.abs(Math.sin(nowMotionClock*6+ac.phase))*.025;
     g.position.y=bob;
   });
-  threeRenderer.render(threeScene,threeCamera);
+  threeRenderer.render(threeScene,activeThreeCamera);
 }
 function pickThreeEmployee(clientX,clientY){
   const rect=threeRenderer.domElement.getBoundingClientRect();
   threePointer.set(((clientX-rect.left)/rect.width)*2-1,-((clientY-rect.top)/rect.height)*2+1);
-  threeRaycaster.setFromCamera(threePointer,threeCamera);
+  threeRaycaster.setFromCamera(threePointer,activeThreeCamera);
   const hits=threeRaycaster.intersectObjects(actorPickTargets,true);
   const root=hits.find(h=>h.object.parent?.userData?.employee||h.object.parent?.parent?.userData?.employee);
   if(!root)return null;
