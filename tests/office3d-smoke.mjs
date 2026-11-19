@@ -86,6 +86,9 @@ try {
     const panel = document.querySelector('#loading');
     return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
   }, { timeout: 45000 });
+  const alexCard = page.locator('#staffStrip .staffCard').filter({ hasText: '알렉스' }).first();
+  await alexCard.waitFor({ state: 'visible', timeout: 10000 });
+  await alexCard.click();
   const restoredItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
   await restoredItem.waitFor({ state: 'visible', timeout: 10000 });
   await restoredItem.click();
