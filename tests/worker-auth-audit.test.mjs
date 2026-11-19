@@ -145,3 +145,36 @@ test('rejects non-POST requests', async () => {
   const response = await worker.fetch(request, {});
   assert.equal(response.status, 405);
 });
+
+test('fails closed when the representative-only secret is missing', async () => {
+  const db = new FakeD1();
+  const request = new Request('https://worker.test/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + ACCESS,
+      'X-Representative-Authorization': 'Bearer ' + REPRESENTATIVE
+    },
+    body: JSON.stringify({ action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' })
+  });
+  const response = await worker.fetch(request, { OFFICE_ACCESS_TOKEN: ACCESS, DB: db });
+  assert.equal(response.status, 503);
+  assert.equal(db.events.length, 0);
+});
+
+test('fails closed when D1 is unavailable for a representative decision', async () => {
+  const request = new Request('https://worker.test/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + ACCESS,
+      'X-Representative-Authorization': 'Bearer ' + REPRESENTATIVE
+    },
+    body: JSON.stringify({ action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' })
+  });
+  const response = await worker.fetch(request, {
+    OFFICE_ACCESS_TOKEN: ACCESS,
+    REPRESENTATIVE_ACCESS_TOKEN: REPRESENTATIVE
+  });
+  assert.equal(response.status, 503);
+});
