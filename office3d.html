@@ -469,6 +469,41 @@ function mergeEmployeeStates(incoming,taskId){
  }
  if(changed){localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));refreshStaffCards()}
 }
+async function refreshTaskRecordFromServer(record){
+ const apiToken=document.getElementById('officeChatToken')?.value.trim();
+ if(!apiToken||!record?.taskId)return;
+ const taskId=record.taskId;
+ try{
+  const audit=await fetchTaskAuditHistory(taskId,apiToken);
+  if(selectedTaskForDecision?.taskId!==taskId)return;
+  record.audit=audit;
+  const response=await fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiToken},body:JSON.stringify({action:'get_representative_decision',taskId})});
+  const raw=await response.text();let decisionData;try{decisionData=JSON.parse(raw)}catch(_){throw new Error(raw||'대표 결정 이력을 해석할 수 없습니다.')}
+  if(!response.ok)throw new Error(decisionData.error||'대표 결정 이력 조회에 실패했습니다.');
+  if(decisionData.decision)record.representativeDecision=decisionData;
+  else if(!record.representativeDecision)record.representativeDecision=null;
+  if(selectedTaskForDecision?.taskId!==taskId)return;
+  renderRepresentativeDecision(record);
+  renderWorkflowSummary({workflow:record.workflow||{},finalReviewResults:record.finalReviewResults||[]},audit);
+  const eventLines=(audit.events||[]).slice(-30).map(event=>{
+   const stamp=event.createdAt?new Date(event.createdAt).toLocaleString('ko-KR'):'시각 미확인';
+   const detail=event.detail||{};
+   return (event.eventType||'이력')+' · '+(event.stage||'단계 미기재')+' · '+(detail.outcome||detail.summary||detail.decisionLabel||'')+' · '+stamp;
+  });
+  if(eventLines.length)appendChat('서버 원본 감사 이력',eventLines.join('\n').slice(0,18000));
+  if(audit.truncated)appendChat('시스템','서버 감사 이력이 300건을 초과하여 최근 300건만 표시합니다.');
+  for(const key of ['swAIOfficeTaskHistory','swAIOffice3DTaskHistory']){
+   try{
+    const items=JSON.parse(localStorage.getItem(key)||'[]');
+    if(!Array.isArray(items))continue;
+    const index=items.findIndex(item=>item.taskId===taskId);
+    if(index>=0){items[index]={...items[index],audit,representativeDecision:record.representativeDecision||null};localStorage.setItem(key,JSON.stringify(key==='swAIOffice3DTaskHistory'?items.map(compactTaskHistoryRecord):items))}
+   }catch(storageError){console.warn('서버 이력 로컬 캐시 갱신 실패:',storageError)}
+  }
+ }catch(error){
+  if(selectedTaskForDecision?.taskId===taskId)appendChat('시스템','서버 원본 이력 재조회 실패: '+(error.message||String(error))+'\n현재 기기에 저장된 업무 기록을 표시하고 있습니다.');
+ }
+}
 function renderTaskHistory(){
  const list=document.getElementById('taskHistoryList');if(!list)return;
  const history=loadCombinedTaskHistory();
@@ -497,6 +532,7 @@ function renderTaskHistory(){
    const reviews=Array.isArray(record.finalReviewResults)?record.finalReviewResults:[];
    if(reviews.length)appendChat('복원된 최종 검수',reviews.map(item=>(item.name||'검수 담당')+' · '+(item.judgment||item.status||'판정 미기재')+'\n'+(item.details?.summary||item.review||'')).join('\n\n').slice(0,12000));
    renderWorkflowSummary({workflow:record.workflow||{},finalReviewResults:record.finalReviewResults||[]},record.audit||null);
+   refreshTaskRecordFromServer(record);
   });
   list.appendChild(item);
  });
