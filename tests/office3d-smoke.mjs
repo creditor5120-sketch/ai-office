@@ -100,14 +100,14 @@ try {
   const restoredItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
   await restoredItem.waitFor({ state: 'visible', timeout: 10000 });
   await restoredItem.click();
-  const restoredChat = await page.locator('#chatHistory').innerText();
+  const restoredChat = await page.locator('#detailMessages').innerText();
   if (!restoredChat.includes('복원된 결과물 본문 확인 문자열')) throw new Error('Saved deliverable content was not restored into the conversation');
   if (!restoredChat.includes('검수 내용 복원 확인')) throw new Error('Saved final review details were not restored into the conversation');
   if (!(await page.locator('#representativeApprove').isDisabled())) throw new Error('Previously recorded representative decision did not lock approval');
   const decisionHint = await page.locator('#decisionTaskHint').innerText();
   if (!decisionHint.includes('대표 승인')) throw new Error('Representative decision was not restored in the decision panel');
-  await page.getByText('서버 원본 감사 이력').waitFor({ state: 'visible', timeout: 10000 });
-  const refreshedChat = await page.locator('#chatHistory').innerText();
+  await page.locator('#detailMessages').getByText('서버 원본 감사 이력').waitFor({ state: 'visible', timeout: 10000 });
+  const refreshedChat = await page.locator('#detailMessages').innerText();
   if (!refreshedChat.includes('서버 원본 이력 확인')) throw new Error('Server audit history was not reloaded');
   if (!refreshedChat.includes('서버 대표 승인')) throw new Error('Server representative decision was not reloaded');
 
