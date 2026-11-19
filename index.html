@@ -1056,7 +1056,7 @@ function buildOffice3D(){
     const w=z.x2-z.x1, d=z.z2-z.z1, cx=(z.x1+z.x2)/2, cz=(z.z1+z.z2)/2;
     const colors=['#f1e8da','#e9edf4','#e6f0ef','#f2ebdf','#e6edf7','#f1e9df','#e7eef0','#eaf0e8','#f0e9e2','#e9e8f2'];
     addBox(officeRoot,cx,.005,cz,w-.05,.018,d-.05,mat(colors[i]||'#edf0f4'),false,true);
-    addFloorLabel(z.name,cx,cz,'#77869a');
+    // 팀명·부서명은 바닥에 표시하지 않는다. 직원 이름만 캐릭터 위에 표시한다.
   });
   // 외곽 벽: 낮은 유리 벽과 진한 프레임
   addBox(officeRoot,0,0,-4.92,16,.92,.10,wallMat);
@@ -1112,8 +1112,8 @@ function makeActor3D(ac){
   if(ac.hairStyle===1||ac.hairStyle===3){part(-.15,.77,0,.07,.22,.31,hair);part(.15,.77,0,.07,.22,.31,hair);}
   if(ac.hairStyle===2)part(0,.99,0,.20,.08,.20,hair);
   const eye=mat('#20242a'), white=mat('#ffffff'), mouth=mat('#8b4d42');
-  part(-.075,.73,-.154,.045,.05,.018,eye);part(.075,.73,-.154,.045,.05,.018,eye);
-  part(0,.65,-.158,.10,.018,.018,mouth);
+  part(-.075,.73,.154,.045,.05,.018,eye);part(.075,.73,.154,.045,.05,.018,eye);
+  part(0,.65,.158,.10,.018,.018,mouth);
   const labelCanvas=document.createElement('canvas');labelCanvas.width=320;labelCanvas.height=80;
   const lg=labelCanvas.getContext('2d');lg.fillStyle='rgba(255,255,255,.94)';lg.strokeStyle='#b8c7db';lg.lineWidth=4;
   lg.beginPath();lg.roundRect(8,8,304,64,16);lg.fill();lg.stroke();
