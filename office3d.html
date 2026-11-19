@@ -289,7 +289,7 @@ function selectAvatar(a,showProfile=true){
  const employeeHistory=(readEmployeeHistory()[p.id]||[]).slice(0,3);
  const historyText=employeeHistory.length?'\n\n최근 업무 이력\n'+employeeHistory.map(item=>(item.status||'상태 변경')+' · '+(item.detail||'업무 내용 미기재')).join('\n'):'\n\n최근 업무 이력 없음';
  const workDetail=liveState?.detail||'현재 진행 중인 업무 없음';
- const workLocation=liveState?.location==='회의실'?'회의실':liveState?.location==='본부장실'?'본부장실':'담당 좌석';
+ const workLocation=liveState?.location==='회의실'||['협업 중','검수 중'].includes(workStatus)?'회의실':liveState?.location==='본부장실'||p.id==='COO'?'본부장실':'담당 좌석';
  document.getElementById('personInfo').textContent='직원 코드: '+(p.id||'-')+'\n소속팀: '+teamName+'\n담당 직무: '+jobTitle+'\n상태: '+workStatus+'\n현재 업무: '+workDetail+'\n현재 위치: '+workLocation+historyText;
  if(showProfile){modal.classList.add('show');}
 }
