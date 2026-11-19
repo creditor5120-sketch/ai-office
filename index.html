@@ -1184,8 +1184,15 @@ function renderRightPanelEmployee() {
   document.getElementById('profileAvatar').textContent = (emp.name || '직').slice(0, 1);
   document.getElementById('profileName').textContent = emp.name;
   document.getElementById('profileRoleTag').textContent = emp.position || '담당';
+  let employeeStates = {};
+  try {
+    employeeStates = JSON.parse(localStorage.getItem(EMPLOYEE_STATE_KEY) || '{}');
+  } catch (_) {}
+  const employeeState = employeeStates[emp.id] || {};
+  const currentStatus = employeeState.status || '유휴';
+  const currentDetail = employeeState.detail || '현재 배정된 업무가 없습니다.';
   document.getElementById('profileMeta').textContent =
-    `Idle - ${emp.department || 'AI 가상 사무실'} · 도와드릴 준비가 되어 있습니다`;
+    `${currentStatus} · ${emp.department || 'AI 가상 사무실'} · ${currentDetail}`;
   requestBox.placeholder = `${emp.name}에게 메시지를 작성하십시오...`;
   const individual = emp.instruction
     ? `\n\n[개별 직무 지침]\n${emp.instruction}`
@@ -1218,7 +1225,7 @@ function renderRosterStrip() {
         </div>
         <div class="staff-mid">
           <span>${emp.position || 'AI'}</span>
-          <span>100%</span>
+          <span>${states[emp.id]?.taskId ? '업무 배정' : '대기'}</span>
         </div>
         <div class="staff-dept">${emp.department || ''}</div>
       </div>
