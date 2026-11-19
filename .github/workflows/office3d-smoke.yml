@@ -34,3 +34,5 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run 3D office browser checks
         run: node tests/office3d-smoke.mjs
+      - name: Run Worker auth and approval audit contract tests
+        run: node --test tests/worker-auth-audit.test.mjs
