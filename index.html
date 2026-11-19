@@ -661,6 +661,69 @@ body.detail-open .detail-drawer {
     grid-template-columns: 1fr;
   }
 }
+
+/* TEAM.AI.ID 레퍼런스 기반 오피스 UI 리빌드 */
+:root{--navy:#101a3b;--navy2:#1c2c59;--blue:#416ff0;--ink:#17213d;--muted:#71809d;--line:#dce4f5;--glass:rgba(255,255,255,.91)}
+html,body{background:#eaf0ff;color:var(--ink);font-family:'NanumSquare',Inter,system-ui,sans-serif}
+.top-bar{height:76px;padding:0 22px;background:linear-gradient(110deg,#111b3d,#243b77 65%,#314f91);border:0;box-shadow:0 4px 18px #16254c30;position:relative;z-index:5}
+.office-title{font-size:21px;letter-spacing:.2px;color:#fff}
+.office-sub{font-size:11px;color:#c8d6ff;letter-spacing:.3px}
+.brand-tag{display:none}
+.top-right{gap:9px}
+.info-pill{background:#ffffff16;border:1px solid #ffffff32;border-radius:13px;padding:9px 13px;color:#f5f7ff;font-size:12px}
+.top-btn{background:#ffffff16;border:1px solid #ffffff35;border-radius:11px;padding:9px 13px;color:#fff}
+.top-btn.active,.top-btn:hover{background:#4d79ff;border-color:#4d79ff;color:#fff}
+.main-grid{grid-template-columns:minmax(0,1fr) 340px;gap:12px;padding:12px}
+.office-stage{border:1px solid #d5def3;border-radius:18px;background:linear-gradient(145deg,#dbe7ff,#f4f7ff);box-shadow:0 12px 32px #273e761c}
+#officeCanvas{background:linear-gradient(180deg,#d9e5ff 0%,#f4f7ff 35%,#e8efff 100%)}
+.active-badge{top:14px;left:16px;background:#ffffffed;border:1px solid #d8e1f5;border-radius:12px;color:#1b9b69;padding:8px 12px;box-shadow:0 3px 12px #263b6712}
+.stage-bottom-bar{left:16px;right:16px;bottom:14px}
+.hint-chip{background:#ffffffeb;border:1px solid #d8e1f5;border-radius:10px;color:#53617e;padding:7px 10px}
+.view-group{background:#ffffffed;border:1px solid #d8e1f5;border-radius:12px;padding:4px}
+.view-btn{padding:7px 12px;border-radius:8px;color:#53617e}
+.view-btn.active{background:#416ff0;color:#fff}
+.chat-panel{background:#f9fbff;border:1px solid #d9e2f5;border-radius:18px;padding:14px;gap:10px;box-shadow:0 12px 32px #273e7617}
+.chat-header{padding-bottom:10px;border-bottom:1px solid #e4eaf7}
+.agent-avatar{border-radius:12px;background:linear-gradient(145deg,#dce8ff,#b8c9ed);border:1px solid #c6d4ef}
+.agent-name{font-size:16px;color:#17213d}
+.agent-role-badge{background:#e9efff;color:#4564ad;border-radius:7px}
+.agent-status-line{color:#7c89a4}
+.principle-toggle,.ghost-btn{background:#f1f5ff;border:1px solid #dce5f7;color:#52648a;border-radius:9px}
+.principle-sheet{background:#fff;border-color:#e0e8f7;border-radius:10px}
+.chat-stream{background:#fff;border:1px solid #e0e8f7;border-radius:12px;color:#253452}
+.composer-box{background:#fff;border:1px solid #dce5f7;border-radius:13px}
+.composer-label{color:#52648a}
+input[type="password"],input[type="text"],textarea{background:#f8faff;border:1px solid #dce5f7;border-radius:9px;color:#253452}
+textarea#request{background:#f8faff;border-radius:9px;padding:9px;min-height:64px}
+.composer-bottom{border-color:#edf1fa}
+.send-btn,.send-btn.ready,.send-btn:hover{background:#416ff0;border:1px solid #416ff0;color:#fff;border-radius:9px;padding:8px 14px}
+.retry-btn{background:#15966b;border-radius:9px}
+.roster-strip{height:104px;background:#f8faff;border-top:1px solid #dce5f7;padding:9px 12px;gap:9px}
+.staff-card{min-width:158px;background:#fff;border:1px solid #e0e7f4;border-radius:13px;padding:7px 10px;box-shadow:0 2px 8px #1b2c5010}
+.staff-card.selected{border:2px solid #416ff0;background:#eef3ff}
+.staff-name{color:#1d2b4a}
+.staff-state-tag{background:#e7f8f0;color:#16845b;border-radius:6px}
+.staff-dept{color:#8793aa}
+.staff-portrait{border-radius:8px}
+.add-staff-btn{background:#f4f7ff;border:1px dashed #b9c8e8;border-radius:12px;color:#49649e}
+.detail-drawer{background:#f8faff;border-color:#dce5f7;border-radius:13px}
+.detail-box{background:#fff;border-color:#e3eafa;border-radius:10px}
+.history-item-btn{background:#f8faff;border-color:#e0e8f7;border-radius:8px}
+.office-nav{position:absolute;z-index:3;left:14px;top:66px;bottom:70px;width:132px;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.office-nav button{pointer-events:auto;border:1px solid #ffffffaa;background:#ffffffdf;color:#293b68;border-radius:11px;padding:11px 12px;text-align:left;font:800 12px 'NanumSquare',sans-serif;box-shadow:0 3px 12px #20345c16;cursor:pointer}
+.office-nav button.active{background:#416ff0;color:#fff;border-color:#416ff0}
+.office-nav .nav-spacer{flex:1}
+.office-activity{background:#fff;border:1px solid #e3eafa;border-radius:13px;padding:11px;margin-bottom:2px}
+.office-activity-head{font-size:13px;font-weight:900;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#1b2b4b}
+.office-activity-sub{font-size:10px;color:#8a96ad;font-weight:700}
+.office-activity-list{display:grid;gap:6px;max-height:150px;overflow:auto}
+.office-activity-item{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;padding:6px 7px;background:#f7f9ff;border-radius:8px;font-size:11px}
+.office-activity-dot{width:7px;height:7px;border-radius:50%;background:#1eb980}
+.office-activity-name{font-weight:900;color:#33466f}
+.office-activity-state{color:#7785a1;font-size:10px}
+@media(max-width:1100px){.main-grid{grid-template-columns:minmax(0,1fr) 300px}.office-nav{width:108px}.office-nav button{padding:9px;font-size:11px}}
+@media(max-width:760px){.top-bar{height:auto;min-height:70px;padding:10px 12px;align-items:flex-start}.top-right{justify-content:flex-end}.info-pill:nth-child(1){display:none}.main-grid{grid-template-columns:1fr;padding:8px}.office-stage{height:58vh;min-height:380px}.chat-panel{min-height:560px}.office-nav{top:58px;bottom:auto;width:auto;right:12px;left:12px;flex-direction:row;flex-wrap:wrap}.office-nav button{padding:7px 9px}.stage-hints{display:none}.roster-strip{height:94px}.staff-card{min-width:140px}}
+
 </style>
 </head>
 <body>
@@ -682,6 +745,14 @@ body.detail-open .detail-drawer {
 <main class="main-grid">
   <section class="office-stage" aria-label="AI 가상 사무실">
     <div class="active-badge" id="activeStaffBadge">● 활성 직원 0명</div>
+    <nav class="office-nav" aria-label="오피스 메뉴">
+      <button type="button" class="active" data-office-nav="home">⌂　홈</button>
+      <button type="button" data-office-nav="tasks">▤　업무현황</button>
+      <button type="button" data-office-nav="staff">♙　직원현황</button>
+      <button type="button" data-office-nav="chat">▤　직원 대화</button>
+      <div class="nav-spacer"></div>
+      <button type="button" data-office-nav="reset">↻　화면 초기화</button>
+    </nav>
     <canvas id="officeCanvas"></canvas>
     <div class="stage-bottom-bar">
       <div class="stage-hints">
@@ -697,6 +768,10 @@ body.detail-open .detail-drawer {
   </section>
 
   <section class="chat-panel" aria-label="직원 대화 및 업무 지시">
+    <section class="office-activity" aria-label="실시간 직원 현황">
+      <div class="office-activity-head"><span>실시간 직원 현황</span><span class="office-activity-sub">LIVE</span></div>
+      <div class="office-activity-list" id="officeActivityList"><div class="office-activity-item">직원 상태를 불러오는 중입니다.</div></div>
+    </section>
     <div class="chat-header">
       <div class="agent-wrap">
         <div class="agent-avatar" id="profileAvatar">알</div>
@@ -1446,6 +1521,35 @@ document.getElementById('activeStaffBadge').textContent = staffCountText;
 document.getElementById('headerStaffCount').textContent = `● 직원 ${employeeDirectory.length}명`;
 renderRightPanelEmployee();
 renderRosterStrip();
+refreshOfficeActivity();
+
+document.querySelectorAll('[data-office-nav]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('[data-office-nav]').forEach(b => b.classList.toggle('active', b === button));
+    const action = button.dataset.officeNav;
+    if (action === 'staff') document.getElementById('rosterStrip').scrollIntoView({behavior:'smooth',block:'nearest'});
+    if (action === 'tasks') document.getElementById('toggleDetailBtn').click();
+    if (action === 'chat') document.getElementById('request').focus();
+    if (action === 'reset') document.getElementById('resetViewBtn').click();
+  });
+});
+function refreshOfficeActivity(){
+  const host=document.getElementById('officeActivityList');
+  if(!host || !Array.isArray(employeeDirectory)) return;
+  let states={}; try{states=JSON.parse(localStorage.getItem(EMPLOYEE_STATE_KEY)||'{}')}catch(_){}
+  host.replaceChildren();
+  employeeDirectory.slice(0,8).forEach((emp,idx)=>{
+    const state=states[emp.id]?.status || (idx===0?'대기':'유휴');
+    const item=document.createElement('div'); item.className='office-activity-item';
+    const dot=document.createElement('span'); dot.className='office-activity-dot';
+    dot.style.background=/업무|검수|협업/.test(state)?'#416ff0':/완료/.test(state)?'#19a879':'#9aa9c5';
+    const name=document.createElement('span'); name.className='office-activity-name'; name.textContent=emp.name;
+    const status=document.createElement('span'); status.className='office-activity-state'; status.textContent=state;
+    item.append(dot,name,status); item.addEventListener('click',()=>{selectedEmployee=emp;renderRightPanelEmployee();renderRosterStrip()});
+    host.append(item);
+  });
+}
+
 resizeOfficeCanvas();
 requestAnimationFrame(loop);
 
@@ -1509,6 +1613,7 @@ function syncEmployeeStates(data, taskId) {
   };
   localStorage.setItem(EMPLOYEE_STATE_KEY, JSON.stringify(states));
   renderRosterStrip();
+  refreshOfficeActivity();
 }
 
 function renderWorkflowReview(data) {
