@@ -167,31 +167,45 @@ for(const t of businessTeams){
 // 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
-function makePixelSheet(person,index){
+function makePixelSheet(person,index,seated=false){
  const c=document.createElement('canvas');c.width=128;c.height=40;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
  const colors=[['#6f91b4','#3c5c7d','#30251f','#f0c9a9'],['#75977f','#46566a','#49372b','#e9bd9c'],['#9a829e','#46566a','#241f20','#f1c9ad'],['#b58b68','#46566a','#62452e','#e6b995'],['#70849a','#46566a','#252b34','#efc8a5'],['#6d9a9a','#46566a','#382b25','#f0c9a9']];
  const p=colors[index%colors.length],isPeter=person.id==='CEO',isAlex=person.id==='COO',shirt=isPeter?'#777d83':isAlex?'#8dbbd5':p[0],hair=isPeter?'#24201e':p[2],skin=p[3],pants=isPeter?'#3c5c7d':p[1];
  const r=(x,y,w,h,color)=>{q.fillStyle=color;q.fillRect(x,y,w,h)};
- for(let f=0;f<4;f++){const o=f*32,step=f%2;
- r(o+8,32+(step?1:0),7,5,'#343c45');r(o+19,32+(step?0:1),7,5,'#343c45');r(o+10,24+(step?1:0),5,9,pants);r(o+19,24+(step?0:1),5,9,pants);
- r(o+8,15,16,11,shirt);r(o+10,13,12,3,shirt);
- if(isPeter){r(o+15,15,2,10,'#f4f1e9');r(o+14,14,1,12,'#d5d8da')}
- if(isAlex){r(o+10,15,4,10,'#283849');r(o+18,15,4,10,'#283849');r(o+14,14,4,3,'#f4f1e9')}
- r(o+5,16+(step?1:0),4,9,shirt);r(o+23,16+(step?0:1),4,9,shirt);r(o+5,24+(step?1:0),4,3,skin);r(o+23,24+(step?0:1),4,3,skin);
- r(o+9,3,14,12,skin);r(o+8,5,2,7,hair);r(o+22,5,2,7,hair);r(o+9,2,14,4,hair);r(o+11,1,10,2,hair);
- if(index%3===0){r(o+9,5,5,3,hair);r(o+18,5,5,2,hair)}else if(index%3===1){r(o+8,6,4,7,hair)}else{r(o+18,5,5,3,hair)}
- r(o+12,9,2,2,'#263849');r(o+19,9,2,2,'#263849');r(o+15,12,4,1,'#9b5e55');
- if(isPeter||isAlex){r(o+10,8,5,1,'#293746');r(o+10,8,1,4,'#293746');r(o+14,8,1,4,'#293746');r(o+18,8,5,1,'#293746');r(o+22,8,1,4,'#293746');r(o+18,11,5,1,'#293746');r(o+15,9,3,1,'#293746')}
+ for(let f=0;f<4;f++){
+  const o=f*32,step=f%2;
+  if(seated){
+   r(o+6,31,8,3,'#343c45');r(o+18,31,8,3,'#343c45');
+   r(o+8,27,8,5,pants);r(o+16,27,8,5,pants);
+   r(o+10,24,5,5,pants);r(o+17,24,5,5,pants);
+  }else{
+   r(o+8,32+(step?1:0),7,5,'#343c45');r(o+19,32+(step?0:1),7,5,'#343c45');
+   r(o+10,24+(step?1:0),5,9,pants);r(o+19,24+(step?0:1),5,9,pants);
+  }
+  r(o+8,15,16,11,shirt);r(o+10,13,12,3,shirt);
+  if(isPeter){r(o+15,15,2,10,'#f4f1e9');r(o+14,14,1,12,'#d5d8da')}
+  if(isAlex){r(o+10,15,4,10,'#283849');r(o+18,15,4,10,'#283849');r(o+14,14,4,3,'#f4f1e9')}
+  if(seated){
+   r(o+5,16,4,7,shirt);r(o+23,16,4,7,shirt);
+   r(o+7,21,6,4,skin);r(o+19,21,6,4,skin);
+  }else{
+   r(o+5,16+(step?1:0),4,9,shirt);r(o+23,16+(step?0:1),4,9,shirt);
+   r(o+5,24+(step?1:0),4,3,skin);r(o+23,24+(step?0:1),4,3,skin);
+  }
+  r(o+9,3,14,12,skin);r(o+8,5,2,7,hair);r(o+22,5,2,7,hair);r(o+9,2,14,4,hair);r(o+11,1,10,2,hair);
+  if(index%3===0){r(o+9,5,5,3,hair);r(o+18,5,5,2,hair)}else if(index%3===1){r(o+8,6,4,7,hair)}else{r(o+18,5,5,3,hair)}
+  r(o+12,9,2,2,'#263849');r(o+19,9,2,2,'#263849');r(o+15,12,4,1,'#9b5e55');
+  if(isPeter||isAlex){r(o+10,8,5,1,'#293746');r(o+10,8,1,4,'#293746');r(o+14,8,1,4,'#293746');r(o+18,8,5,1,'#293746');r(o+22,8,1,4,'#293746');r(o+18,11,5,1,'#293746');r(o+15,9,3,1,'#293746')}
  }
  const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;t.generateMipmaps=false;t.repeat.set(.25,1);return t;
 }
 function makeAvatar(person,index,x,z){
- const tex=makePixelSheet(person,index);
+ const tex=makePixelSheet(person,index,false),seatedTex=makePixelSheet(person,index,true);
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
  sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);
  sprite.userData.homeX=x;sprite.userData.homeZ=z;sprite.userData.targetX=x;sprite.userData.targetZ=z;sprite.userData.workStatus='업무 대기';
  sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;
- sprite.userData.texture=tex;sprite.userData.frame=0;
+ sprite.userData.texture=tex;sprite.userData.walkTexture=tex;sprite.userData.seatedTexture=seatedTex;sprite.userData.frame=0;sprite.userData.isSeated=false;
  const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;
  const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(248,251,255,.94)';
  ctx.fillRect(5,8,374,80);ctx.fillStyle='#263b50';ctx.font='bold 42px sans-serif';
@@ -414,6 +428,11 @@ function animate(){
    if(u.frame!==0){u.texture.offset.x=0;u.frame=0}
   }
   const active=u.workStatus==='업무 중'||u.workStatus==='검수 중';
+  const shouldSit=!moving&&u.workStatus!=='휴식 중';
+  if(shouldSit!==u.isSeated){
+   const nextTexture=shouldSit?u.seatedTexture:u.walkTexture;
+   avatar.material.map=nextTexture;avatar.material.needsUpdate=true;u.texture=nextTexture;u.isSeated=shouldSit;u.frame=0;nextTexture.offset.x=0;
+  }
   avatar.position.y=.82+(active&&!moving?Math.sin(t*2.8+u.phase)*.025:0);
  }
  controls.update();renderer.render(scene,camera)
