@@ -14,8 +14,8 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #ece3d2;
-  color: #2b241b;
+  background: #ede4d3;
+  color: #2c241b;
   font-family: 'NanumSquare', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   display: flex;
   flex-direction: column;
@@ -26,7 +26,7 @@ html, body {
 .top-bar {
   height: 54px;
   background: #f6efe2;
-  border-bottom: 1px solid #d4c5ab;
+  border-bottom: 1px solid #d5c6ad;
   padding: 0 14px;
   display: flex;
   align-items: center;
@@ -41,54 +41,54 @@ html, body {
   gap: 10px;
 }
 
-.brand-pill {
+.brand-tag {
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 5px 9px;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.4px;
   color: #3a3025;
 }
 
-.brand-title-wrap {
+.office-title-group {
   display: flex;
   flex-direction: column;
 }
 
-.brand-title {
+.office-title {
   font-size: 15px;
   font-weight: 900;
   line-height: 1.15;
 }
 
-.brand-sub {
+.office-sub {
   font-size: 11px;
-  color: #7c6d59;
+  color: #7b6c58;
   line-height: 1.15;
 }
 
 .top-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   flex-wrap: wrap;
 }
 
-.status-chip {
+.info-pill {
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 700;
-  color: #4b3f31;
+  color: #4a3e30;
 }
 
-.icon-btn {
+.top-btn {
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 6px;
   padding: 5px 9px;
   font-size: 12px;
@@ -97,18 +97,18 @@ html, body {
   cursor: pointer;
 }
 
-.icon-btn.active {
+.top-btn.active {
   background: #8c5a2b;
   color: #fff;
   border-color: #8c5a2b;
 }
 
-/* 메인 2분할 영역 */
+/* 메인 분할 */
 .main-grid {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1.52fr 1fr;
+  grid-template-columns: 1.54fr 1fr;
   gap: 10px;
   padding: 10px;
 }
@@ -123,7 +123,7 @@ body.detail-open .main-grid {
 
 .office-stage {
   position: relative;
-  background: #e6dcc8;
+  background: #e5dbc7;
   border: 1px solid #cbbba0;
   border-radius: 8px;
   overflow: hidden;
@@ -141,17 +141,17 @@ body.detail-open .main-grid {
   cursor: grabbing;
 }
 
-.stage-top-badge {
+.active-badge {
   position: absolute;
   top: 12px;
   left: 12px;
-  background: rgba(255, 250, 240, 0.95);
+  background: rgba(255, 250, 240, 0.96);
   border: 1px solid #cbbba0;
   border-radius: 999px;
   padding: 5px 12px;
   font-size: 12px;
   font-weight: 800;
-  color: #26734d;
+  color: #24724a;
   pointer-events: none;
 }
 
@@ -175,39 +175,39 @@ body.detail-open .main-grid {
   pointer-events: auto;
 }
 
-.hint-pill {
-  background: rgba(255, 250, 240, 0.94);
+.hint-chip {
+  background: rgba(255, 250, 240, 0.95);
   border: 1px solid #cbbba0;
   border-radius: 6px;
   padding: 5px 9px;
   font-size: 11px;
   font-weight: 700;
-  color: #4b3f31;
+  color: #4a3e30;
 }
 
-.floor-view-toggles {
+.view-group {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(255, 250, 240, 0.95);
+  gap: 3px;
+  background: rgba(255, 250, 240, 0.96);
   border: 1px solid #cbbba0;
   border-radius: 6px;
   padding: 3px;
   pointer-events: auto;
 }
 
-.toggle-pill-btn {
+.view-btn {
   background: transparent;
   border: 0;
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 11px;
   font-weight: 800;
-  color: #4b3f31;
+  color: #4a3e30;
   cursor: pointer;
 }
 
-.toggle-pill-btn.active {
+.view-btn.active {
   background: #3a3025;
   color: #fff;
 }
@@ -233,17 +233,17 @@ body.detail-open .main-grid {
   border-bottom: 1px solid #dfd3bc;
 }
 
-.chat-agent-info {
+.agent-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.agent-avatar-box {
+.agent-avatar {
   width: 38px;
   height: 38px;
   border-radius: 8px;
-  background: #334e68;
+  background: #2f4b6e;
   color: #fff;
   font-size: 14px;
   font-weight: 900;
@@ -253,7 +253,7 @@ body.detail-open .main-grid {
   flex-shrink: 0;
 }
 
-.agent-name-row {
+.agent-title-line {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -264,26 +264,26 @@ body.detail-open .main-grid {
   font-weight: 900;
 }
 
-.agent-role-tag {
+.agent-role-badge {
   background: #ebe0ca;
-  color: #5c4d3c;
+  color: #5b4c3b;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
 }
 
-.agent-sub {
+.agent-status-line {
   font-size: 11px;
-  color: #7c6d59;
+  color: #7b6c58;
   margin-top: 2px;
 }
 
 .principle-toggle {
   font-size: 11px;
-  color: #6b5b47;
+  color: #675845;
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 5px;
   padding: 4px 8px;
   cursor: pointer;
@@ -292,7 +292,7 @@ body.detail-open .main-grid {
 .principle-sheet {
   display: none;
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 11px;
@@ -320,13 +320,13 @@ body.detail-open .main-grid {
   overflow-wrap: anywhere;
 }
 
-.auth-bar {
+.auth-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
 }
 
-.composer-card {
+.composer-box {
   background: #fffdf9;
   border: 1px solid #cbbba0;
   border-radius: 8px;
@@ -339,7 +339,7 @@ body.detail-open .main-grid {
 .composer-label {
   font-size: 11px;
   font-weight: 800;
-  color: #6b5b47;
+  color: #675845;
 }
 
 input[type="password"],
@@ -347,9 +347,9 @@ input[type="text"],
 textarea {
   width: 100%;
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 6px;
-  color: #2b241b;
+  color: #2c241b;
   font-family: inherit;
   font-size: 12px;
   padding: 7px 9px;
@@ -369,7 +369,7 @@ input:focus {
   outline: none;
 }
 
-.composer-footer {
+.composer-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -378,18 +378,18 @@ input:focus {
   border-top: 1px solid #efe6d6;
 }
 
-.composer-hint {
+.composer-tip {
   font-size: 11px;
-  color: #8a7a66;
+  color: #897965;
 }
 
-.composer-actions {
+.composer-btns {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.sub-btn {
+.ghost-btn {
   background: #f3ead8;
   border: 1px solid #cbbba0;
   border-radius: 6px;
@@ -429,11 +429,11 @@ input:focus {
   cursor: pointer;
 }
 
-/* 하단 직원 카드 스트립 */
-.bottom-strip {
+/* 하단 직원 스트립 */
+.roster-strip {
   height: 92px;
   background: #f6efe2;
-  border-top: 1px solid #d4c5ab;
+  border-top: 1px solid #d5c6ad;
   padding: 6px 10px;
   display: flex;
   align-items: stretch;
@@ -445,7 +445,7 @@ input:focus {
 .staff-card {
   min-width: 146px;
   background: #fffdf9;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 8px;
   padding: 6px 8px;
   cursor: pointer;
@@ -460,7 +460,7 @@ input:focus {
   background: #fff4df;
 }
 
-.staff-card-top {
+.staff-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -472,7 +472,7 @@ input:focus {
   font-weight: 900;
 }
 
-.staff-badge {
+.staff-state-tag {
   font-size: 9px;
   font-weight: 800;
   padding: 1px 5px;
@@ -486,38 +486,37 @@ input:focus {
   align-items: center;
   justify-content: space-between;
   font-size: 10px;
-  color: #7c6d59;
+  color: #7b6c58;
 }
 
 .staff-dept {
   font-size: 10px;
-  color: #5c4d3c;
+  color: #5b4c3b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.add-staff-card {
+.add-staff-btn {
   min-width: 72px;
   background: #fffaf0;
   border: 1px dashed #c5b396;
   border-radius: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 800;
-  color: #5c4d3c;
+  color: #5b4c3b;
   cursor: pointer;
   flex-shrink: 0;
 }
 
-/* 업무 상세 드로어 */
+/* 상세 드로어 */
 .detail-drawer {
   display: none;
   background: #fffaf0;
-  border: 1px solid #d4c5ab;
+  border: 1px solid #d5c6ad;
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -569,7 +568,7 @@ body.detail-open .detail-drawer {
   .office-stage {
     height: 360px;
   }
-  .auth-bar {
+  .auth-row {
     grid-template-columns: 1fr;
   }
 }
@@ -578,49 +577,49 @@ body.detail-open .detail-drawer {
 <body>
 <header class="top-bar">
   <div class="top-left">
-    <div class="brand-pill">TEAM.AI.ID</div>
-    <div class="brand-title-wrap">
-      <div class="brand-title">SW AI 사무실</div>
-      <div class="brand-sub">AI 가상 사무실</div>
+    <div class="brand-tag">TEAM.AI.ID</div>
+    <div class="office-title-group">
+      <div class="office-title">SW AI 사무실</div>
+      <div class="office-sub">AI 가상 사무실</div>
     </div>
   </div>
   <div class="top-right">
-    <span class="status-chip" id="headerStaffCount">● 직원 33명</span>
-    <span class="status-chip">● 온라인</span>
-    <button type="button" class="icon-btn" id="autoRotateBtn">자동 회전</button>
-    <button type="button" class="icon-btn" id="toggleDetailBtn">업무 상세</button>
-    <button type="button" class="icon-btn" id="resetViewBtn">초기화</button>
+    <span class="info-pill" id="headerStaffCount">● 직원 33명</span>
+    <span class="info-pill">● 온라인</span>
+    <button type="button" class="top-btn" id="autoRotateBtn">자동 회전</button>
+    <button type="button" class="top-btn" id="toggleDetailBtn">업무 상세</button>
+    <button type="button" class="top-btn" id="resetViewBtn">초기화</button>
   </div>
 </header>
 
 <main class="main-grid">
   <section class="office-stage" aria-label="AI 가상 사무실">
-    <div class="stage-top-badge" id="activeStaffBadge">● 활성 직원 33명</div>
+    <div class="active-badge" id="activeStaffBadge">● 활성 직원 33명</div>
     <canvas id="officeCanvas"></canvas>
     <div class="stage-bottom-bar">
       <div class="stage-hints">
-        <span class="hint-pill">캐릭터/이름 클릭: 대화</span>
-        <span class="hint-pill">드래그: 회전 · 우클릭/Shift: 이동</span>
-        <span class="hint-pill">휠: 확대/축소</span>
+        <span class="hint-chip">캐릭터/이름 클릭: 대화</span>
+        <span class="hint-chip">드래그: 회전 · 우클릭/Shift: 이동</span>
+        <span class="hint-chip">휠: 확대/축소</span>
       </div>
-      <div class="floor-view-toggles">
-        <button type="button" class="toggle-pill-btn active" id="floor1Btn">1층</button>
-        <button type="button" class="toggle-pill-btn" id="view2dBtn">2D</button>
-        <button type="button" class="toggle-pill-btn active" id="view3dBtn">3D</button>
+      <div class="view-group">
+        <button type="button" class="view-btn active" id="floor1Btn">1층</button>
+        <button type="button" class="view-btn" id="view2dBtn">2D</button>
+        <button type="button" class="view-btn active" id="view3dBtn">3D</button>
       </div>
     </div>
   </section>
 
   <section class="chat-panel" aria-label="직원 대화 및 업무 지시">
     <div class="chat-header">
-      <div class="chat-agent-info">
-        <div class="agent-avatar-box" id="profileAvatar">알</div>
+      <div class="agent-wrap">
+        <div class="agent-avatar" id="profileAvatar">알</div>
         <div>
-          <div class="agent-name-row">
+          <div class="agent-title-line">
             <span class="agent-name" id="profileName">알렉스</span>
-            <span class="agent-role-tag" id="profileRoleTag">관리자 / 본부장</span>
+            <span class="agent-role-badge" id="profileRoleTag">관리자 / 본부장</span>
           </div>
-          <div class="agent-sub" id="profileMeta">Idle - 도와드릴 준비가 되어 있습니다</div>
+          <div class="agent-status-line" id="profileMeta">Idle - 도와드릴 준비가 되어 있습니다</div>
         </div>
       </div>
       <button type="button" class="principle-toggle" id="togglePrincipleBtn">업무 지침 보기</button>
@@ -630,19 +629,19 @@ body.detail-open .detail-drawer {
 
     <div class="chat-stream" id="response">업무 지시와 답변이 이 창에 표시됩니다. 직원을 선택하고 메시지를 입력해 주세요.</div>
 
-    <div class="auth-bar">
+    <div class="auth-row">
       <input id="officeAccessToken" type="password" autocomplete="off" placeholder="서버 접속 인증 값 입력">
       <input id="representativeAccessToken" type="password" autocomplete="off" placeholder="대표 승인 인증 값 입력">
     </div>
 
-    <div class="composer-card">
+    <div class="composer-box">
       <div class="composer-label">메시지</div>
       <textarea id="request" placeholder="알렉스에게 메시지를 작성하십시오..."></textarea>
-      <div class="composer-footer">
-        <span class="composer-hint">입력 전송 · Shift+새 줄 입력</span>
-        <div class="composer-actions">
+      <div class="composer-bottom">
+        <span class="composer-tip">입력 전송 · Shift+새 줄 입력</span>
+        <div class="composer-btns">
           <button id="retryTaskButton" type="button" class="retry-btn" style="display:none;">보존된 업무 재처리</button>
-          <button type="button" class="sub-btn" id="attachSampleBtn">+ 첨부</button>
+          <button type="button" class="ghost-btn" id="attachSampleBtn">+ 첨부</button>
           <button id="sendButton" type="button" class="send-btn">보내기 →</button>
         </div>
       </div>
@@ -651,9 +650,9 @@ body.detail-open .detail-drawer {
     <div class="detail-drawer" id="detailDrawer">
       <div class="detail-box" id="deliverableCard" style="display:none;">
         <div class="tool-row">
-          <button id="copyDeliverable" type="button" class="sub-btn">전체 복사</button>
-          <button id="downloadWord" type="button" class="sub-btn">Word 다운로드</button>
-          <button id="downloadPdf" type="button" class="sub-btn">PDF 다운로드</button>
+          <button id="copyDeliverable" type="button" class="ghost-btn">전체 복사</button>
+          <button id="downloadWord" type="button" class="ghost-btn">Word 다운로드</button>
+          <button id="downloadPdf" type="button" class="ghost-btn">PDF 다운로드</button>
         </div>
         <div id="deliverableContent"></div>
       </div>
@@ -665,18 +664,18 @@ body.detail-open .detail-drawer {
 
       <div class="detail-box">
         <h4>서버 업무 이력 조회</h4>
-        <div class="auth-bar">
+        <div class="auth-row">
           <input id="serverHistoryTaskId" type="text" autocomplete="off" placeholder="조회할 업무 ID 입력">
-          <button id="loadServerHistoryButton" type="button" class="sub-btn">서버 이력 조회</button>
+          <button id="loadServerHistoryButton" type="button" class="ghost-btn">서버 이력 조회</button>
         </div>
-        <p id="serverHistoryStatus" class="agent-sub" aria-live="polite">업무 ID를 입력해 이력을 조회하세요.</p>
-        <ol id="serverHistoryEvents" class="agent-sub"></ol>
+        <p id="serverHistoryStatus" class="agent-status-line" aria-live="polite">업무 ID를 입력해 이력을 조회하세요.</p>
+        <ol id="serverHistoryEvents" class="agent-status-line"></ol>
       </div>
     </div>
   </section>
 </main>
 
-<footer class="bottom-strip" id="rosterStrip" aria-label="직원 카드 목록"></footer>
+<footer class="roster-strip" id="rosterStrip" aria-label="직원 카드 목록"></footer>
 
 <script type="module">
 let employeeDirectory = [];
@@ -746,7 +745,6 @@ const EMPLOYEE_STATE_KEY = 'swAIOfficeEmployeeStates';
 const employeeById = new Map(employeeDirectory.map(e => [String(e.id), e]));
 const employeeByName = new Map(employeeDirectory.map(e => [String(e.name), e]));
 
-// 캡처 화면 스타일의 1층 아이소메트릭 오피스 구역 & 가구
 const ZONES = [
   { name: '개발·운영존', x1: -7.6, z1: -4.6, x2: -1.6, z2: 0.4, color: '#f3e8d2' },
   { name: '메인 회의실', x1: -7.6, z1: 0.7, x2: -1.6, z2: 4.8, color: '#efe3ca' },
@@ -844,9 +842,9 @@ function renderRosterStrip() {
     const card = document.createElement('div');
     card.className = `staff-card ${isSel ? 'selected' : ''}`;
     card.innerHTML = `
-      <div class="staff-card-top">
+      <div class="staff-top">
         <span class="staff-name">${emp.name}</span>
-        <span class="staff-badge">${st}</span>
+        <span class="staff-state-tag">${st}</span>
       </div>
       <div class="staff-mid">
         <span>${emp.position || 'AI'}</span>
@@ -871,7 +869,7 @@ function renderRosterStrip() {
 
   const addBtn = document.createElement('button');
   addBtn.type = 'button';
-  addBtn.className = 'add-staff-card';
+  addBtn.className = 'add-staff-btn';
   addBtn.textContent = '+ 직원';
   addBtn.addEventListener('click', () => {
     document.getElementById('toggleDetailBtn').click();
@@ -934,7 +932,6 @@ function renderScene(nowSec) {
   canvasHits.length = 0;
   ctx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
 
-  // 1층 바닥 외곽
   drawQuad([
     project(-8.0, 0, -5.0),
     project(8.0, 0, -5.0),
@@ -956,21 +953,17 @@ function renderScene(nowSec) {
     ctx.fillText(z.name, pt.x, pt.y);
   });
 
-  // 책상 + 모니터
   WORKSTATIONS.forEach(ws => {
     drawBox3D(ws.x, 0, ws.z, 1.15, 0.42, 0.55, '#e8d8bc', '#cbb796', '#b39e7c');
     drawBox3D(ws.x, 0.42, ws.z - 0.06, 0.48, 0.3, 0.08, '#4a5568', '#2d3748', '#1a202c');
   });
 
-  // 메인 회의실 대형 테이블
   drawBox3D(-4.2, 0, 2.7, 2.2, 0.4, 1.1, '#dfc9a6', '#c5ad88', '#a8906c');
 
-  // 서버 랙
   SERVER_RACKS.forEach(sr => {
     drawBox3D(sr.x, 0, sr.z, 0.65, 1.15, 0.55, '#475569', '#334155', '#1e293b');
   });
 
-  // 움직이는 복셀 캐릭터들
   const sorted = [...actors].sort((a, b) => (a.x + a.z) - (b.x + b.z));
   sorted.forEach(ac => {
     const isSel = selectedEmployee && String(selectedEmployee.id) === String(ac.emp.id);
@@ -998,7 +991,7 @@ function renderScene(nowSec) {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = isSel ? '#fff' : '#2b241b';
+    ctx.fillStyle = isSel ? '#fff' : '#2c241b';
     ctx.fillText(label, topPt.x, topPt.y - 4);
 
     canvasHits.push({
