@@ -48,7 +48,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 </head>
 <body>
 <div id="loading">SW AI OFFICE 공간을 준비하고 있습니다...</div>
-<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><button id="home">전체 보기</button><button id="rotate">자동 회전</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
+<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
 <div id="appMain">
  <section id="officeStage"><div id="scene"></div><div id="officeStatus">● 활성 직원 <b id="activeCount">-</b>명</div><div id="officeTools"><button id="zoomOut">－ 축소</button><button id="zoomIn">＋ 확대</button><button id="resetView">전체 보기</button><button>드래그: 회전 · 휠: 확대/축소</button></div></section>
  <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
@@ -80,21 +80,12 @@ const controls=new OrbitControls(camera,renderer.domElement);controls.target.set
 scene.add(new THREE.HemisphereLight(0xf2f7ff,0x81796d,2.15));const sun=new THREE.DirectionalLight(0xfff1dc,3.2);sun.position.set(-22,34,22);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;scene.add(sun);
 const mat=(color,opts={})=>new THREE.MeshStandardMaterial({color,roughness:.82,...opts});
 const wallMeshes=[];
-const teamFloorLabels=[];
+
 const M={floor:mat(0xd9cdb4),wall:mat(0xd7dce0),wood:mat(0x8a603f),wood2:mat(0x594232),glass:mat(0x91b9c6,{transparent:true,opacity:.25,roughness:.18}),metal:mat(0x526274),screen:mat(0x172b45,{emissive:0x14263a}),fabric:mat(0xb84d45),green:mat(0x56815d),rug:mat(0xc8cbd0)};
 function cube(w,h,d,m,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);if(m===M.wall||m===M.glass)wallMeshes.push(o);return o}
 function textSprite(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');q.fillStyle='rgba(250,252,255,.94)';q.beginPath();q.roundRect(8,12,496,104,18);q.fill();q.fillStyle='#34495e';q.font='bold 42px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,65);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false}));s.position.set(x,3.25,z);s.scale.set(6.4,1.6,1);scene.add(s)}
 function wallSign(txt,x,z){const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');q.fillStyle='#f8f5ec';q.fillRect(8,8,496,112);q.strokeStyle='#9d8765';q.lineWidth=7;q.strokeRect(8,8,496,112);q.fillStyle='#263b50';q.font='bold 48px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,66);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.8,1.2),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));sign.position.set(x,2.05,z);scene.add(sign)}
 function wallTeamSign(txt,x,z){wallSign(txt,x,z);const sign=scene.children[scene.children.length-1];sign.rotation.y=Math.PI/2}
-function floorTeamLabel(txt,x,z){
- const c=document.createElement('canvas');c.width=512;c.height=128;const q=c.getContext('2d');
- q.fillStyle='rgba(248,245,236,.96)';q.fillRect(8,8,496,112);q.strokeStyle='#9d8765';q.lineWidth=6;q.strokeRect(8,8,496,112);
- q.fillStyle='#263b50';q.font='bold 46px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(txt,256,66);
- const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
- const label=new THREE.Mesh(new THREE.PlaneGeometry(3.5,.88),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
- label.rotation.x=-Math.PI/2;label.position.set(x,.035,z);scene.add(label);teamFloorLabels.push(label);
-}
-
 function room(cx,cz,w,d,name,{glass=true,back=true}={}){cube(w,.28,d,M.floor,cx,-.12,cz);const wallMat=glass?M.glass:M.wall;cube(w,.18,.18,M.wall,cx,.12,cz-d/2);cube(.18,2.8,d,wallMat,cx-w/2,1.45,cz);cube(.18,2.8,d,wallMat,cx+w/2,1.45,cz);if(back)cube(w,2.8,.18,wallMat,cx,1.45,cz+d/2);if(name)textSprite(name,cx,cz-d/2+1.1)}
 function desk(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;cube(1.8,.16,.9,M.wood,0,1.03,0,g);for(const a of [-.72,.72])for(const b of [-.32,.32])cube(.12,.94,.12,M.wood2,a,.48,b,g);cube(.62,.42,.08,M.metal,0,1.34,-.2,g);cube(.53,.29,.025,M.screen,0,1.35,-.145,g);scene.add(g)}
 function chair(x,z){const g=new THREE.Group();g.position.set(x,0,z);cube(.58,.12,.58,M.metal,0,.58,0,g);cube(.58,.68,.13,M.metal,0,.91,-.23,g);const stem=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.5,8),M.metal);stem.position.y=.25;g.add(stem);scene.add(g)}
@@ -170,7 +161,7 @@ for(const t of businessTeams){
  // 3D에서는 각 팀 구역의 왼쪽 벽면에 팀명 표시
  wallTeamSign(t.name,t.x-1.9,-9.5);
  // 2D에서는 각 팀 책상 구역의 아래쪽에 팀명 표시
- floorTeamLabel(t.name,t.x,-1.05);
+
  for(const [x,z] of t.slots){desk(x,z);chair(x,z+1.02)}
 }
 // 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
@@ -198,6 +189,7 @@ function makeAvatar(person,index,x,z){
  const tex=makePixelSheet(person,index);
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
  sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);
+ sprite.userData.homeX=x;sprite.userData.homeZ=z;sprite.userData.targetX=x;sprite.userData.targetZ=z;sprite.userData.workStatus='업무 대기';
  sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;
  sprite.userData.texture=tex;sprite.userData.frame=0;
  const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;
@@ -209,14 +201,7 @@ function makeAvatar(person,index,x,z){
  label.position.set(0,1.12,0);label.scale.set(1.8,.45,1);label.userData.avatar=sprite;sprite.add(label);
  const marker=new THREE.Mesh(new THREE.TorusGeometry(.48,.035,6,20),new THREE.MeshBasicMaterial({color:0x7fd0ff}));
  marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;marker.userData.avatar=sprite;sprite.add(marker);sprite.userData.marker=marker;
- const ph=sprite.userData.phase;
- sprite.userData.route=[
-  new THREE.Vector3(x,.82,z),
-  new THREE.Vector3(x+Math.cos(ph)*.78,.82,z+Math.sin(ph)*.58),
-  new THREE.Vector3(x+Math.cos(ph+2.1)*.68,.82,z+Math.sin(ph+2.1)*.7),
-  new THREE.Vector3(x+Math.cos(ph+4.2)*.72,.82,z+Math.sin(ph+4.2)*.56)
- ];
- sprite.userData.routeIndex=0;sprite.userData.wait=1+(index%4)*.55;
+
  avatarRoot.add(sprite);avatars.push(sprite);
 }
 const peter={id:'CEO',name:'피터',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
@@ -234,8 +219,8 @@ const used={};function nextSlot(dept){const a=zoneSlots[dept]||[[0,0]];const n=u
 makeAvatar(peter,0,-21,9);
 const characterNames={
  'COO':'알렉스',
- 'MA-01':'제니','MA-02':'카리나','MA-03':'이던','MA-04':'클로이','MA-05':'루카스',
- 'LE-01':'단테','LE-02':'앤','LE-03':'소피아','LE-04':'줄리안','LE-05':'민준',
+ 'MA-01':'데니스','MA-02':'카리나','MA-03':'이던','MA-04':'클로이','MA-05':'루카스',
+ 'LE-01':'렉스','LE-02':'앤','LE-03':'소피아','LE-04':'줄리안','LE-05':'민준',
  'IR-01':'라이언','IR-02':'수지','IR-03':'케빈','IR-04':'해나','IR-05':'노아',
  'GA-01':'에이든','GA-02':'로라','GA-03':'브라이언','GA-04':'미아','GA-05':'오웬',
  'SP-01':'에릭','SP-02':'노라','SP-03':'제이슨','SP-04':'이사벨라','SP-05':'아담',
@@ -274,7 +259,7 @@ renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domEl
 function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
- document.getElementById('chatName').textContent=p.name;document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원');
+ document.getElementById('chatName').textContent=p.name;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
  document.getElementById('chatAvatar').textContent='👤';document.getElementById('chatIntro').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
@@ -283,7 +268,7 @@ function selectAvatar(a,showProfile=true){
  const photo=document.getElementById('profilePhoto');const photoCtx=photo.getContext('2d');photoCtx.clearRect(0,0,photo.width,photo.height);photoCtx.imageSmoothingEnabled=false;const spriteImage=a.userData.texture?.image;if(spriteImage)photoCtx.drawImage(spriteImage,0,0,32,40,0,0,photo.width,photo.height);
  const teamName=p.department==='본부장실'?'본부장실':(p.department||'')+'팀';
  const jobTitle=p.jobTitle||(p.position==='팀장'?p.position:p.name);
- const stateMap=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');const liveState=stateMap[p.id];const workStatus=liveState?.status||(p.currentTask?'업무 중 ('+p.currentTask+')':(p.workStatus||'업무 대기'));
+ const stateMap=readEmployeeStates();const liveState=stateMap[p.id];const workStatus=liveState?.status||(p.currentTask?'업무 중 ('+p.currentTask+')':(p.workStatus||'업무 대기'));
  document.getElementById('personInfo').textContent='직원 코드: '+(p.id||'-')+'\n소속팀: '+teamName+'\n담당 직무: '+jobTitle+'\n상태: '+workStatus;
  if(showProfile){modal.classList.add('show');}
 }
@@ -319,14 +304,14 @@ async function submitSelectedTask(value){
  }catch(error){pending.textContent='처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId}
 }
 function appendChat(who,message){const el=document.createElement('div');el.className='chatBubble';el.textContent=who+'\n'+message;document.getElementById('chatHistory').appendChild(el);document.getElementById('chatHistory').scrollTop=999999;return el}
-function refreshStaffCards(){document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>{const p=avatars.find(a=>a.userData.person.id===el.dataset.emp)?.userData.person;if(!p)return;const status=el.querySelector('.staffStatus');if(status){const states=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');status.textContent='상태: '+(states[p.id]?.status||p.workStatus||'업무 대기')}})}
+function refreshStaffCards(){const states=readEmployeeStates();document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>{const p=avatars.find(a=>a.userData.person.id===el.dataset.emp)?.userData.person;if(!p)return;const status=el.querySelector('.staffStatus');if(status)status.textContent='상태: '+(states[p.id]?.status||p.workStatus||'업무 대기')});syncAvatarWorkStates(true);if(selected)selectAvatar(selected,false)}
 document.getElementById('sendTask').onclick=()=>submitSelectedTask(document.getElementById('taskInput').value);
 document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitSelectedTask(e.target.value)}});
 
 
 let is2D=new URLSearchParams(location.search).get('view')==='2d';
 
-function applyTeamLabelMode(){teamFloorLabels.forEach(o=>o.visible=is2D);scene.traverse(o=>{if(o.isMesh&&o.geometry?.type==='PlaneGeometry'&&o.rotation.y===Math.PI/2)o.visible=!is2D})}
+function applyTeamLabelMode(){scene.traverse(o=>{if(o.isMesh&&o.geometry?.type==='PlaneGeometry'&&o.rotation.y===Math.PI/2)o.visible=!is2D})}
 applyTeamLabelMode();
 
 const viewButton=document.getElementById('view2d');
@@ -366,10 +351,56 @@ document.getElementById('home').onclick=()=>{
   camera.position.copy(is2D?new THREE.Vector3(0,76,0.01):new THREE.Vector3(43,39,45));
   controls.update();
 };
-let spin=false;document.getElementById('rotate').onclick=e=>{spin=!spin;controls.autoRotate=spin;controls.autoRotateSpeed=.55;e.target.textContent=spin?'회전 끄기':'자동 회전'};
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;for(const a of avatars){if(a.userData.wait>0){a.userData.wait-=dt}else{const route=a.userData.route,target=route[(a.userData.routeIndex+1)%route.length],dx=target.x-a.position.x,dz=target.z-a.position.z,dist=Math.hypot(dx,dz);if(dist<.06){a.userData.routeIndex=(a.userData.routeIndex+1)%route.length;a.userData.wait=1.4+(Math.floor(a.userData.phase*10)%5)*.55}else{a.position.x+=dx/dist*Math.min(dist,.62*dt);a.position.z+=dz/dist*Math.min(dist,.62*dt)}const f=Math.floor(t*7+a.userData.phase)%4;if(f!==a.userData.frame){a.userData.texture.offset.x=f*.25;a.userData.frame=f}}if(a.userData.wait>0)a.userData.texture.offset.x=0}controls.update();renderer.render(scene,camera)}animate();
+// 자동 회전은 비활성화하고 사용자의 드래그 조작만 허용한다.
+const meetingSeats=[
+ new THREE.Vector3(-4.2,.82,-12.2),new THREE.Vector3(-1.4,.82,-12.2),
+ new THREE.Vector3(1.4,.82,-12.2),new THREE.Vector3(4.2,.82,-12.2),
+ new THREE.Vector3(-4.2,.82,-6.8),new THREE.Vector3(-1.4,.82,-6.8),
+ new THREE.Vector3(1.4,.82,-6.8),new THREE.Vector3(4.2,.82,-6.8)
+];
+const breakSeats=[new THREE.Vector3(-10,.82,9.5),new THREE.Vector3(-4,.82,13),new THREE.Vector3(18,.82,12)];
+let lastStateSync=0;
+function readEmployeeStates(){
+ try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');return value&&typeof value==='object'?value:{}}catch(_){return {}}
+}
+function syncAvatarWorkStates(force=false){
+ const now=performance.now();if(!force&&now-lastStateSync<650)return;lastStateSync=now;
+ const states=readEmployeeStates();let meetingIndex=0,breakIndex=0;
+ for(const avatar of avatars){
+  const person=avatar.userData.person,state=states[person.id]||{};
+  const status=state.status||person.workStatus||'업무 대기';
+  avatar.userData.workStatus=status;avatar.userData.workDetail=state.detail||state.task||'';
+  let targetX=avatar.userData.homeX,targetZ=avatar.userData.homeZ;
+  if(status==='협업 중'){const seat=meetingSeats[meetingIndex++%meetingSeats.length];targetX=seat.x;targetZ=seat.z}
+  else if(status==='휴식 중'){const seat=breakSeats[breakIndex++%breakSeats.length];targetX=seat.x;targetZ=seat.z}
+  avatar.userData.targetX=targetX;avatar.userData.targetZ=targetZ;
+ }
+}
+const clock=new THREE.Clock();
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ syncAvatarWorkStates();
+ for(const avatar of avatars){
+  const u=avatar.userData,dx=u.targetX-avatar.position.x,dz=u.targetZ-avatar.position.z,dist=Math.hypot(dx,dz);
+  const moving=dist>.07;
+  if(moving){
+   const step=Math.min(dist,2.1*dt);avatar.position.x+=dx/dist*step;avatar.position.z+=dz/dist*step;
+   const frame=Math.floor(t*8+u.phase)%4;
+   if(frame!==u.frame){u.texture.offset.x=frame*.25;u.frame=frame}
+  }else{
+   avatar.position.x=u.targetX;avatar.position.z=u.targetZ;
+   if(u.frame!==0){u.texture.offset.x=0;u.frame=0}
+  }
+  const active=u.workStatus==='업무 중'||u.workStatus==='검수 중';
+  avatar.position.y=.82+(active&&!moving?Math.sin(t*2.8+u.phase)*.025:0);
+ }
+ controls.update();renderer.render(scene,camera)
+}
+animate();
 function resizeOffice(){const w=mount.clientWidth||innerWidth,h=mount.clientHeight||innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 addEventListener('resize',resizeOffice);if('ResizeObserver' in window)new ResizeObserver(resizeOffice).observe(document.getElementById('officeStage'));
+syncAvatarWorkStates(true);
 const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex,false);
 document.getElementById('loading').style.display='none';
 </script>
