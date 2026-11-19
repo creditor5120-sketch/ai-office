@@ -178,3 +178,10 @@ test('fails closed when D1 is unavailable for a representative decision', async 
   });
   assert.equal(response.status, 503);
 });
+
+test('rejects unknown explicit API actions without starting a task', async () => {
+  const result = await call({ action: 'delete_everything', task: 'should never execute', employees: [{ id: 'COO' }] });
+  assert.equal(result.status, 400);
+  assert.match(result.body.error, /지원하지 않는 API action/);
+  assert.equal(result.db.events.length, 0);
+});
