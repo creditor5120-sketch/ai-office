@@ -397,8 +397,9 @@ function renderTaskHistory(){
  const list=document.getElementById('taskHistoryList');if(!list)return;
  let history=[];try{const parsed=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed}catch(_){}
  list.replaceChildren();
- if(!history.length){list.textContent='저장된 업무 기록이 없습니다.';return}
- history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id).slice(0,5).forEach(record=>{
+ const visibleHistory=history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id);
+ if(!visibleHistory.length){list.textContent='이 직원의 저장된 업무 기록이 없습니다.';return}
+ visibleHistory.slice(0,5).forEach(record=>{
   const item=document.createElement('button');item.type='button';item.className='historyItem';
   const date=new Date(record.savedAt),stamp=Number.isNaN(date.getTime())?'':date.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   item.textContent=(record.employeeName?record.employeeName+' · ':'')+(record.task||'업무 내용 미기재').slice(0,72)+' · '+stamp;
