@@ -283,3 +283,17 @@ test('rejects invalid representative decisions and unknown task IDs', async () =
   const missing = await call({ action: 'representative_decision', taskId: 'missing-task', decision: 'APPROVE' });
   assert.equal(missing.status, 404);
 });
+
+test('concurrent opposite representative decisions preserve exactly one immutable first decision', async () => {
+  const db = new FakeD1({ releaseAllowed: true });
+  const [approve, reject] = await Promise.all([
+    call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' }, { db }),
+    call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'REJECT', reason: '동시 반려 요청' }, { db })
+  ]);
+  assert.equal(db.events.length, 1);
+  assert.equal([approve.status, reject.status].filter(status => status === 200).length, 1);
+  assert.equal([approve.status, reject.status].filter(status => status === 409).length, 1);
+  const stored = JSON.parse(db.events[0].detail_json);
+  assert.ok(['APPROVE', 'REJECT'].includes(stored.decision));
+  assert.equal(stored.decision, approve.status === 200 ? 'APPROVE' : 'REJECT');
+});
