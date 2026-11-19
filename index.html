@@ -710,46 +710,46 @@
 
     // 사용자 제공 명단 기반 초기 직원 데이터
     const INITIAL_ROSTER = [
-      { name: '피터', dept: '대표', role: 'CEO / 대표', floor: 1, status: 'idle', progress: 0, note: 'Idle - 전사 의사결정 대기' },
-      { name: '알렉스', dept: '본부장', role: 'Manager / 본부장', floor: 1, status: 'idle', progress: 1, note: 'Idle - 총괄 조율 및 지시 대기' },
+      { name: '피터', dept: '대표이사실', role: '대표이사', floor: 1, status: 'idle', progress: 0, note: '전사 의사결정 대기' },
+      { name: '알렉스', dept: '본부장실', role: '본부장', floor: 1, status: 'idle', progress: 0, note: '전사 업무 조정 및 배정 대기' },
 
-      { name: '제니', dept: '경영관리 (4)', role: '경영관리 리드', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 운영 현황 점검' },
-      { name: '카리나', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 문서 및 일정 관리' },
-      { name: '이던', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 프로세스 지원' },
-      { name: '클로이', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 재무/정산 보조' },
-      { name: '루카스', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 자료 취합' },
+      { name: '데니스', dept: '경영관리팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: '경영관리 총괄' },
+      { name: '카리나', dept: '경영관리팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '경영분석' },
+      { name: '이던', dept: '경영관리팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '예산관리' },
+      { name: '클로이', dept: '경영관리팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '성과관리' },
+      { name: '루카스', dept: '경영관리팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '경영기획' },
 
-      { name: '단테', dept: '법무 (4)', role: 'Legal / 법무 리드', floor: 1, status: 'idle', progress: 0, note: '법무 - 계약 및 규정 검토' },
-      { name: '앤', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 조항 검토' },
-      { name: '민준', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 컴플라이언스 확인' },
-      { name: '소피아', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 자문 요약' },
-      { name: '줄리안', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 서류 대조' },
+      { name: '렉스', dept: '법무팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: '법무 업무 총괄' },
+      { name: '앤', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '계약 검토' },
+      { name: '소피아', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '송무 및 분쟁 대응' },
+      { name: '줄리안', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '공정거래 준수' },
+      { name: '민준', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '지식재산 관리' },
 
-      { name: '라이언', dept: 'IR (4)', role: 'IR / 대외협력 리드', floor: 1, status: 'idle', progress: 0, note: 'IR - 투자자 및 공시 대응' },
-      { name: '수지', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 주주 문의 정리' },
-      { name: '케빈', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 지표 모니터링' },
-      { name: '해나', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 보도자료 초안' },
-      { name: '노아', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 일정 조율' },
+      { name: '라이언', dept: 'IR팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: 'IR 전략 및 투자자 소통' },
+      { name: '수지', dept: 'IR팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '공시 관리' },
+      { name: '케빈', dept: 'IR팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '재무 및 기업분석' },
+      { name: '해나', dept: 'IR팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '주식시장 분석' },
+      { name: '노아', dept: 'IR팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: 'IR 자료 작성' },
+      { name: '지안', dept: 'IR팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '언론홍보 및 보도자료' },
 
-      { name: '에이든', dept: '총무 (4)', role: '총무 리드', floor: 1, status: 'busy', progress: 5, note: '총무 - 시설 및 비품 조율 중' },
-      { name: '로라', dept: '총무 (4)', role: '총무 스태프', floor: 1, status: 'idle', progress: 0, note: '총무 - 자산 관리' },
-      { name: '브라이언', dept: '총무 (4)', role: '총무 스태프', floor: 1, status: 'idle', progress: 0, note: '총무 - 출입 및 현장 지원' },
-      { name: '미아', dept: '총무 (4)', role: '총무 스태프', floor: 1, status: 'idle', progress: 0, note: '총무 - 물품 발주 확인' },
-      { name: '오웬', dept: '총무 (4)', role: '총무 스태프', floor: 2, status: 'idle', progress: 0, note: '총무 - 2층 공간 점검' },
+      { name: '에이든', dept: '총무팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: '총무 업무 총괄' },
+      { name: '로라', dept: '총무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '자산관리' },
+      { name: '브라이언', dept: '총무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '부동산 및 시설관리' },
+      { name: '미아', dept: '총무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '구매관리' },
+      { name: '오웬', dept: '총무팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '물류관리' },
 
-      { name: '에릭', dept: '전략기획 (4)', role: '전략기획 리드', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 중장기 로드맵' },
-      { name: '노라', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 시장 리서치' },
-      { name: '제이슨', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 사업성 분석' },
-      { name: '이사벨라', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 제휴안 검토' },
-      { name: '아담', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 보고서 정리' },
+      { name: '에릭', dept: '전략기획팀', role: '팀장', floor: 2, status: 'idle', progress: 0, note: '전략기획 총괄' },
+      { name: '노라', dept: '전략기획팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '시장조사' },
+      { name: '제이슨', dept: '전략기획팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '사업전략' },
+      { name: '이사벨라', dept: '전략기획팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '해외사업' },
+      { name: '아담', dept: '전략기획팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '사업성분석' },
 
-      { name: '테오', dept: 'IT·기술 (5)', role: 'IT·기술 리드', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 인프라 및 자동화' },
-      { name: '아바', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 시스템 점검' },
-      { name: '레오', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 워크플로우 연동' },
-      { name: '조이', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 데이터 파이프라인' },
-      { name: '토니', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 보안 설정 확인' },
-      { name: '켄지', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 테스트 자동화' }
-    ];
+      { name: '테오', dept: '기술·IT팀', role: '팀장', floor: 2, status: 'idle', progress: 0, note: '기술·IT 총괄' },
+      { name: '아바', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: 'AI 개발' },
+      { name: '레오', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '시스템관리' },
+      { name: '조이', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '데이터관리' },
+      { name: '토니', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '보안관리' }
+    ];;
 
     const state = {
       layoutMode: 'map', // 'map' | 'list'
@@ -786,8 +786,8 @@
           model: 'gpt-5-mini',
           progress: item.progress,
           status: item.status, // 'idle' | 'busy' | 'error'
-          statusText: `${item.status === 'busy' ? 'Working' : 'Idle'} - ${item.note}`,
-          badgeText: item.status === 'busy' ? '진행 중' : 'idle',
+          statusText: `${item.status === 'busy' ? '업무 중' : '대기 중'} · ${item.note}`,
+          badgeText: item.status === 'busy' ? '진행 중' : '대기',
           floor: item.floor,
           x: Math.min(0.76, Math.max(0.24, 0.5 + Math.cos(angle) * radius)),
           y: Math.min(0.74, Math.max(0.26, 0.5 + Math.sin(angle) * radius * 0.85)),
@@ -1058,9 +1058,9 @@
     function renderRosters() {
       // 상단과 캔버스에 등록 직원 수 표시
       const actualCount = state.staff.length;
-      document.getElementById('headerStaffBadge').textContent = `등록 직원 29명 (${actualCount}명)`;
+      document.getElementById('headerStaffBadge').textContent = `전체 구성원 ${actualCount}명`;
       document.getElementById('canvasAktifBadge').innerHTML =
-        `<span class="dot"></span><span>등록 직원 29명</span>`;
+        `<span class="dot"></span><span>전체 구성원 ${actualCount}명</span>`;
       document.getElementById('rosterCountNote').textContent =
         `명단 등록 ${actualCount}명 · 현재 ${state.floor}층 (${state.mode3D ? '3D' : '2D'})`;
 
