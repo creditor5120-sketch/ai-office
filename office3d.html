@@ -517,10 +517,10 @@ const meetingSeats=[
 const breakSeats=[new THREE.Vector3(-10,.82,9.5),new THREE.Vector3(-4,.82,13),new THREE.Vector3(18,.82,12)];
 let lastStateSync=0;
 function readEmployeeStates(){
- try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');return value&&typeof value==='object'?value:{}}catch(_){return {}}
+ try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeStates')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}
 }
 function readEmployeeHistory(){
- try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeHistory')||'{}');return value&&typeof value==='object'?value:{}}catch(_){return {}}
+ try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}
 }
 function recordEmployeeHistory(id,state){
  if(!id||!state)return;
