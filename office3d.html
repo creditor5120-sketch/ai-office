@@ -48,7 +48,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 </head>
 <body>
 <div id="loading">SW AI OFFICE 공간을 준비하고 있습니다...</div>
-<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./index.html" style="text-decoration:none">업무 화면</a><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
+<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./index.html" style="text-decoration:none">2D 사무실</a><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
 <div id="appMain">
  <section id="officeStage"><div id="scene"></div><div id="officeStatus">● 전체 구성원 <b id="activeCount">-</b>명</div><div id="officeTools"><button id="zoomOut">－ 축소</button><button id="zoomIn">＋ 확대</button><button id="resetView">전체 보기</button><span class="interactionHint">드래그: 회전 · 휠: 확대/축소</span></div></section>
  <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
