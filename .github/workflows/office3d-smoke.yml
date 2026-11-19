@@ -9,14 +9,6 @@ on:
       - 'tests/office3d-smoke.mjs'
       - '.github/workflows/office3d-smoke.yml'
       - 'tests/worker-auth-audit.test.mjs'
-  push:
-    branches: [work/office3d-integration]
-    paths:
-      - 'office3d.html'
-      - 'employees.js'
-      - 'tests/office3d-smoke.mjs'
-      - '.github/workflows/office3d-smoke.yml'
-      - 'tests/worker-auth-audit.test.mjs'
 
 permissions:
   contents: read
