@@ -1104,19 +1104,34 @@ function buildOffice3D(){
 function makeActor3D(ac){
   const group=new THREE.Group(); group.userData.employee=ac.emp;
   const skin=mat(ac.skin), hair=mat(ac.hair), shirt=mat(ac.color), pants=mat('#29394e'), shoe=mat('#182536');
-  const part=(x,y,z,w,h,d,m)=>addBox(group,x,y,z,w,h,d,m,true,true);
-  part(0,.30,0,.36,.40,.24,shirt);
-  part(-.245,.28,0,.13,.34,.15,shirt); part(.245,.28,0,.13,.34,.15,shirt);
-  part(-.245,.13,-.015,.13,.10,.15,skin); part(.245,.13,-.015,.13,.10,.15,skin);
-  part(-.095,0,.015,.14,.30,.15,pants); part(.095,0,.015,.14,.30,.15,pants);
-  part(-.095,0,-.045,.15,.10,.23,shoe); part(.095,0,-.045,.15,.10,.23,shoe);
-  part(0,.70,0,.34,.32,.30,skin);
-  part(0,.91,0,.36,.12,.32,hair);
-  if(ac.hairStyle===1||ac.hairStyle===3){part(-.15,.77,0,.07,.22,.31,hair);part(.15,.77,0,.07,.22,.31,hair);}
-  if(ac.hairStyle===2)part(0,.99,0,.20,.08,.20,hair);
-  const eye=mat('#20242a'), white=mat('#ffffff'), mouth=mat('#8b4d42');
-  part(-.075,.73,.154,.045,.05,.018,eye);part(.075,.73,.154,.045,.05,.018,eye);
-  part(0,.65,.158,.10,.018,.018,mouth);
+  const part=(parent,x,y,z,w,h,d,m)=>addBox(parent,x,y,z,w,h,d,m,true,true);
+
+  // 몸통·머리와 관절형 팔·다리: 실제 업무 상태에 따라 자세를 바꾼다.
+  const body=new THREE.Group(); body.position.y=.08; group.add(body);
+  part(body,0,.30,0,.36,.40,.24,shirt);
+  part(body,0,.70,0,.34,.32,.30,skin);
+  part(body,0,.91,0,.36,.12,.32,hair);
+  if(ac.hairStyle===1||ac.hairStyle===3){part(body,-.15,.77,0,.07,.22,.31,hair);part(body,.15,.77,0,.07,.22,.31,hair);}
+  if(ac.hairStyle===2)part(body,0,.99,0,.20,.08,.20,hair);
+  const eye=mat('#20242a'), mouth=mat('#8b4d42');
+  part(body,-.075,.73,.154,.045,.05,.018,eye);part(body,.075,.73,.154,.045,.05,.018,eye);
+  part(body,0,.65,.158,.10,.018,.018,mouth);
+
+  const arms=[];
+  [-1,1].forEach(side=>{
+    const pivot=new THREE.Group(); pivot.position.set(side*.245,.46,0); body.add(pivot);
+    part(pivot,0,-.16,0,.13,.34,.15,shirt);
+    part(pivot,0,-.34,-.015,.13,.10,.15,skin);
+    arms.push(pivot);
+  });
+  const legs=[];
+  [-1,1].forEach(side=>{
+    const pivot=new THREE.Group(); pivot.position.set(side*.095,.17,.015); body.add(pivot);
+    part(pivot,0,-.15,0,.14,.30,.15,pants);
+    part(pivot,0,-.30,-.045,.15,.10,.23,shoe);
+    legs.push(pivot);
+  });
+
   const labelCanvas=document.createElement('canvas');labelCanvas.width=320;labelCanvas.height=80;
   const lg=labelCanvas.getContext('2d');lg.fillStyle='rgba(255,255,255,.94)';lg.strokeStyle='#b8c7db';lg.lineWidth=4;
   lg.beginPath();lg.roundRect(8,8,304,64,16);lg.fill();lg.stroke();
@@ -1127,6 +1142,7 @@ function makeActor3D(ac){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.34,.025,8,40),new THREE.MeshBasicMaterial({color:'#f0b429'}));
   ring.rotation.x=Math.PI/2;ring.position.y=.035;ring.visible=false;group.add(ring);
   group.userData.ring=ring;
+  group.userData.pose={body,arms,legs};
   officeRoot.add(group); actorObjects.set(String(ac.emp.id),group);
   actorPickTargets.push(group);
 }
@@ -1159,7 +1175,25 @@ function updateThreeOffice(){
     g.position.set(ac.x,0,ac.z);
     g.rotation.y=ac.state==='walking'?Math.atan2(ac.targetX-ac.x,ac.targetZ-ac.z):0;
     const ring=g.userData.ring; if(ring)ring.visible=!!(selectedEmployee&&String(selectedEmployee.id)===String(ac.emp.id));
-    const bob=ac.state==='working'?0:Math.abs(Math.sin(nowMotionClock*6+ac.phase))*.025;
+    const status=String(ac.status || ac.activityStatus || '');
+    const seated=ac.state==='working' && (status==='업무 중' || status==='검수 중' || status==='협업 중');
+    const pose=g.userData.pose;
+    if(pose){
+      // 책상·회의 위치에 도착하면 앉고, 이동 중에는 자연스럽게 선 자세로 복귀한다.
+      pose.body.position.y=seated ? -.13 : .08;
+      pose.body.rotation.x=seated ? -.10 : 0;
+      pose.legs.forEach((leg,i)=>{
+        leg.rotation.x=seated ? -.72 : 0;
+        leg.rotation.z=0;
+      });
+      const typing=seated && (status==='업무 중' || status==='검수 중');
+      pose.arms.forEach((arm,i)=>{
+        const swing=typing ? Math.sin(nowMotionClock*7+(i*Math.PI))*.09 : 0;
+        arm.rotation.x=seated ? -1.05+swing : Math.sin(nowMotionClock*4+ac.phase)*.025;
+        arm.rotation.z=typing ? (i===0?-.12:.12) : 0;
+      });
+    }
+    const bob=ac.state==='working' && seated ? 0 : Math.abs(Math.sin(nowMotionClock*6+ac.phase))*.025;
     g.position.y=bob;
   });
   threeRenderer.render(threeScene,activeThreeCamera);
