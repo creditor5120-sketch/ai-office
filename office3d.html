@@ -576,7 +576,7 @@ function syncAvatarWorkStates(force=false){
   const status=state.status||person.workStatus||'업무 대기';
   avatar.userData.workStatus=status;avatar.userData.workDetail=state.detail||state.task||'';
   let targetX=avatar.userData.homeX,targetZ=avatar.userData.homeZ;
-  if(status==='협업 중'||state.location==='회의실'){const seat=meetingSeats[meetingIndex++%meetingSeats.length];targetX=seat.x;targetZ=seat.z}
+  if(status==='협업 중'||status==='검수 중'||state.location==='회의실'){const seat=meetingSeats[meetingIndex++%meetingSeats.length];targetX=seat.x;targetZ=seat.z}
   else if(status==='휴식 중'){const seat=breakSeats[breakIndex++%breakSeats.length];targetX=seat.x;targetZ=seat.z}
   avatar.userData.targetX=targetX;avatar.userData.targetZ=targetZ;
  }
