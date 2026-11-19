@@ -495,6 +495,7 @@ async function submitRepresentativeDecision(decision){
   document.getElementById('representativeAccessToken').value='';renderRepresentativeDecision(record);
   appendChat('대표 결정',`${data.decisionLabel||decision} 기록 완료\n업무 ID: ${taskId}\n${data.message||''}\n${data.attributionNote||''}`);
  }catch(error){appendChat('대표 결정 오류',error.message||String(error));approve.disabled=false;reject.disabled=false}
+ finally{document.getElementById('representativeAccessToken').value=''}
 }
 document.getElementById('representativeApprove').addEventListener('click',()=>submitRepresentativeDecision('APPROVE'));
 document.getElementById('representativeReject').addEventListener('click',()=>submitRepresentativeDecision('REJECT'));
