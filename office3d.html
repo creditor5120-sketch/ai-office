@@ -411,10 +411,10 @@ function compactTaskHistoryRecord(record){
  return {
   taskId:record.taskId||null,task:String(record.task||'').slice(0,12000),reply:String(record.reply||'').slice(0,50000),
   deliverables:(Array.isArray(record.deliverables)?record.deliverables:[]).filter(item=>item&&typeof item==='object').slice(0,5).map(item=>({id:item.id||null,title:item.title||'',department:item.department||'',teamLeader:item.teamLeader||'',status:item.status||'',content:String(item.content||'').slice(0,10000),errors:Array.isArray(item.errors)?item.errors.slice(0,5):[]})),
-  workflow:{currentStage:record.workflow?.currentStage||'',status:record.workflow?.status||'',resultStatus:record.workflow?.resultStatus||'',resultStatusReason:String(record.workflow?.resultStatusReason||'').slice(0,3000)},
+  workflow:{currentStage:record.workflow?.currentStage||'',status:record.workflow?.status||'',resultStatus:record.workflow?.resultStatus||'',resultStatusReason:String(record.workflow?.resultStatusReason||'').slice(0,3000),reviewGate:{finalReleaseAllowed:record.workflow?.reviewGate?.finalReleaseAllowed===true}},
   finalReviewResults:(Array.isArray(record.finalReviewResults)?record.finalReviewResults:[]).filter(item=>item&&typeof item==='object').slice(0,5).map(item=>({id:item.id||null,name:item.name||'',status:item.status||'',judgment:item.judgment||'',review:String(item.review||'').slice(0,3000),details:item.details?.summary?{summary:String(item.details.summary).slice(0,1500)}:null})),
-  audit:audit?{task:{taskId:audit.task?.taskId||record.taskId||null,status:audit.task?.status||'',currentStage:audit.task?.currentStage||'',createdAt:audit.task?.createdAt||null,completedAt:audit.task?.completedAt||null},events:(Array.isArray(audit.events)?audit.events:[]).slice(-100).map(event=>({eventType:event.eventType||'',stage:event.stage||'',createdAt:event.createdAt||null}))}:null,
-  employeeId:record.employeeId||null,employeeName:record.employeeName||null,department:record.department||null,savedAt:record.savedAt||new Date().toISOString()
+  audit:audit?{task:{taskId:audit.task?.taskId||record.taskId||null,status:audit.task?.status||'',currentStage:audit.task?.currentStage||'',createdAt:audit.task?.createdAt||null,completedAt:audit.task?.completedAt||null},events:(Array.isArray(audit.events)?audit.events:[]).slice(-100).map(event=>({eventType:event.eventType||'',stage:event.stage||'',actor:event.actor||'',detail:event.detail&&typeof event.detail==='object'?event.detail:null,createdAt:event.createdAt||null}))}:null,
+  employeeId:record.employeeId||null,employeeIds:[...new Set([record.employeeId,...(Array.isArray(record.employeeIds)?record.employeeIds:[]),...(Array.isArray(record.deliverables)?record.deliverables.map(item=>item?.id):[])].filter(Boolean))],employeeName:record.employeeName||null,department:record.department||null,representativeDecision:record.representativeDecision||null,savedAt:record.savedAt||new Date().toISOString()
  };
 }
 function loadCombinedTaskHistory(){
@@ -425,7 +425,7 @@ function loadCombinedTaskHistory(){
 function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults,audit,employee){
  let history=[];
  try{const parsed=JSON.parse(localStorage.getItem('swAIOffice3DTaskHistory')||'[]');if(Array.isArray(parsed))history=parsed.map(compactTaskHistoryRecord)}catch(_){}
- const record=compactTaskHistoryRecord({taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit,employeeId:employee?.id||null,employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()});
+ const record=compactTaskHistoryRecord({taskId,task,reply,deliverables:deliverables||[],workflow:workflow||{},finalReviewResults:finalReviewResults||[],audit,employeeId:employee?.id||null,employeeIds:[...new Set([employee?.id,...(deliverables||[]).map(item=>item?.id)].filter(Boolean))],employeeName:employee?.name||null,department:employee?.department||null,savedAt:new Date().toISOString()});
  const next=[record,...history.filter(item=>item.taskId!==taskId)].slice(0,10);
  localStorage.setItem('swAIOffice3DTaskHistory',JSON.stringify(next));
 }
@@ -445,7 +445,7 @@ function renderTaskHistory(){
  const list=document.getElementById('taskHistoryList');if(!list)return;
  const history=loadCombinedTaskHistory();
  list.replaceChildren();
- const visibleHistory=history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id);
+ const visibleHistory=history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id||(Array.isArray(record.employeeIds)&&record.employeeIds.includes(selected?.userData.person.id)));
  if(!visibleHistory.length){list.textContent='이 직원의 저장된 업무 기록이 없습니다.';return}
  visibleHistory.slice(0,5).forEach(record=>{
   const item=document.createElement('button');item.type='button';item.className='historyItem';
@@ -479,7 +479,7 @@ async function submitRepresentativeDecision(decision){
   if(!response.ok)throw new Error(data.error||`대표 결정 기록 실패 (HTTP ${response.status})`);
   record.representativeDecision={...data};
   if(record.audit){record.audit.events=Array.isArray(record.audit.events)?record.audit.events:[];record.audit.events.push({eventType:'REPRESENTATIVE_DECISION',stage:data.decisionLabel||decision,detail:data,createdAt:data.recordedAt||new Date().toISOString()})}
-  try{const history=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=record;localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(history))}}catch(storageError){appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록 갱신은 실패했습니다: '+(storageError.message||String(storageError)))}
+  let savedLocally=false;for(const key of ['swAIOfficeTaskHistory','swAIOffice3DTaskHistory']){try{const history=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(history))continue;const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=compactTaskHistoryRecord(record);localStorage.setItem(key,JSON.stringify(history));savedLocally=true}}catch(_){}}if(!savedLocally)appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록에는 저장하지 못했습니다.','SYSTEM');
   document.getElementById('representativeAccessToken').value='';renderRepresentativeDecision(record);
   appendChat('대표 결정',`${data.decisionLabel||decision} 기록 완료\n업무 ID: ${taskId}\n${data.message||''}\n${data.attributionNote||''}`);
  }catch(error){appendChat('대표 결정 오류',error.message||String(error));approve.disabled=false;reject.disabled=false}
