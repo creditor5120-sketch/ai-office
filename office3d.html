@@ -35,7 +35,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 .detailPerson.active{border:2px solid #39475a}
 #detailConversation{display:flex;flex-direction:column;min-width:0;min-height:0}
 #detailTop{padding:15px 18px;background:#f8f1df;border-bottom:1px solid var(--line);font-weight:700}
-#detailMessages{flex:1;overflow:auto;padding:18px;color:#443c31;line-height:1.65}#taskHistoryPanel{flex:0 0 150px;overflow:auto;padding:10px 14px;border-top:1px solid var(--line);background:#fbf6e8}#taskHistoryPanel h3{margin:0 0 7px;font-size:12px;color:#6e5a40}.historyItem{display:block;width:100%;margin:4px 0;padding:7px 9px;border:1px solid #dfd1b5;background:#fffaf0;color:#443c31;text-align:left;font:inherit;font-size:11px;cursor:pointer}.historyItem:hover{background:#f2e7d2}
+#detailMessages{flex:1;overflow:auto;padding:18px;color:#443c31;line-height:1.65}#taskHistoryPanel{flex:0 0 150px;overflow:auto;padding:10px 14px;border-top:1px solid var(--line);background:#fbf6e8}#taskHistoryPanel h3{margin:0 0 7px;font-size:12px;color:#6e5a40}.decisionPanel{margin-top:10px;padding:10px;border:1px solid #c9b995;background:#f8f1df}.decisionPanel strong{display:block;font-size:12px;margin-bottom:5px}.decisionPanel small{display:block;color:#76664f;line-height:1.5;margin:5px 0}.decisionPanel input,.decisionPanel textarea{width:100%;margin:4px 0;padding:8px;border:1px solid #c8b995;background:#fffdf7;font:inherit;font-size:12px}.decisionPanel textarea{min-height:52px;resize:vertical}.decisionActions{display:flex;gap:6px}.decisionActions button{flex:1;padding:8px;border:1px solid #c5ad8d;background:#fff8e8;color:#59442f;font:inherit;font-size:12px;cursor:pointer}.decisionActions button.primary{background:var(--brown);color:#fff}.decisionActions button:disabled{opacity:.5;cursor:not-allowed}.historyItem{display:block;width:100%;margin:4px 0;padding:7px 9px;border:1px solid #dfd1b5;background:#fffaf0;color:#443c31;text-align:left;font:inherit;font-size:11px;cursor:pointer}.historyItem:hover{background:#f2e7d2}
 #detailComposer{padding:14px;border-top:1px solid var(--line);background:#fff9eb}
 #detailInput{width:100%;height:105px;resize:vertical;padding:12px;border:1px solid #c8b995;background:#fffdf7;font:inherit}
 #detailSend{margin-top:8px;float:right;background:var(--brown);color:white;border:0;padding:9px 16px;cursor:pointer}
@@ -54,7 +54,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
  <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
 </div>
 <div id="staffStrip"></div>
-<section id="detailView"><aside id="detailEmployees"><h3>직원 목록</h3><div id="detailEmployeeList"></div></aside><section id="detailConversation"><div id="detailTop">알렉스 · 본부장</div><div id="detailMessages"><div class="chatBubble">직원을 선택하면 해당 직원의 상세 업무 화면이 표시됩니다. 업무 지시를 입력하면 기존 업무 처리 화면으로 연결됩니다.</div></div><section id="taskHistoryPanel"><h3>최근 업무 기록</h3><div id="taskHistoryList">저장된 업무 기록이 없습니다.</div></section></section></section>
+<section id="detailView"><aside id="detailEmployees"><h3>직원 목록</h3><div id="detailEmployeeList"></div></aside><section id="detailConversation"><div id="detailTop">알렉스 · 본부장</div><div id="detailMessages"><div class="chatBubble">직원을 선택하면 해당 직원의 상세 업무 화면이 표시됩니다. 업무 지시를 입력하면 기존 업무 처리 화면으로 연결됩니다.</div></div><section id="taskHistoryPanel"><h3>최근 업무 기록</h3><div id="taskHistoryList">저장된 업무 기록이 없습니다.</div><div class="decisionPanel" id="representativeDecisionPanel"><strong>대표 최종 결정</strong><small id="decisionTaskHint">업무 기록을 선택하면 승인 또는 반려를 기록할 수 있습니다.</small><input id="representativeAccessToken" type="password" autocomplete="off" placeholder="대표 승인 전용 인증값"><textarea id="representativeDecisionReason" placeholder="반려 사유 또는 승인 의견 (선택)"></textarea><div class="decisionActions"><button type="button" id="representativeApprove" class="primary" disabled>대표 승인</button><button type="button" id="representativeReject" disabled>대표 반려</button></div><small>대표 승인 전용 토큰으로 결정 이력을 기록합니다. 현재 개인별 계정 로그인·신원 확인 기능과는 별개입니다.</small></div></section></section></section>
 <div class="hint" style="display:none"> </div>
 <div class="modal" id="modal"><div class="dialog profileDialog"><div class="profileHeader"><canvas id="profilePhoto" class="profilePhoto" width="96" height="120"></canvas><h2 id="personName">직원</h2></div><div id="personInfo" class="profileInfo"></div><div class="profileActions"><button class="action secondary" id="close">닫기</button></div></div></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
@@ -269,14 +269,14 @@ document.getElementById('zoomIn').onclick=()=>{camera.position.multiplyScalar(.8
 document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1.18);controls.update()};
 document.getElementById('resetView').onclick=()=>{controls.target.set(0,0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(43,39,45));controls.update()};
 
-const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null;
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null,selectedTaskForDecision=null;
 renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
 function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
  document.getElementById('chatName').textContent=p.name;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
  renderEmployeeChat(p.id);
- renderTaskHistory();
+ renderTaskHistory();selectedTaskForDecision=null;renderRepresentativeDecision(null);
  document.getElementById('chatAvatar').textContent='👤';document.getElementById('chatIntro').textContent=p.instruction||'담당 업무를 수행하는 직원입니다.';
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
@@ -452,6 +452,7 @@ function renderTaskHistory(){
   const date=new Date(record.savedAt),stamp=Number.isNaN(date.getTime())?'':date.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   item.textContent=(record.employeeName?record.employeeName+' · ':'')+(record.task||'업무 내용 미기재').slice(0,72)+' · '+stamp;
   item.addEventListener('click',()=>{
+   selectedTaskForDecision=record;renderRepresentativeDecision(record);
    appendChat('이전 업무 지시',record.task||'');
    appendChat('이전 업무 결과',record.reply||'결과가 저장되지 않았습니다.');
    renderWorkflowSummary({workflow:record.workflow||{},finalReviewResults:record.finalReviewResults||[]},record.audit||null);
@@ -459,6 +460,31 @@ function renderTaskHistory(){
   list.appendChild(item);
  });
 }
+function renderRepresentativeDecision(record=null){
+ const hint=document.getElementById('decisionTaskHint'),approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');
+ const taskId=record?.taskId||'';const decision=record?.representativeDecision||record?.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.detail||null;
+ hint.textContent=taskId?(decision?`업무 ${taskId} · ${decision.decisionLabel||decision.decision||'결정 기록됨'} (${decision.recordedAt||record.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.createdAt||'시각 미확인'})`:`선택 업무 ID: ${taskId}`):'업무 기록을 선택하면 승인 또는 반려를 기록할 수 있습니다.';
+ const allowed=!!taskId&&!decision;approve.disabled=!allowed;reject.disabled=!allowed;
+}
+async function submitRepresentativeDecision(decision){
+ const record=selectedTaskForDecision,taskId=record?.taskId,token=document.getElementById('representativeAccessToken').value.trim(),reason=document.getElementById('representativeDecisionReason').value.trim();
+ if(!taskId){appendChat('시스템','먼저 최근 업무 기록에서 결정할 업무를 선택해 주세요.');return}
+ if(!token){appendChat('시스템','대표 승인 전용 인증값을 입력해 주세요.');return}
+ if(decision==='REJECT'&&!reason){appendChat('시스템','반려 사유를 입력해야 합니다.');return}
+ const approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');approve.disabled=true;reject.disabled=true;
+ try{
+  const response=await fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','X-Representative-Authorization':'Bearer '+token},body:JSON.stringify({action:'representative_decision',taskId,decision,reason})});
+  const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error(raw||'대표 결정 응답을 해석할 수 없습니다.')}
+  if(!response.ok)throw new Error(data.error||`대표 결정 기록 실패 (HTTP ${response.status})`);
+  record.representativeDecision={...data};
+  if(record.audit){record.audit.events=Array.isArray(record.audit.events)?record.audit.events:[];record.audit.events.push({eventType:'REPRESENTATIVE_DECISION',stage:data.decisionLabel||decision,detail:data,createdAt:data.recordedAt||new Date().toISOString()})}
+  const history=JSON.parse(localStorage.getItem('swAIOfficeTaskHistory')||'[]');const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=record;localStorage.setItem('swAIOfficeTaskHistory',JSON.stringify(history))}
+  document.getElementById('representativeAccessToken').value='';renderRepresentativeDecision(record);
+  appendChat('대표 결정',`${data.decisionLabel||decision} 기록 완료\n업무 ID: ${taskId}\n${data.message||''}\n${data.attributionNote||''}`);
+ }catch(error){appendChat('대표 결정 오류',error.message||String(error));approve.disabled=false;reject.disabled=false}
+}
+document.getElementById('representativeApprove').addEventListener('click',()=>submitRepresentativeDecision('APPROVE'));
+document.getElementById('representativeReject').addEventListener('click',()=>submitRepresentativeDecision('REJECT'));
 function renderWorkflowSummary(data,audit=null,employeeId=selected?.userData.person.id){
  const workflow=data.workflow||{},reviews=Array.isArray(data.finalReviewResults)?data.finalReviewResults:[];
  const lines=[];
