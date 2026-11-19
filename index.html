@@ -619,6 +619,33 @@ body.detail-open .detail-drawer {
   cursor: pointer;
 }
 
+
+/* 블록형 직원 캐릭터 */
+.agent-avatar {
+  border-radius: 2px;
+  image-rendering: pixelated;
+  background: linear-gradient(180deg,#dce7ed 0 48%,#aebfca 48% 100%);
+  border: 1px solid #718596;
+}
+.agent-avatar::before {
+  width: 22px; height: 22px; left: 9px; top: 6px;
+  border-radius: 0; background: #e7b995;
+  box-shadow: inset 0 5px 0 #302a29;
+}
+.agent-avatar::after {
+  width: 30px; height: 22px; left: 5px; bottom: 1px;
+  border-radius: 0; background: #2f4b6e;
+}
+.staff-portrait { border-radius: 2px; image-rendering: pixelated; }
+.staff-portrait .portrait-head {
+  width: 20px; height: 20px; left: 9px; top: 7px;
+  border-radius: 0; box-shadow: inset 0 5px 0 rgba(45,35,30,.65);
+}
+.staff-portrait .portrait-body {
+  width: 28px; height: 25px; left: 4px; bottom: 0;
+  border-radius: 0;
+}
+
 @media (max-width: 900px) {
   html, body {
     height: auto;
@@ -659,7 +686,7 @@ body.detail-open .detail-drawer {
     <div class="stage-bottom-bar">
       <div class="stage-hints">
         <span class="hint-chip">캐릭터/이름 클릭: 대화</span>
-        <span class="hint-chip">드래그·터치: 화면 이동</span>
+        <span class="hint-chip">3D 드래그: 회전 · Shift+드래그: 이동</span>
         <span class="hint-chip">휠: 확대/축소</span>
       </div>
       <div class="view-group">
@@ -1053,6 +1080,63 @@ function drawOfficeScreen(x, y, z, w, h, nowSec, style = 'chart') {
   ctx.restore();
 }
 
+
+function drawVoxelCharacter(ac, nowSec, isSel) {
+  const seated = ac.state === 'working';
+  const stride = Math.sin(nowSec * 7 + ac.phase) * 0.045;
+  const armMove = Math.sin(nowSec * 6 + ac.phase) * 0.055;
+  const baseY = 0;
+  const headY = seated ? 0.58 : 0.72;
+  const bodyY = seated ? 0.20 : 0.30;
+  const headH = 0.30;
+  const bodyH = seated ? 0.34 : 0.40;
+  const skin = ac.skin;
+  const hair = ac.hair;
+  const shirt = ac.color;
+  const dark = '#263449';
+  // 다리와 신발: 둥근 선이 아닌 각진 블록
+  if (seated) {
+    drawBox3D(ac.x - 0.10, baseY, ac.z + 0.13, 0.13, 0.18, 0.28, dark, '#1d2938', '#111b29');
+    drawBox3D(ac.x + 0.10, baseY, ac.z + 0.13, 0.13, 0.18, 0.28, dark, '#1d2938', '#111b29');
+  } else {
+    drawBox3D(ac.x - 0.09 + stride, baseY, ac.z, 0.14, 0.30, 0.16, dark, '#1d2938', '#111b29');
+    drawBox3D(ac.x + 0.09 - stride, baseY, ac.z, 0.14, 0.30, 0.16, dark, '#1d2938', '#111b29');
+  }
+  // 몸통과 양팔
+  drawBox3D(ac.x, bodyY, ac.z, 0.36, bodyH, 0.22, shirt, shirt, '#24354a');
+  drawBox3D(ac.x - 0.25 - armMove, seated ? 0.24 : 0.31, ac.z, 0.13, 0.34, 0.15, shirt, shirt, '#24354a');
+  drawBox3D(ac.x + 0.25 + armMove, seated ? 0.24 : 0.31, ac.z, 0.13, 0.34, 0.15, shirt, shirt, '#24354a');
+  // 손
+  drawBox3D(ac.x - 0.25 - armMove, seated ? 0.20 : 0.27, ac.z - 0.01, 0.13, 0.10, 0.15, skin, skin, '#b98260');
+  drawBox3D(ac.x + 0.25 + armMove, seated ? 0.20 : 0.27, ac.z - 0.01, 0.13, 0.10, 0.15, skin, skin, '#b98260');
+  // 목과 정육면체 머리
+  drawBox3D(ac.x, bodyY + bodyH, ac.z, 0.13, 0.10, 0.13, skin, skin, '#b98260');
+  drawBox3D(ac.x, headY, ac.z, 0.34, headH, 0.30, skin, skin, '#bd8968');
+  // 블록 헤어와 헤어스타일별 실루엣
+  drawBox3D(ac.x, headY + headH - 0.045, ac.z, 0.36, 0.11, 0.32, hair, hair, '#211d1c');
+  if (ac.hairStyle === 1 || ac.hairStyle === 3) {
+    drawBox3D(ac.x - 0.15, headY + 0.12, ac.z, 0.07, 0.19, 0.31, hair, hair, '#211d1c');
+    drawBox3D(ac.x + 0.15, headY + 0.12, ac.z, 0.07, 0.19, 0.31, hair, hair, '#211d1c');
+  } else if (ac.hairStyle === 2) {
+    drawBox3D(ac.x, headY + headH + 0.025, ac.z, 0.20, 0.08, 0.20, hair, hair, '#211d1c');
+  }
+  // 얼굴의 픽셀 눈과 앞머리
+  drawBox3D(ac.x - 0.075, headY + 0.12, ac.z - 0.153, 0.045, 0.045, 0.018, '#20242a', '#20242a', '#20242a');
+  drawBox3D(ac.x + 0.075, headY + 0.12, ac.z - 0.153, 0.045, 0.045, 0.018, '#20242a', '#20242a', '#20242a');
+  drawBox3D(ac.x, headY + 0.205, ac.z - 0.16, 0.25, 0.055, 0.035, hair, hair, '#211d1c');
+  // 선택된 직원은 발밑에 선택 링 표시
+  if (isSel) {
+    const p = project(ac.x, 0.025, ac.z);
+    ctx.save();
+    ctx.strokeStyle = '#f0b429';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y, 15 * Math.max(0.62,zoom/41), 6 * Math.max(0.62,zoom/41), 0, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function renderScene(nowSec) {
   canvasHits.length = 0;
   ctx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
@@ -1137,107 +1221,10 @@ function renderScene(nowSec) {
   const sorted = [...actors].sort((a, b) => (a.x + a.z) - (b.x + b.z));
   sorted.forEach(ac => {
     const isSel = selectedEmployee && String(selectedEmployee.id) === String(ac.emp.id);
-    const seated = ac.state === 'working';
-    const walkBob = seated ? 0 : Math.abs(Math.sin(nowSec * 6 + ac.phase)) * 0.09;
-    const armSwing = seated ? Math.sin(nowSec * 2.4 + ac.phase) * 0.035 : Math.sin(nowSec * 6.5 + ac.phase) * 0.15;
+    const walkBob = ac.state === 'working' ? 0 : Math.abs(Math.sin(nowSec * 6 + ac.phase)) * 0.035;
+    drawVoxelCharacter(ac, nowSec, isSel);
 
-    // 이동 중에는 걷고, 책상에 도착하면 의자에 앉아 컴퓨터로 일하는 자세
-    const foot = project(ac.x, walkBob, ac.z);
-    const head = project(ac.x, walkBob + (seated ? 0.72 : 0.88), ac.z);
-    const shoulder = project(ac.x, walkBob + (seated ? 0.46 : 0.58), ac.z);
-    const leftArm = seated
-      ? project(ac.x - 0.18, 0.39 + armSwing, ac.z - 0.16)
-      : project(ac.x - 0.23 + armSwing * 0.18, walkBob + 0.48, ac.z);
-    const rightArm = seated
-      ? project(ac.x + 0.18, 0.39 - armSwing, ac.z - 0.16)
-      : project(ac.x + 0.23 - armSwing * 0.18, walkBob + 0.48, ac.z);
-    const leftFoot = seated
-      ? project(ac.x - 0.12, 0.10, ac.z + 0.10)
-      : project(ac.x - 0.11, walkBob + 0.04, ac.z);
-    const rightFoot = seated
-      ? project(ac.x + 0.12, 0.10, ac.z + 0.10)
-      : project(ac.x + 0.11, walkBob + 0.04, ac.z);
-    const scale = Math.max(0.62, Math.min(1.25, zoom / 41));
-    const bodyW = 12 * scale;
-    const bodyH = 19 * scale;
-    const headR = 7.2 * scale;
-
-    ctx.save();
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    // 다리와 신발
-    ctx.strokeStyle = '#273449';
-    ctx.lineWidth = 4.2 * scale;
-    ctx.beginPath();
-    if (seated) {
-      ctx.moveTo(shoulder.x - 3 * scale, shoulder.y + bodyH * 0.48);
-      ctx.lineTo(shoulder.x - 8 * scale, shoulder.y + bodyH * 0.78);
-      ctx.lineTo(leftFoot.x, leftFoot.y);
-      ctx.moveTo(shoulder.x + 3 * scale, shoulder.y + bodyH * 0.48);
-      ctx.lineTo(shoulder.x + 8 * scale, shoulder.y + bodyH * 0.78);
-      ctx.lineTo(rightFoot.x, rightFoot.y);
-    } else {
-      ctx.moveTo(shoulder.x - 3 * scale, shoulder.y + bodyH * 0.55);
-      ctx.lineTo(leftFoot.x, leftFoot.y - 1 * scale);
-      ctx.moveTo(shoulder.x + 3 * scale, shoulder.y + bodyH * 0.55);
-      ctx.lineTo(rightFoot.x, rightFoot.y - 1 * scale);
-    }
-    ctx.stroke();
-    // 팔: 앉아 있을 때는 책상 위 키보드 쪽으로 손을 뻗는다.
-    ctx.strokeStyle = '#e7b995';
-    ctx.lineWidth = 4.5 * scale;
-    ctx.beginPath();
-    ctx.moveTo(shoulder.x - bodyW * 0.72, shoulder.y + 2 * scale);
-    ctx.lineTo(leftArm.x, leftArm.y);
-    ctx.moveTo(shoulder.x + bodyW * 0.72, shoulder.y + 2 * scale);
-    ctx.lineTo(rightArm.x, rightArm.y);
-    ctx.stroke();
-    // 상체
-    ctx.fillStyle = ac.color;
-    ctx.strokeStyle = 'rgba(20,28,40,.55)';
-    ctx.lineWidth = 1 * scale;
-    ctx.beginPath();
-    ctx.roundRect(shoulder.x - bodyW / 2, shoulder.y, bodyW, bodyH, 4 * scale);
-    ctx.fill();
-    ctx.stroke();
-    // 목과 얼굴
-    ctx.fillStyle = ac.skin;
-    ctx.fillRect(head.x - 2.5 * scale, head.y + headR * 0.55, 5 * scale, 5 * scale);
-    ctx.beginPath();
-    ctx.arc(head.x, head.y, headR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#9b6b50';
-    ctx.lineWidth = 0.8 * scale;
-    ctx.stroke();
-    // 헤어 실루엣과 눈
-    ctx.fillStyle = ac.hair;
-    const hairLift = ac.hairStyle === 2 ? 3.2 : ac.hairStyle === 3 ? 0.2 : 1.7;
-    const hairWidth = ac.hairStyle === 1 ? 1.12 : ac.hairStyle === 3 ? 1.06 : 0.98;
-    ctx.beginPath();
-    ctx.arc(head.x, head.y - hairLift * scale, headR * hairWidth, Math.PI, Math.PI * 2);
-    ctx.lineTo(head.x + headR * (ac.hairStyle === 1 ? 1.0 : 0.82), head.y + (ac.hairStyle === 3 ? 3 : -headR * 0.1));
-    ctx.quadraticCurveTo(head.x, head.y - headR * (ac.hairStyle === 2 ? 1.25 : 0.8), head.x - headR * (ac.hairStyle === 1 ? 1.0 : 0.9), head.y);
-    if (ac.hairStyle === 1 || ac.hairStyle === 3) {
-      ctx.lineTo(head.x - headR * 0.82, head.y + headR * 0.75);
-      ctx.quadraticCurveTo(head.x, head.y + headR * 0.2, head.x + headR * 0.82, head.y + headR * 0.75);
-    }
-    ctx.fill();
-    ctx.fillStyle = '#342c28';
-    ctx.beginPath();
-    ctx.arc(head.x - 2.5 * scale, head.y + 1.1 * scale, 0.8 * scale, 0, Math.PI * 2);
-    ctx.arc(head.x + 2.5 * scale, head.y + 1.1 * scale, 0.8 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    // 선택된 직원 표시
-    if (isSel) {
-      ctx.strokeStyle = '#f0b429';
-      ctx.lineWidth = 2 * scale;
-      ctx.beginPath();
-      ctx.ellipse(foot.x, foot.y + 2 * scale, 13 * scale, 5 * scale, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    const topPt = project(ac.x, walkBob + 1.12, ac.z);
+    const topPt = project(ac.x, (ac.state === 'working' ? 0.98 : 1.10), ac.z);
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
     const label = ac.emp.name;
@@ -1368,8 +1355,15 @@ officeCanvas.addEventListener('pointermove', e => {
     const dx = e.clientX - previous.x;
     const dy = e.clientY - previous.y;
     if (Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY) > 4) pointerMoved = true;
-    panX += dx;
-    panY += dy;
+    if (!view2D && !e.shiftKey && e.buttons === 1) {
+      // 3D에서는 사용자의 드래그로만 회전한다. 자동 회전은 하지 않는다.
+      yaw += dx * 0.008;
+      pitch = Math.max(0.18, Math.min(1.18, pitch + dy * 0.006));
+    } else {
+      // 2D 이동 또는 Shift/우클릭 드래그는 화면 이동
+      panX += dx;
+      panY += dy;
+    }
   }
 });
 
