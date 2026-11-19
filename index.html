@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TEAM.AI.ID - sw ai office (AI Virtual Office)</title>
+  <title>SW AI OFFICE | AI 가상 사무실</title>
   <style>
     :root {
       --bg-outer: #d7c7b0;
@@ -640,20 +640,20 @@
 <body>
   <header class="topbar">
     <div class="brand-area">
-      <div class="brand-logo">TEAM.AI.ID</div>
+      <div class="brand-logo">SW</div>
       <div class="title-stack">
-        <div class="office-name">sw ai office</div>
-        <div class="office-desc">AI Virtual Office</div>
+        <div class="office-name">SW AI OFFICE</div>
+        <div class="office-desc">AI 가상 사무실</div>
       </div>
     </div>
 
     <div class="topbar-right">
       <a class="btn" href="./office3d.html" style="text-decoration:none;display:inline-flex;align-items:center;">3D 사무실 열기</a>
       <button id="toggleLayoutModeBtn" class="btn" type="button">좌측 직원 목록 보기</button>
-      <span id="headerStaffBadge" class="pill">29 karyawan</span>
-      <span class="pill online">● online</span>
+      <span id="headerStaffBadge" class="pill">등록 직원 29명</span>
+      <span class="pill online">● 접속 중</span>
       <button id="testRetryBtn" class="btn" type="button">오류 시뮬레이션</button>
-      <button id="logoutBtn" class="btn" type="button">Logout</button>
+      <button id="logoutBtn" class="btn" type="button">로그아웃</button>
     </div>
   </header>
 
@@ -664,7 +664,7 @@
         <div class="map-header-strip">
           <div id="canvasAktifBadge" class="aktif-badge">
             <span class="dot"></span>
-            <span>29 karyawan aktif</span>
+            <span>등록 직원 29명</span>
           </div>
           <span id="rosterCountNote" style="font-size:11.5px;font-weight:700;color:#584c40;"></span>
         </div>
@@ -1058,9 +1058,9 @@
     function renderRosters() {
       // 상단/캔버스 29 karyawan 표기 + 실제 인원 수 병기
       const actualCount = state.staff.length;
-      document.getElementById('headerStaffBadge').textContent = `29 karyawan (${actualCount}명)`;
+      document.getElementById('headerStaffBadge').textContent = `등록 직원 29명 (${actualCount}명)`;
       document.getElementById('canvasAktifBadge').innerHTML =
-        `<span class="dot"></span><span>29 karyawan aktif</span>`;
+        `<span class="dot"></span><span>등록 직원 29명</span>`;
       document.getElementById('rosterCountNote').textContent =
         `명단 등록 ${actualCount}명 · 현재 ${state.floor}층 (${state.mode3D ? '3D' : '2D'})`;
 
