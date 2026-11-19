@@ -207,7 +207,11 @@ export default {
     };
 
     try {
-      body = await request.json();
+      try {
+        body = await request.json();
+      } catch (_) {
+        return json({ error: "요청 본문이 올바른 JSON 형식이 아닙니다." }, 400);
+      }
 
       // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없는 action이 업무 실행으로 흘러가지 않게 차단한다.
       if (body && body.action && !["get_representative_decision", "get_task_history", "representative_decision"].includes(String(body.action))) {
