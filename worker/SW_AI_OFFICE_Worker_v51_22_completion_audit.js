@@ -213,8 +213,13 @@ export default {
         return json({ error: "요청 본문이 올바른 JSON 형식이 아닙니다." }, 400);
       }
 
-      // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없는 action이 업무 실행으로 흘러가지 않게 차단한다.
-      if (body && body.action && !["get_representative_decision", "get_task_history", "representative_decision"].includes(String(body.action))) {
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return json({ error: "요청 본문은 JSON 객체여야 합니다." }, 400);
+      }
+
+      // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없거나 잘못된 action이 업무 실행으로 흘러가지 않게 차단한다.
+      if (Object.prototype.hasOwnProperty.call(body, "action") &&
+          !["get_representative_decision", "get_task_history", "representative_decision"].includes(body.action)) {
         return json({ error: "지원하지 않는 API action입니다." }, 400);
       }
 
