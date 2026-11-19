@@ -45,6 +45,38 @@ try {
   await page.locator('#staffStrip .staffCard').first().click();
   const selectedName = (await page.locator('#chatName').innerText()).trim();
   if (!selectedName) throw new Error('Selecting a staff card did not update the chat header');
+  const restoreFixture = {
+    taskId: 'smoke-history-restore',
+    task: '복원 테스트 업무 지시',
+    reply: '복원 테스트 최종 보고',
+    employeeId: 'COO',
+    employeeIds: ['COO', 'MA-01'],
+    employeeName: '알렉스',
+    department: '본부장실',
+    savedAt: new Date().toISOString(),
+    deliverables: [{ id: 'MA-01', title: '복원 테스트 결과물', department: '경영관리', teamLeader: '데니스', status: '완료', content: '복원된 결과물 본문 확인 문자열' }],
+    workflow: { currentStage: '최종 검수 완료', status: 'COMPLETED', resultStatus: '승인', reviewGate: { finalReleaseAllowed: true } },
+    finalReviewResults: [{ id: 'MA-01', name: '데니스', judgment: '승인', review: '검수 내용 복원 확인' }],
+    representativeDecision: { decision: 'APPROVE', decisionLabel: '대표 승인', recordedAt: '2026-11-19T10:00:00Z' },
+    audit: { task: { taskId: 'smoke-history-restore', status: 'COMPLETED', currentStage: '최종 검수 완료' }, events: [{ eventType: 'REPRESENTATIVE_DECISION', stage: '대표 승인', detail: { decision: 'APPROVE', decisionLabel: '대표 승인' }, createdAt: '2026-11-19T10:00:00Z' }] }
+  };
+  await page.evaluate(record => {
+    localStorage.setItem('swAIOffice3DTaskHistory', JSON.stringify([record]));
+  }, restoreFixture);
+  await page.reload({ waitUntil: 'commit' });
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('#loading');
+    return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
+  }, { timeout: 45000 });
+  const restoredItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
+  await restoredItem.waitFor({ state: 'visible', timeout: 10000 });
+  await restoredItem.click();
+  const restoredChat = await page.locator('#chatHistory').innerText();
+  if (!restoredChat.includes('복원된 결과물 본문 확인 문자열')) throw new Error('Saved deliverable content was not restored into the conversation');
+  if (!restoredChat.includes('검수 내용 복원 확인')) throw new Error('Saved final review details were not restored into the conversation');
+  if (!(await page.locator('#representativeApprove').isDisabled())) throw new Error('Previously recorded representative decision did not lock approval');
+  const decisionHint = await page.locator('#decisionTaskHint').innerText();
+  if (!decisionHint.includes('대표 승인')) throw new Error('Representative decision was not restored in the decision panel');
 
   await page.locator('#detailToggle').click();
   await page.locator('#detailView').waitFor({ state: 'visible' });
