@@ -280,7 +280,6 @@ function selectAvatar(a,showProfile=true){
  document.getElementById('chatAvatar').textContent='👤';
  document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>el.classList.toggle('active',el.dataset.emp===p.id));
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
- document.getElementById('detailMessages').innerHTML='<div class="chatBubble">'+(p.instruction||'담당 업무를 수행하는 직원입니다.')+'</div>';
  document.getElementById('personName').textContent=p.name;
  const photo=document.getElementById('profilePhoto');const photoCtx=photo.getContext('2d');photoCtx.clearRect(0,0,photo.width,photo.height);photoCtx.imageSmoothingEnabled=false;const spriteImage=a.userData.texture?.image;if(spriteImage)photoCtx.drawImage(spriteImage,0,0,32,40,0,0,photo.width,photo.height);
  const teamName=p.department==='본부장실'?'본부장실':(p.department||'')+'팀';
@@ -360,18 +359,23 @@ async function submitSelectedTask(value){
 }
 function readEmployeeChats(){try{const value=JSON.parse(localStorage.getItem('swAIOfficeChatHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}}
 function renderEmployeeChat(employeeId,introText='이 직원과의 대화가 여기에 기록됩니다. 간단한 대화나 업무 지시를 입력할 수 있습니다.'){
- const host=document.getElementById('chatHistory');if(!host)return;host.replaceChildren();
- const entries=readEmployeeChats()[String(employeeId)]||[];
- if(!entries.length){const intro=document.createElement('div');intro.className='chatBubble';intro.textContent=introText;host.appendChild(intro);return}
- entries.forEach(item=>{const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=item.id||'';el.dataset.employeeId=String(employeeId);el.textContent=(item.who||'')+'\n'+(item.message||'');host.appendChild(el)});
- host.scrollTop=host.scrollHeight;
+ const key=String(employeeId),hosts=[document.getElementById('chatHistory'),document.getElementById('detailMessages')].filter(Boolean),entries=readEmployeeChats()[key]||[];
+ hosts.forEach(host=>{
+  host.replaceChildren();
+  if(!entries.length){const intro=document.createElement('div');intro.className='chatBubble';intro.textContent=introText;host.appendChild(intro);return}
+  entries.forEach(item=>{const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=item.id||'';el.dataset.employeeId=key;el.textContent=(item.who||'')+'\n'+(item.message||'');host.appendChild(el)});
+  host.scrollTop=host.scrollHeight;
+ });
 }
 function appendChat(who,message,employeeId=selected?.userData.person.id||'SYSTEM'){
  const id=crypto.randomUUID(),key=String(employeeId),chats=readEmployeeChats(),entries=Array.isArray(chats[key])?chats[key]:[];
  entries.push({id,who:String(who||''),message:String(message??'').slice(0,30000),createdAt:new Date().toISOString()});chats[key]=entries.slice(-40);
  try{localStorage.setItem('swAIOfficeChatHistory',JSON.stringify(chats))}catch(_){ }
  const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=id;el.dataset.employeeId=key;el.textContent=who+'\n'+message;
- if(selected&&String(selected.userData.person.id)===key){const host=document.getElementById('chatHistory');host.appendChild(el);host.scrollTop=host.scrollHeight}
+ if(selected&&String(selected.userData.person.id)===key){
+  const host=document.getElementById('chatHistory');if(host){host.appendChild(el);host.scrollTop=host.scrollHeight}
+  const detail=document.getElementById('detailMessages');if(detail){detail.appendChild(el.cloneNode(true));detail.scrollTop=detail.scrollHeight}
+ }
  return el;
 }
 function updateChatBubble(element,message){
@@ -381,10 +385,19 @@ function updateChatBubble(element,message){
  if(entry){entry.message=String(message);entry.updatedAt=new Date().toISOString();try{localStorage.setItem('swAIOfficeChatHistory',JSON.stringify(chats))}catch(_){}}
  if(selected&&String(selected.userData.person.id)===key){
   const host=document.getElementById('chatHistory');
-  const existing=[...host.querySelectorAll('.chatBubble')].find(item=>item.dataset.messageId===id);
-  if(existing&&existing!==element)existing.textContent=element.textContent;
-  else if(element.parentNode!==host)host.appendChild(element);
-  host.scrollTop=host.scrollHeight;
+  if(host){
+   const existing=[...host.querySelectorAll('.chatBubble')].find(item=>item.dataset.messageId===id);
+   if(existing&&existing!==element)existing.textContent=element.textContent;
+   else if(element.parentNode!==host)host.appendChild(element);
+   host.scrollTop=host.scrollHeight;
+  }
+  const detail=document.getElementById('detailMessages');
+  if(detail){
+   const existing=[...detail.querySelectorAll('.chatBubble')].find(item=>item.dataset.messageId===id);
+   if(existing)existing.textContent=element.textContent;
+   else detail.appendChild(element.cloneNode(true));
+   detail.scrollTop=detail.scrollHeight;
+  }
  }
 }
 function fetchTaskAuditHistory(taskId,token){
