@@ -479,7 +479,7 @@ async function submitRepresentativeDecision(decision){
   if(!response.ok)throw new Error(data.error||`대표 결정 기록 실패 (HTTP ${response.status})`);
   record.representativeDecision={...data};
   if(record.audit){record.audit.events=Array.isArray(record.audit.events)?record.audit.events:[];record.audit.events.push({eventType:'REPRESENTATIVE_DECISION',stage:data.decisionLabel||decision,detail:data,createdAt:data.recordedAt||new Date().toISOString()})}
-  let savedLocally=false;for(const key of ['swAIOfficeTaskHistory','swAIOffice3DTaskHistory']){try{const history=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(history))continue;const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=compactTaskHistoryRecord(record);localStorage.setItem(key,JSON.stringify(history));savedLocally=true}}catch(_){}}if(!savedLocally)appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록에는 저장하지 못했습니다.','SYSTEM');
+  let savedLocally=false;for(const key of ['swAIOfficeTaskHistory','swAIOffice3DTaskHistory']){try{const history=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(history))continue;const index=history.findIndex(item=>item.taskId===taskId);if(index>=0){history[index]=compactTaskHistoryRecord(record);localStorage.setItem(key,JSON.stringify(history));savedLocally=true}}catch(_){}}if(!savedLocally)appendChat('시스템','서버에는 대표 결정이 기록되었지만 이 기기의 업무 기록에는 저장하지 못했습니다.');
   document.getElementById('representativeAccessToken').value='';renderRepresentativeDecision(record);
   appendChat('대표 결정',`${data.decisionLabel||decision} 기록 완료\n업무 ID: ${taskId}\n${data.message||''}\n${data.attributionNote||''}`);
  }catch(error){appendChat('대표 결정 오류',error.message||String(error));approve.disabled=false;reject.disabled=false}
