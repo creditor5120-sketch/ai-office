@@ -1227,13 +1227,7 @@ function renderRosterStrip() {
       selectedEmployee = emp;
       renderRightPanelEmployee();
       renderRosterStrip();
-      const act = actors.find(a => String(a.emp.id) === String(emp.id));
-      if (act) {
-        const wp = WAYPOINTS[Math.floor(Math.random() * WAYPOINTS.length)];
-        act.targetX = wp.x;
-        act.targetZ = wp.z;
-        act.pauseTimer = 0;
-      }
+      // 직원 선택은 대화 상대만 바꾸며 캐릭터 위치에는 영향을 주지 않는다.
     });
     strip.appendChild(card);
   });
@@ -1515,38 +1509,26 @@ function renderScene(nowSec) {
 }
 
 function updateActors(dt) {
-  actors.forEach((ac, idx) => {
+  actors.forEach(ac => {
     if (ac.pauseTimer > 0) {
-      ac.pauseTimer -= dt;
+      ac.pauseTimer = Math.max(0, ac.pauseTimer - dt);
       return;
     }
-    if (ac.state === 'working') {
-      ac.workTimer -= dt;
-      if (ac.workTimer <= 0) {
-        const corridor = COMMON_WAYPOINTS[(idx + Math.floor(nowMotionClock / 8)) % COMMON_WAYPOINTS.length];
-        ac.targetX = corridor.x;
-        ac.targetZ = corridor.z;
-        ac.state = 'walking';
-      }
-      return;
-    }
+    // 업무가 끝나지 않은 직원은 지정된 업무 위치에서 대기한다.
+    // 업무와 무관한 복도 순회나 무작위 이동은 하지 않는다.
+    if (ac.state === 'working') return;
     const dx = ac.targetX - ac.x;
     const dz = ac.targetZ - ac.z;
     const dist = Math.hypot(dx, dz);
     if (dist < 0.09) {
-      const atDesk = Math.hypot(ac.x - ac.deskX, ac.z - ac.deskZ) < 0.18;
-      if (atDesk) {
-        ac.state = 'working';
-        ac.workTimer = 7 + (idx % 6) * 3;
-      } else {
-        ac.targetX = ac.deskX;
-        ac.targetZ = ac.deskZ;
-      }
-    } else {
-      const step = Math.min(dist, ac.speed * dt);
-      ac.x += (dx / dist) * step;
-      ac.z += (dz / dist) * step;
+      ac.x = ac.targetX;
+      ac.z = ac.targetZ;
+      ac.state = 'working';
+      return;
     }
+    const step = Math.min(dist, ac.speed * dt);
+    ac.x += (dx / dist) * step;
+    ac.z += (dz / dist) * step;
   });
 }
 let nowMotionClock = 0;
@@ -1765,12 +1747,32 @@ function syncEmployeeStates(data, taskId) {
     if (!employee) return;
     const rawStatus = value.status ?? value.state ?? value.currentStatus ?? stage;
     const detail = value.detail ?? value.description ?? value.task ?? stage;
+    const status = normalizeEmployeeStatus(rawStatus, stage);
     states[employee.id] = {
-      status: normalizeEmployeeStatus(rawStatus, stage),
+      status,
       detail: String(detail).slice(0, 500),
       taskId,
       updatedAt: now
     };
+
+    // 서버가 전달한 실제 업무 상태에 따라 직원의 목적지를 정한다.
+    const actor = actors.find(item => String(item.emp.id) === String(employee.id));
+    if (actor) {
+      const isCollaboration = status === '협업 중';
+      if (isCollaboration) {
+        const index = Math.max(0, employeeDirectory.findIndex(item => String(item.id) === String(employee.id)));
+        const meetingPoint = COMMON_WAYPOINTS[index % COMMON_WAYPOINTS.length];
+        actor.targetX = meetingPoint.x;
+        actor.targetZ = meetingPoint.z;
+        actor.activityTarget = 'meeting';
+      } else {
+        actor.targetX = actor.deskX;
+        actor.targetZ = actor.deskZ;
+        actor.activityTarget = 'desk';
+      }
+      actor.pauseTimer = 0;
+      actor.state = 'walking';
+    }
   }
 
   function walk(value, depth = 0) {
