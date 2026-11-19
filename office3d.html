@@ -354,7 +354,7 @@ async function submitSelectedTask(value){
  }catch(error){
   const failedStates=readEmployeeStates();
   failedStates[p.id]={...(failedStates[p.id]||{}),status:'오류',detail:(error.message||String(error)).slice(0,240),taskId,updatedAt:new Date().toISOString()};
-  localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(failedStates));recordEmployeeHistory(p.id,failedStates[p.id]);refreshStaffCards();
+  writeEmployeeStates(failedStates);recordEmployeeHistory(p.id,failedStates[p.id]);refreshStaffCards();
   updateChatBubble(pending,'처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId);
  }
 }
