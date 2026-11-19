@@ -1814,6 +1814,7 @@ function syncEmployeeStates(data, taskId) {
   };
   localStorage.setItem(EMPLOYEE_STATE_KEY, JSON.stringify(states));
   renderRosterStrip();
+  if (selectedEmployee) renderRightPanelEmployee();
   refreshOfficeActivity();
 }
 
