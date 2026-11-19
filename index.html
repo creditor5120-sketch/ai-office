@@ -1056,7 +1056,7 @@
     }
 
     function renderRosters() {
-      // 상단/캔버스 29 karyawan 표기 + 실제 인원 수 병기
+      // 상단과 캔버스에 등록 직원 수 표시
       const actualCount = state.staff.length;
       document.getElementById('headerStaffBadge').textContent = `등록 직원 29명 (${actualCount}명)`;
       document.getElementById('canvasAktifBadge').innerHTML =
