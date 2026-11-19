@@ -1860,6 +1860,7 @@ function syncEmployeeStates(data, taskId) {
     // 서버가 전달한 실제 업무 상태에 따라 직원의 목적지를 정한다.
     const actor = actors.find(item => String(item.emp.id) === String(employee.id));
     if (actor) {
+      actor.activityStatus = status;
       const isCollaboration = status === '협업 중';
       if (isCollaboration) {
         const index = Math.max(0, employeeDirectory.findIndex(item => String(item.id) === String(employee.id)));
