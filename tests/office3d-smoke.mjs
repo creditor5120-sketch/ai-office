@@ -56,6 +56,21 @@ try {
   const backLink = await page.locator('header a.action').getAttribute('href');
   if (backLink !== './index.html') throw new Error(`Unexpected 2D navigation target: ${backLink}`);
 
+  await page.locator('header a.action').click();
+  await page.waitForURL('**/index.html', { timeout: 15000 });
+  await page.locator('.office-name').waitFor({ state: 'visible', timeout: 10000 });
+  const twoDName = (await page.locator('.office-name').innerText()).trim();
+  if (twoDName !== 'SW AI OFFICE') throw new Error(`Unexpected 2D office title: ${twoDName}`);
+  const forwardLink = page.locator('a[href="./office3d.html"]').first();
+  if (await forwardLink.count() !== 1) throw new Error('2D page is missing the 3D office navigation link');
+  await forwardLink.click();
+  await page.waitForURL('**/office3d.html', { timeout: 15000 });
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('#loading');
+    return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
+  }, { timeout: 45000 });
+  const reentryError = await page.locator('#loading').innerText().catch(() => '');
+  if (reentryError.includes('초기화 오류')) throw new Error('3D re-entry failed: ' + reentryError);
   if (pageErrors.length) throw new Error('Browser page errors: ' + pageErrors.join(' | '));
   console.log(JSON.stringify({
     result: 'PASS',
@@ -65,6 +80,8 @@ try {
     selectedStaff: selectedName,
     detailViewStaff: detailCount,
     navigationTo2D: backLink,
+    twoDTitle: twoDName,
+    navigationBackTo3D: './office3d.html',
     pageErrors
   }, null, 2));
 } finally {
