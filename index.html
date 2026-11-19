@@ -675,7 +675,10 @@ html,body{background:#eaf0ff;color:var(--ink);font-family:'NanumSquare',Inter,sy
 .top-btn.active,.top-btn:hover{background:#4d79ff;border-color:#4d79ff;color:#fff}
 .main-grid{grid-template-columns:minmax(0,1fr) 340px;gap:12px;padding:12px}
 .office-stage{border:1px solid #d5def3;border-radius:18px;background:linear-gradient(145deg,#dbe7ff,#f4f7ff);box-shadow:0 12px 32px #273e761c}
-#officeCanvas{background:linear-gradient(180deg,#d9e5ff 0%,#f4f7ff 35%,#e8efff 100%)}
+#officeCanvas{background:transparent;opacity:0}
+.three-office-renderer{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+.office-stage{isolation:isolate}
+.office-nav,.active-badge,.stage-bottom-bar{z-index:2}
 .active-badge{top:14px;left:16px;background:#ffffffed;border:1px solid #d8e1f5;border-radius:12px;color:#1b9b69;padding:8px 12px;box-shadow:0 3px 12px #263b6712}
 .stage-bottom-bar{left:16px;right:16px;bottom:14px}
 .hint-chip{background:#ffffffeb;border:1px solid #d8e1f5;border-radius:10px;color:#53617e;padding:7px 10px}
@@ -839,6 +842,7 @@ textarea#request{background:#f8faff;border-radius:9px;padding:9px;min-height:64p
 <footer class="roster-strip" id="rosterStrip" aria-label="직원 카드 목록"></footer>
 
 <script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 let employeeDirectory = [];
 try {
   const mod = await import('./employees.js');
@@ -990,7 +994,175 @@ let lastY = 0;
 const canvasHits = [];
 
 const officeCanvas = document.getElementById('officeCanvas');
+
 const ctx = officeCanvas.getContext('2d');
+officeCanvas.style.opacity = '0';
+
+// 실제 3D 렌더러: 기존 업무 데이터와 직원 이동 로직을 그대로 사용한다.
+const threeScene = new THREE.Scene();
+threeScene.background = new THREE.Color('#dce8fa');
+threeScene.fog = new THREE.Fog('#dce8fa', 22, 42);
+const threeCamera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+const threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+threeRenderer.domElement.className = 'three-office-renderer';
+threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+threeRenderer.shadowMap.enabled = true;
+threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+threeRenderer.outputColorSpace = THREE.SRGBColorSpace;
+threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+threeRenderer.toneMappingExposure = 1.12;
+officeCanvas.parentElement.appendChild(threeRenderer.domElement);
+
+threeScene.add(new THREE.HemisphereLight(0xffffff, 0x8392a8, 2.0));
+const keyLight = new THREE.DirectionalLight(0xfff4df, 2.4);
+keyLight.position.set(-7, 13, -8);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+threeScene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xd7e5ff, 0.8);
+fillLight.position.set(8, 8, 7);
+threeScene.add(fillLight);
+
+const officeRoot = new THREE.Group();
+threeScene.add(officeRoot);
+const actorObjects = new Map();
+const actorPickTargets = [];
+const threeRaycaster = new THREE.Raycaster();
+const threePointer = new THREE.Vector2();
+const mat = (color, roughness=0.82, metalness=0) => new THREE.MeshStandardMaterial({color, roughness, metalness});
+const floorMat = mat('#e8edf1');
+const wallMat = new THREE.MeshStandardMaterial({color:'#dce7ee', roughness:.48, transparent:true, opacity:.72});
+const trimMat = mat('#9eafbd');
+const woodMat = mat('#b99063');
+const darkMat = mat('#26364a');
+const screenMat = new THREE.MeshStandardMaterial({color:'#17283d', emissive:'#132d48', emissiveIntensity:.65, roughness:.28});
+const addBox = (parent, x,y,z,w,h,d, material, cast=true, receive=true) => {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), material);
+  mesh.position.set(x,y+h/2,z); mesh.castShadow=cast; mesh.receiveShadow=receive; parent.add(mesh); return mesh;
+};
+function addFloorLabel(label,x,z,color='#52647b'){
+  const c=document.createElement('canvas'); c.width=512; c.height=128;
+  const g=c.getContext('2d'); g.clearRect(0,0,512,128);
+  g.fillStyle=color; g.font='bold 46px NanumSquare, sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(label,256,64);
+  const tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace;
+  const m=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false});
+  const p=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.55),m); p.rotation.x=-Math.PI/2; p.position.set(x,.018,z); officeRoot.add(p);
+}
+function buildOffice3D(){
+  addBox(officeRoot,0,-.18,0,16.2,.18,10.2,mat('#d4dde5'));
+  addBox(officeRoot,0,-.02,0,15.8,.05,9.8,floorMat,false,true);
+  // 구역별 바닥 타일과 이름
+  ZONES.forEach((z,i)=>{
+    const w=z.x2-z.x1, d=z.z2-z.z1, cx=(z.x1+z.x2)/2, cz=(z.z1+z.z2)/2;
+    const colors=['#f1e8da','#e9edf4','#e6f0ef','#f2ebdf','#e6edf7','#f1e9df','#e7eef0','#eaf0e8','#f0e9e2','#e9e8f2'];
+    addBox(officeRoot,cx,.005,cz,w-.05,.018,d-.05,mat(colors[i]||'#edf0f4'),false,true);
+    addFloorLabel(z.name,cx,cz,'#77869a');
+  });
+  // 외곽 벽: 낮은 유리 벽과 진한 프레임
+  addBox(officeRoot,0,0,-4.92,16,.92,.10,wallMat);
+  addBox(officeRoot,0,0,4.92,16,.92,.10,wallMat);
+  addBox(officeRoot,-7.98,0,0,.10,.92,9.8,wallMat);
+  addBox(officeRoot,7.98,0,0,.10,.92,9.8,wallMat);
+  // 실내 구획은 시야를 가리지 않는 낮은 파티션으로 표현
+  [[-4.95,-4.0,3.7],[-2.15,-4.0,3.7],[1.25,-4.0,3.7],[4.55,-4.0,3.7],[-4.95,2.45,4.35],[-1.85,2.45,4.35],[2.2,2.45,4.35],[5.05,2.45,4.35]].forEach(([x,z,len])=>{
+    addBox(officeRoot,x,0,z,.055,.72,len,wallMat);
+  });
+  [[-6.35,-1.0,2.5],[-3.55,-1.0,2.5],[-.45,-1.0,3.0],[2.9,-1.0,2.5],[6.0,-1.0,2.5]].forEach(([x,z,len])=>{
+    addBox(officeRoot,x,0,z,len,.72,.055,wallMat);
+  });
+  // 책상, 모니터, 의자
+  WORKSTATIONS.forEach((ws,i)=>{
+    addBox(officeRoot,ws.x,0,ws.z,.98,.12,.58,woodMat);
+    addBox(officeRoot,ws.x-.28,0,ws.z+.22,.08,.72,.08,trimMat);
+    addBox(officeRoot,ws.x+.28,0,ws.z+.22,.08,.72,.08,trimMat);
+    addBox(officeRoot,ws.x, .12, ws.z-.18,.48,.34,.055,darkMat);
+    addBox(officeRoot,ws.x,.47,ws.z-.145,.38,.23,.018,screenMat,false,false);
+    addBox(officeRoot,ws.x,.12,ws.z-.08,.08,.10,.08,trimMat);
+    addBox(officeRoot,ws.x,0,ws.z+.78,.48,.10,.48,mat('#64748b'));
+    addBox(officeRoot,ws.x,0,ws.z+.98,.10,.42,.10,darkMat);
+  });
+  // 대표실 소파와 원형 테이블, 회의실 테이블, 카페테리아
+  addBox(officeRoot,-6.45,0,-2.15,1.55,.42,.62,mat('#536b86'));
+  addBox(officeRoot,-6.45,.42,-2.42,1.55,.42,.18,mat('#536b86'));
+  const table=new THREE.Mesh(new THREE.CylinderGeometry(.62,.62,.12,32),woodMat); table.position.set(-5.7,.55,-1.55); officeRoot.add(table);
+  addBox(officeRoot,-.45,0,-2.7,2.0,.16,1.0,woodMat);
+  for(let i=0;i<6;i++){const a=i*Math.PI/3; addBox(officeRoot,-.45+Math.cos(a)*1.28,0,-2.7+Math.sin(a)*.78,.38,.42,.38,mat('#64748b'));}
+  [[2.1,-3.6],[3.55,-3.6],[2.1,-2.0],[3.55,-2.0]].forEach(([x,z])=>addBox(officeRoot,x,0,z,.72,.32,.55,woodMat));
+  addBox(officeRoot,5.95,0,-2.25,1.35,.62,.52,woodMat);
+  addBox(officeRoot,6.0,.62,-2.0,1.15,.45,.06,screenMat);
+  // IT 서버 랙
+  SERVER_RACKS.forEach(sr=>{addBox(officeRoot,sr.x,0,sr.z,.48,1.2,.55,darkMat);for(let j=0;j<4;j++)addBox(officeRoot,sr.x,.18+j*.23,sr.z-.285,.22,.035,.012,mat(j%2?'#4bc4a0':'#5d9be8'),false,false);});
+  // 회의실/로비 스크린
+  addBox(officeRoot,-.45,1.15,-4.48,1.55,.92,.08,darkMat);
+  addBox(officeRoot,-.45,1.2,-4.425,1.38,.72,.018,screenMat,false,false);
+  addBox(officeRoot,6.1,1.15,-4.48,1.2,.72,.08,darkMat);
+  addBox(officeRoot,6.1,1.2,-4.425,1.05,.54,.018,screenMat,false,false);
+}
+function makeActor3D(ac){
+  const group=new THREE.Group(); group.userData.employee=ac.emp;
+  const skin=mat(ac.skin), hair=mat(ac.hair), shirt=mat(ac.color), pants=mat('#29394e'), shoe=mat('#182536');
+  const part=(x,y,z,w,h,d,m)=>addBox(group,x,y,z,w,h,d,m,true,true);
+  part(0,.30,0,.36,.40,.24,shirt);
+  part(-.245,.28,0,.13,.34,.15,shirt); part(.245,.28,0,.13,.34,.15,shirt);
+  part(-.245,.13,-.015,.13,.10,.15,skin); part(.245,.13,-.015,.13,.10,.15,skin);
+  part(-.095,0,.015,.14,.30,.15,pants); part(.095,0,.015,.14,.30,.15,pants);
+  part(-.095,0,-.045,.15,.10,.23,shoe); part(.095,0,-.045,.15,.10,.23,shoe);
+  part(0,.70,0,.34,.32,.30,skin);
+  part(0,.91,0,.36,.12,.32,hair);
+  if(ac.hairStyle===1||ac.hairStyle===3){part(-.15,.77,0,.07,.22,.31,hair);part(.15,.77,0,.07,.22,.31,hair);}
+  if(ac.hairStyle===2)part(0,.99,0,.20,.08,.20,hair);
+  const eye=mat('#20242a'), white=mat('#ffffff'), mouth=mat('#8b4d42');
+  part(-.075,.73,-.154,.045,.05,.018,eye);part(.075,.73,-.154,.045,.05,.018,eye);
+  part(0,.65,-.158,.10,.018,.018,mouth);
+  const labelCanvas=document.createElement('canvas');labelCanvas.width=320;labelCanvas.height=80;
+  const lg=labelCanvas.getContext('2d');lg.fillStyle='rgba(255,255,255,.94)';lg.strokeStyle='#b8c7db';lg.lineWidth=4;
+  lg.beginPath();lg.roundRect(8,8,304,64,16);lg.fill();lg.stroke();
+  lg.fillStyle='#233654';lg.font='bold 34px NanumSquare,sans-serif';lg.textAlign='center';lg.textBaseline='middle';lg.fillText(ac.emp.name,160,41);
+  const tex=new THREE.CanvasTexture(labelCanvas);tex.colorSpace=THREE.SRGBColorSpace;
+  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  sprite.scale.set(1.05,.26,1);sprite.position.set(0,1.25,0);group.add(sprite);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.34,.025,8,40),new THREE.MeshBasicMaterial({color:'#f0b429'}));
+  ring.rotation.x=Math.PI/2;ring.position.y=.035;ring.visible=false;group.add(ring);
+  group.userData.ring=ring;
+  officeRoot.add(group); actorObjects.set(String(ac.emp.id),group);
+  actorPickTargets.push(group);
+}
+buildOffice3D();
+actors.forEach(makeActor3D);
+function updateThreeOffice(){
+  const w=Math.max(280,officeCanvas.parentElement.clientWidth),h=Math.max(240,officeCanvas.parentElement.clientHeight);
+  if(threeRenderer.domElement.width!==Math.floor(w*threeRenderer.getPixelRatio())||threeRenderer.domElement.height!==Math.floor(h*threeRenderer.getPixelRatio())){
+    threeRenderer.setSize(w,h,false); threeCamera.aspect=w/h; threeCamera.updateProjectionMatrix();
+  }
+  const target=new THREE.Vector3(-panX/zoom*.12, .35+panY/zoom*.08, 0);
+  const radius=Math.max(9,Math.min(30,30-(zoom-24)*.28));
+  if(view2D){threeCamera.position.set(target.x,.35+radius*.9,target.z+.01);threeCamera.up.set(0,0,-1);}
+  else{
+    threeCamera.up.set(0,1,0);
+    threeCamera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);
+  }
+  threeCamera.lookAt(target);
+  actors.forEach(ac=>{
+    const g=actorObjects.get(String(ac.emp.id)); if(!g)return;
+    g.position.set(ac.x,0,ac.z);
+    g.rotation.y=ac.state==='walking'?Math.atan2(ac.targetX-ac.x,ac.targetZ-ac.z):0;
+    const ring=g.userData.ring; if(ring)ring.visible=!!(selectedEmployee&&String(selectedEmployee.id)===String(ac.emp.id));
+    const bob=ac.state==='working'?0:Math.abs(Math.sin(nowMotionClock*6+ac.phase))*.025;
+    g.position.y=bob;
+  });
+  threeRenderer.render(threeScene,threeCamera);
+}
+function pickThreeEmployee(clientX,clientY){
+  const rect=threeRenderer.domElement.getBoundingClientRect();
+  threePointer.set(((clientX-rect.left)/rect.width)*2-1,-((clientY-rect.top)/rect.height)*2+1);
+  threeRaycaster.setFromCamera(threePointer,threeCamera);
+  const hits=threeRaycaster.intersectObjects(actorPickTargets,true);
+  const root=hits.find(h=>h.object.parent?.userData?.employee||h.object.parent?.parent?.userData?.employee);
+  if(!root)return null;
+  let node=root.object; while(node&&!node.userData.employee)node=node.parent;
+  return node?.userData.employee||null;
+}
+
 
 function updateSendButtonState() {
   sendButton.classList.toggle('ready', Boolean(requestBox.value.trim()));
@@ -1375,6 +1547,7 @@ function loop(now) {
   nowMotionClock = now / 1000;
   updateActors(dt);
   renderScene(now / 1000);
+  updateThreeOffice();
   requestAnimationFrame(loop);
 }
 
@@ -1383,6 +1556,7 @@ function resizeOfficeCanvas() {
   if (!parent) return;
   officeCanvas.width = Math.max(280, parent.clientWidth);
   officeCanvas.height = Math.max(240, parent.clientHeight);
+  if (threeRenderer) { threeRenderer.setSize(Math.max(280,parent.clientWidth),Math.max(240,parent.clientHeight),false); threeCamera.aspect=Math.max(280,parent.clientWidth)/Math.max(240,parent.clientHeight); threeCamera.updateProjectionMatrix(); }
 }
 
 officeCanvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -1448,7 +1622,8 @@ function finishPointer(e) {
     const rect = officeCanvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    const hit = canvasHits.find(h =>
+    const picked = pickThreeEmployee(e.clientX,e.clientY);
+    const hit = picked ? {emp:picked} : canvasHits.find(h =>
       (mx >= h.x && mx <= h.x + h.w && my >= h.y && my <= h.y + h.h) ||
       Math.hypot(mx - h.cx, my - h.cy) <= h.r
     );
