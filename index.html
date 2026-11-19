@@ -650,7 +650,7 @@
     <div class="topbar-right">
       <a class="btn" href="./office3d.html" style="text-decoration:none;display:inline-flex;align-items:center;">3D 사무실 열기</a>
       <button id="toggleLayoutModeBtn" class="btn" type="button">좌측 직원 목록 보기</button>
-      <span id="headerStaffBadge" class="pill">등록 직원 29명</span>
+      <span id="headerStaffBadge" class="pill">전체 구성원 33명</span>
       <span class="pill online">● 접속 중</span>
       <button id="testRetryBtn" class="btn" type="button">오류 시뮬레이션</button>
       <button id="logoutBtn" class="btn" type="button">로그아웃</button>
@@ -664,7 +664,7 @@
         <div class="map-header-strip">
           <div id="canvasAktifBadge" class="aktif-badge">
             <span class="dot"></span>
-            <span>등록 직원 29명</span>
+            <span>전체 구성원 33명</span>
           </div>
           <span id="rosterCountNote" style="font-size:11.5px;font-weight:700;color:#584c40;"></span>
         </div>
@@ -749,7 +749,7 @@
       { name: '레오', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '시스템관리' },
       { name: '조이', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '데이터관리' },
       { name: '토니', dept: '기술·IT팀', role: '전문 직원', floor: 2, status: 'idle', progress: 0, note: '보안관리' }
-    ];;
+    ];
 
     const state = {
       layoutMode: 'map', // 'map' | 'list'
@@ -888,8 +888,8 @@
             person.retries.quota = 0;
             if (person.status === 'error') {
               person.status = 'idle';
-              person.badgeText = 'idle';
-              person.statusText = `Idle - ${person.note}`;
+              person.badgeText = '대기';
+              person.statusText = `대기 중 · ${person.note}`;
             }
           });
           const count = state.preservedQueue.length;
@@ -978,8 +978,8 @@
         } else {
           sel.progress = Math.min(100, sel.progress + 5);
           sel.status = 'idle';
-          sel.badgeText = 'idle';
-          sel.statusText = `Idle - ${sel.note}`;
+          sel.badgeText = '대기';
+          sel.statusText = `대기 중 · ${sel.note}`;
           sel.messages.push({
             sender: sel.name,
             role: sel.role,
@@ -1033,8 +1033,8 @@
         model: 'gpt-5-mini',
         progress: 0,
         status: 'idle',
-        statusText: 'Idle - 신규 추가 직원 대기 중',
-        badgeText: 'idle',
+        statusText: '대기 중 · 신규 추가 직원 대기',
+        badgeText: '대기',
         floor: state.floor,
         x: 0.35 + ((idx * 0.08) % 0.35),
         y: 0.35 + ((idx * 0.07) % 0.35),
