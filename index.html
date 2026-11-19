@@ -578,7 +578,6 @@ body.detail-open .detail-drawer {
 <body>
 <header class="top-bar">
   <div class="top-left">
-    <div class="brand-tag">TEAM.AI.ID</div>
     <div class="office-title-group">
       <div class="office-title">SW AI 사무실</div>
       <div class="office-sub">AI 가상 사무실</div>
@@ -603,7 +602,6 @@ body.detail-open .detail-drawer {
         <span class="hint-chip">휠: 확대/축소</span>
       </div>
       <div class="view-group">
-        <button type="button" class="view-btn active" id="floor1Btn">1층</button>
         <button type="button" class="view-btn" id="view2dBtn">2D</button>
         <button type="button" class="view-btn active" id="view3dBtn">3D</button>
       </div>
@@ -1135,12 +1133,7 @@ function resetCamera() {
 }
 
 document.getElementById('resetViewBtn').addEventListener('click', resetCamera);
-document.getElementById('floor1Btn').addEventListener('click', () => {
-  view2D = false;
-  document.getElementById('view2dBtn').classList.remove('active');
-  document.getElementById('view3dBtn').classList.add('active');
-  resetCamera();
-});
+
 document.getElementById('view2dBtn').addEventListener('click', () => {
   view2D = true;
   document.getElementById('view2dBtn').classList.add('active');
