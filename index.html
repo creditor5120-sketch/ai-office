@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,343 +5,1080 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SW AI OFFICE</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
- 
 <style>
-/* 공통 화면 크기 및 레이아웃 */
 * {
   box-sizing: border-box;
 }
 
 body {
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: clamp(12px, 3vw, 28px);
-  font-family: 'NanumSquare', sans-serif;
-}
-
-.card {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-textarea {
-  min-height: 150px;
-  resize: vertical;
-  font-size: 16px;
-}
-
-button {
-  min-height: 44px;
-  font-size: 15px;
-  touch-action: manipulation;
-}
-
-#response,
-#deliverableContent {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-/* 결과물 도구 버튼 */
-#deliverableCard > div:first-child {
-  flex-wrap: wrap;
-}
-
-#deliverableCard > div:first-child button {
-  width: auto;
-  flex: 0 1 auto;
-}
-
-/* 아이패드 및 태블릿 */
-@media (max-width: 1024px) {
-  body {
-    padding: 18px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-}
-
-/* 스마트폰 및 좁은 화면 */
-@media (max-width: 600px) {
-  body {
-    padding: 10px;
-  }
-
-  h1 {
-    font-size: 25px;
-  }
-
-  .card {
-    padding: 14px;
-    margin: 10px 0;
-  }
-
-  .card h2 {
-    font-size: 20px;
-  }
-
-  .card h3 {
-    font-size: 17px;
-  }
-
-  #deliverableCard > div:first-child {
-    flex-direction: column;
-    align-items: stretch !important;
-  }
-
-  #deliverableCard > div:first-child button {
-    width: 100%;
-  }
-
-    textarea {
-    min-height: 130px;
-  }
-}
-
-html,
-body,
-button,
-input,
-select,
-textarea {
-}
-
-body {
   margin: 0;
-  background: #101827;
-  color: white;
-  padding: 20px;
-}
-  
-h1 {
-  color: #60a5fa;
-}
-
-.card {
-  background: #243247;
-  padding: 20px;
-  margin: 12px 0;
-  border-radius: 12px;
+  min-height: 100vh;
+  background: #efe7d6;
+  color: #2d261e;
+  font-family: 'NanumSquare', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
 }
 
-button {
-  background: #2563eb;
-  color: white;
-  border: 0;
-  padding: 13px;
-  border-radius: 8px;
+/* 상단 헤더 (참고 이미지 스타일) */
+.top-header {
+  height: 56px;
+  background: #fffaf0;
+  border-bottom: 1px solid #dfd3bc;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-tag {
+  background: #8c5a2b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.brand-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #2d261e;
+  white-space: nowrap;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: #7c6d5b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.status-pill {
+  background: #f6efe1;
+  border: 1px solid #e2d5be;
+  color: #2e7d32;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.mode-btn {
+  background: #fffaf0;
+  color: #3b3126;
+  border: 1px solid #cbbba0;
+  border-radius: 7px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mode-btn.active {
+  background: #8c5a2b;
+  color: #fff;
+  border-color: #8c5a2b;
+}
+
+/* 참고 이미지 기준 2컬럼 메인 영역 */
+.workspace-shell {
+  display: grid;
+  grid-template-columns: 1.48fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  min-height: 540px;
+}
+
+body.list-mode .stage-column {
+  display: none;
+}
+
+body.list-mode .workspace-shell {
+  grid-template-columns: 1fr;
+}
+
+.stage-column {
+  background: #f7f0e2;
+  border: 1px solid #dfd3bc;
+  border-radius: 10px;
+  position: relative;
+  min-height: 460px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#officeCanvas {
   width: 100%;
-  margin-top: 10px;
-  box-sizing: border-box;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+
+#officeCanvas:active {
+  cursor: grabbing;
+}
+
+.stage-top-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.stage-badge {
+  pointer-events: auto;
+  background: rgba(255, 250, 240, 0.95);
+  border: 1px solid #dfd3bc;
+  color: #2e7d32;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.stage-bottom-bar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+
+.stage-hint {
+  pointer-events: auto;
+  background: rgba(255, 250, 240, 0.95);
+  border: 1px solid #dfd3bc;
+  color: #5d5040;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.view-toggle-group {
+  pointer-events: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.view-toggle-btn {
+  background: #fffaf0;
+  color: #3b3126;
+  border: 1px solid #cbbba0;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
 }
 
-button:disabled {
-  background: #64748b;
-  cursor: wait;
+.view-toggle-btn.active {
+  background: #8c5a2b;
+  color: #fff;
+  border-color: #8c5a2b;
+}
+
+/* 우측 프로필 & 업무 지시 패널 */
+.right-column {
+  background: #fffaf0;
+  border: 1px solid #dfd3bc;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.assignee-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eadfc9;
+}
+
+.assignee-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #8c5a2b;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.assignee-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #2d261e;
+}
+
+.assignee-role {
+  font-size: 12px;
+  color: #7c6d5b;
+  margin-top: 2px;
+}
+
+.assignee-status {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-top: 3px;
+}
+
+.token-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4f4335;
+  margin-bottom: 4px;
+}
+
+.field-note {
+  font-size: 11px;
+  color: #7c6d5b;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+input[type="password"],
+input[type="text"],
+textarea {
+  width: 100%;
+  border: 1px solid #d5c5aa;
+  border-radius: 8px;
+  background: #fffdf9;
+  color: #2d261e;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
 }
 
 textarea {
-  width: 100%;
-  height: 150px;
-  box-sizing: border-box;
-  padding: 12px;
-  border-radius: 8px;
-  font: inherit;
-}
-
-#response {
-  white-space: pre-wrap;
-  line-height: 1.7;
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
-#response h1,
-#response h2,
-#response h3 {
-  color: #93c5fd;
-}
-
-#response hr {
+.action-btn {
+  width: 100%;
+  min-height: 42px;
   border: 0;
-  border-top: 1px solid #64748b;
-  margin: 18px 0;
-}
-
-.small {
-  color: #cbd5e1;
+  border-radius: 8px;
+  background: #8c5a2b;
+  color: #fff;
+  font-family: inherit;
   font-size: 14px;
+  font-weight: 700;
+  padding: 10px 14px;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
-.role {
-  color: #93c5fd;
-  font-size: 15px;
-}
-  /* 검수 결과를 읽기 쉽게 표시 */
-.structured-report {
-  padding: 16px;
-  line-height: 1.7;
+.action-btn:hover {
+  background: #734820;
 }
 
-.structured-report h3 {
-  margin: 0 0 14px;
-  font-size: 18px;
+.action-btn:disabled {
+  background: #b8aa96;
+  cursor: wait;
 }
 
-.structured-object {
+.action-btn.secondary {
+  background: #3b6e52;
+}
+
+.action-btn.secondary:hover {
+  background: #2e5841;
+}
+
+/* 하단 직원 스트립 */
+.staff-strip {
+  background: #f6efe1;
+  border-top: 1px solid #dfd3bc;
+  border-bottom: 1px solid #dfd3bc;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.staff-card {
+  min-width: 164px;
+  background: #fffaf0;
+  border: 1px solid #dfd3bc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.staff-card.active {
+  border-color: #8c5a2b;
+  background: #fff3de;
+  box-shadow: 0 0 0 1px #8c5a2b;
+}
+
+.staff-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.staff-card-meta {
+  font-size: 11px;
+  color: #7c6d5b;
+}
+
+.staff-card-state {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+/* 통일된 베이지/크림 톤 업무 상세·결과·이력 카드 */
+.detail-container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px;
   display: grid;
   gap: 12px;
 }
 
-.structured-object section {
-  padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
+.office-card {
+  background: #fffaf0;
+  border: 1px solid #dfd3bc;
+  border-radius: 10px;
+  padding: 18px 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.structured-object strong {
+.office-card h2,
+.office-card h3 {
+  margin: 0 0 10px;
+  color: #2d261e;
+  font-weight: 800;
+}
+
+.small-muted {
+  color: #7c6d5b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#response,
+#deliverableContent {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: #2d261e;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#response h1,
+#response h2,
+#response h3,
+#deliverableContent h1,
+#deliverableContent h2,
+#deliverableContent h3 {
+  color: #6b421c;
+  margin-top: 12px;
+}
+
+#response hr,
+#deliverableContent hr {
+  border: 0;
+  border-top: 1px solid #e2d5be;
+  margin: 14px 0;
+}
+
+.deliverable-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.deliverable-toolbar .tool-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-btn {
+  width: auto;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid #cbbba0;
+  border-radius: 8px;
+  background: #f6efe1;
+  color: #2d261e;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tool-btn:hover {
+  background: #eadec7;
+}
+
+.structured-report {
+  margin-top: 14px;
+  padding: 14px;
+  background: #fdf7ea;
+  border: 1px solid #e5d8bf;
+  border-radius: 9px;
+  line-height: 1.65;
+}
+
+.structured-report h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #6b421c;
+}
+
+.structured-object {
+  display: grid;
+  gap: 10px;
+}
+
+.structured-object section,
+.structured-report section {
+  padding: 11px 13px;
+  background: #fffaf0;
+  border: 1px solid #eadfc9;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.structured-object strong,
+.structured-report section > strong {
   display: block;
-  margin-bottom: 6px;
-  color: #60a5fa;
+  margin-bottom: 5px;
+  color: #7c4d20;
+  font-size: 13px;
 }
 
 .structured-list {
   display: grid;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .structured-item {
   padding: 8px 12px;
-  border-left: 3px solid #60a5fa;
-  background: rgba(255,255,255,0.04);
+  border-left: 3px solid #8c5a2b;
+  background: #fdf7ea;
+  border-radius: 0 6px 6px 0;
+}
+
+.history-btn {
+  width: 100%;
+  text-align: left;
+  background: #fdf7ea;
+  color: #2d261e;
+  border: 1px solid #dfd3bc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.history-btn:hover {
+  background: #f6ebd6;
+  border-color: #8c5a2b;
+}
+
+@media (max-width: 960px) {
+  .workspace-shell {
+    grid-template-columns: 1fr;
+  }
+  .token-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .top-header {
+    height: auto;
+    padding: 10px 12px;
+    flex-wrap: wrap;
+  }
+  .brand-title {
+    font-size: 15px;
+  }
+  .stage-column {
+    min-height: 340px;
+  }
+  .deliverable-toolbar .tool-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+  .deliverable-toolbar .tool-btn {
+    width: 100%;
+  }
 }
 </style>
 </head>
-
 <body>
-<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><a href="./office.html" style="display:inline-block;padding:10px 14px;border:1px solid #64748b;border-radius:8px;color:#bfdbfe;text-decoration:none;">가상 사무실 열기 ↗</a></div>
-
-<h1 style="font-weight: 900; font-size: 42px;">SW AI OFFICE</h1>
-
-<div class="card">
-  <h2>AI 본부장 업무실 · 알렉스</h2>
-
-  <p class="role">
-    COO · 조직 운영 및 업무 실행 총괄
-  </p>
-
-  <p class="small">
-    모든 업무는 본부장에게 지시하세요.
-    본부장은 업무를 분석하고 담당 팀과 전문 직원을 배정합니다.
-    팀 간 협업과 진행 상황을 관리하고 결과물을 검수한 후 대표에게 보고합니다.
-  </p>
-
-  <label for="officeAccessToken" class="small">서버 접속 인증</label>
-  <input
-    id="officeAccessToken"
-    type="password"
-    autocomplete="off"
-    placeholder="Cloudflare OFFICE_ACCESS_TOKEN 입력"
-    style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px;border:1px solid #64748b;background:#fff;color:#111827;font:inherit;"
-  >
-  <p class="small">인증값은 브라우저에 저장하지 않고 요청에만 사용합니다. 대화창에 인증값을 보내지 마세요.</p>
-  <label for="representativeAccessToken" class="small">대표 승인 전용 인증</label>
-  <input
-    id="representativeAccessToken"
-    type="password"
-    autocomplete="off"
-    placeholder="Cloudflare REPRESENTATIVE_ACCESS_TOKEN 입력"
-    style="width:100%;padding:12px;margin:6px 0 14px;border-radius:8px;border:1px solid #64748b;background:#fff;color:#111827;font:inherit;"
-  >
-  <p class="small">업무 처리용 인증과 별도입니다. 대표 승인·반려 시에만 사용하며 브라우저에 저장하지 않습니다.</p>
-  <textarea
-    id="request"
-    placeholder="본부장에게 업무를 지시하세요."
-  ></textarea>
-
-  <button id="sendButton">
-    본부장에게 업무 지시
-  </button>
- <button
-  id="retryTaskButton"
-  type="button"
-  style="display:none; background:#059669;"
->
-  보존된 업무 재처리
-</button>
-</div>
-
-
-<div class="card">
-  <h3>업무 처리 결과</h3>
-  <div id="response" class="report-content">
-    아직 접수된 업무가 없습니다.
+<header class="top-header">
+  <div class="brand-group">
+    <span class="brand-tag">OFFICE</span>
+    <span class="brand-title">SW AI OFFICE</span>
+    <span class="brand-sub">AI 본부장 업무실 · 단일 층 가상 사무실</span>
   </div>
-</div>
+  <div class="header-actions">
+    <span class="status-pill" id="staffCountBadge">직원 7명</span>
+    <span class="status-pill">● 온라인</span>
+    <button type="button" class="mode-btn active" id="modeSplitBtn">사무실+업무</button>
+    <button type="button" class="mode-btn" id="modeListBtn">업무 집중</button>
+  </div>
+</header>
 
-<div class="card" id="deliverableCard" style="display:none;">
-  <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-    <h3>실제 작성 결과물</h3>
-    <button id="copyDeliverable" type="button">
-      전체 복사
+<main class="workspace-shell">
+  <section class="stage-column" aria-label="3D 가상 사무실">
+    <div class="stage-top-bar">
+      <div class="stage-badge">● 단일 층 사무실 · 화분 및 카페테리아 배치</div>
+    </div>
+    <canvas id="officeCanvas"></canvas>
+    <div class="stage-bottom-bar">
+      <div class="stage-hint">
+        이름을 클릭하여 선택 · 드래그 = 회전/이동 · 오른쪽 클릭 = 슬라이드 · 스크롤 = 확대
+      </div>
+      <div class="view-toggle-group">
+        <button type="button" class="view-toggle-btn" id="btn2D">2D</button>
+        <button type="button" class="view-toggle-btn active" id="btn3D">3D</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="right-column" aria-label="AI 본부장 업무실 · 알렉스">
+    <div class="assignee-header">
+      <div class="assignee-avatar" id="selectedAvatar">알</div>
+      <div>
+        <div class="assignee-name" id="selectedName">알렉스 · 본부장</div>
+        <div class="assignee-role" id="selectedRole">AI 본부장 업무실 · 업무 분석, 배정, 총괄 및 최종 보고</div>
+        <div class="assignee-status" id="selectedStatus">대기 중 · 대표 지시 대기</div>
+      </div>
+    </div>
+
+    <div class="token-grid">
+      <div>
+        <label for="officeAccessToken" class="field-label">서버 접속 인증</label>
+        <input
+          id="officeAccessToken"
+          type="password"
+          autocomplete="off"
+          placeholder="OFFICE_ACCESS_TOKEN"
+        >
+        <div class="field-note">브라우저에 저장하지 않습니다.</div>
+      </div>
+      <div>
+        <label for="representativeAccessToken" class="field-label">대표 승인 전용 인증</label>
+        <input
+          id="representativeAccessToken"
+          type="password"
+          autocomplete="off"
+          placeholder="REPRESENTATIVE_ACCESS_TOKEN"
+        >
+        <div class="field-note">대표 승인·반려 시에만 사용합니다.</div>
+      </div>
+    </div>
+
+    <div>
+      <label for="request" class="field-label">업무 지시 내용</label>
+      <textarea
+        id="request"
+        placeholder="본부장에게 업무를 지시하세요. 본부장이 분석 후 담당 팀과 직원을 배정합니다."
+      ></textarea>
+    </div>
+
+    <button id="sendButton" type="button" class="action-btn">
+      본부장에게 업무 지시
     </button>
-<button id="downloadWord" type="button">Word 다운로드</button>
-<button id="downloadPdf" type="button">PDF 다운로드</button>
-  </div>
-  <div id="deliverableContent" class="report-content"></div>
-</div>
+    <button
+      id="retryTaskButton"
+      type="button"
+      class="action-btn secondary"
+      style="display:none;"
+    >
+      보존된 업무 재처리
+    </button>
+  </aside>
+</main>
 
-<div class="card" id="taskHistoryCard">
-  <h3>최근 업무 기록</h3>
-  <p class="small">최근 완료된 업무 최대 10건을 보관합니다.</p>
-  <div id="taskHistoryList">
-    <p class="small">아직 저장된 업무 기록이 없습니다.</p>
+<div class="staff-strip" id="staffStrip" aria-label="직원 목록"></div>
+
+<section class="detail-container">
+  <div class="office-card">
+    <h3>업무 처리 결과</h3>
+    <div id="response" class="report-content">
+      아직 접수된 업무가 없습니다.
+    </div>
   </div>
-  <div style="margin-top:16px;padding-top:12px;border-top:1px solid #475569;">
-    <label for="serverHistoryTaskId" class="small">서버 업무 이력 조회 · 업무 ID</label>
-    <input id="serverHistoryTaskId" type="text" autocomplete="off" placeholder="조회할 업무 ID 입력" style="width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #64748b;background:#fff;color:#111827;font:inherit;">
-    <button id="loadServerHistoryButton" type="button">서버 이력 조회</button>
-    <p id="serverHistoryStatus" class="small" aria-live="polite">업무 ID를 입력하면 기존 처리 이력만 조회합니다.</p>
-    <ol id="serverHistoryEvents"></ol>
+
+  <div class="office-card" id="deliverableCard" style="display:none;">
+    <div class="deliverable-toolbar">
+      <h3>실제 작성 결과물</h3>
+      <div class="tool-buttons">
+        <button id="copyDeliverable" type="button" class="tool-btn">전체 복사</button>
+        <button id="downloadWord" type="button" class="tool-btn">Word 다운로드</button>
+        <button id="downloadPdf" type="button" class="tool-btn">PDF 다운로드</button>
+      </div>
+    </div>
+    <div id="deliverableContent" class="report-content"></div>
   </div>
-</div>
-  
+
+  <div class="office-card" id="taskHistoryCard">
+    <h3>최근 업무 기록</h3>
+    <p class="small-muted">최근 완료된 업무 최대 10건을 보관합니다.</p>
+    <div id="taskHistoryList">
+      <p class="small-muted">아직 저장된 업무 기록이 없습니다.</p>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5d8bf;">
+      <label for="serverHistoryTaskId" class="field-label">서버 업무 이력 조회 · 업무 ID</label>
+      <input id="serverHistoryTaskId" type="text" autocomplete="off" placeholder="조회할 업무 ID 입력">
+      <button id="loadServerHistoryButton" type="button" class="action-btn" style="margin-top:8px;">서버 이력 조회</button>
+      <p id="serverHistoryStatus" class="small-muted" aria-live="polite" style="margin-top:8px;">업무 ID를 입력하면 기존 처리 이력만 조회합니다.</p>
+      <ol id="serverHistoryEvents" class="small-muted"></ol>
+    </div>
+  </div>
+</section>
+
 <script type="module">
-
 import employeeDirectory from './employees.js';
 
-// 기존 CEO 내부 ID는 직원 데이터 연결을 위해 유지
-// 화면과 업무상 역할은 본부장으로 변경
-const headOfOffice = employeeDirectory.find(
-  item => item.id === 'COO'
-);
+const headOfOffice = employeeDirectory.find(item => item.id === 'COO');
 
 const responseBox = document.getElementById('response');
 const sendButton = document.getElementById('sendButton');
 const requestBox = document.getElementById('request');
 const accessTokenBox = document.getElementById('officeAccessToken');
 const representativeAccessTokenBox = document.getElementById('representativeAccessToken');
-let currentWorkflowReviewData = null;
 const retryTaskButton = document.getElementById('retryTaskButton');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
- // 업무 중복 실행 방지 잠금
-let isTaskRunning = false;
-// API 오류로 중단된 업무 지시 복원
-const PENDING_TASK_KEY = 'swAIOfficeStagingPendingTask';
 
-// 최근 업무 기록 관리
+let currentWorkflowReviewData = null;
+let isTaskRunning = false;
+
+const PENDING_TASK_KEY = 'swAIOfficeStagingPendingTask';
 const TASK_HISTORY_KEY = 'swAIOfficeTaskHistory';
 const TASK_HISTORY_LIMIT = 10;
-
- 
-// 가상 사무실 직원 현황 연동
 const EMPLOYEE_STATE_KEY = 'swAIOfficeEmployeeStates';
+
 const employeeById = new Map(employeeDirectory.map(e => [String(e.id), e]));
 const employeeByName = new Map(employeeDirectory.map(e => [String(e.name), e]));
+
+// 참고 이미지 동일 톤 단일 층 사무실 (화분 및 카페테리아 소파·테이블·정수기·냉장고 배치)
+const FLOOR_STAFF = [
+  { id: 'CEO', name: '피터', role: '대표이사', area: '대표이사실', x: -3.5, z: -2.1, color: '#1e3a5f', desc: '업무 지시 및 최종 승인' },
+  { id: 'COO', name: '알렉스', role: '본부장', area: 'AI 본부장 업무실', x: -0.6, z: -2.1, color: '#3b5998', desc: '업무 분석, 배정, 총괄 및 최종 보고' },
+  { id: 'MGMT_LEAD', name: '데니스', role: '경영관리팀장', area: '경영관리팀', x: -3.2, z: 0.7, color: '#2b6cb0', desc: '경영관리 및 관리 업무' },
+  { id: 'LEGAL_LEAD', name: '렉스', role: '법무팀장', area: '법무팀', x: -0.8, z: 0.7, color: '#4a5568', desc: '계약, 법률, 분쟁 및 법무 검토' },
+  { id: 'IR_LEAD', name: '라이언', role: 'IR팀장', area: 'IR팀', x: 1.5, z: 0.7, color: '#2c5282', desc: '기업공시, IR, 투자자 대응 및 기업 분석' },
+  { id: 'GA_LEAD', name: '에이든', role: '총무팀장', area: '총무팀', x: -2.0, z: 2.8, color: '#744210', desc: '자산, 시설, 구매 및 총무 업무' },
+  { id: 'STRAT_LEAD', name: '에릭', role: '전략기획팀장', area: '전략기획팀', x: 0.5, z: 2.8, color: '#285e61', desc: '사업전략, 기획 및 시장 분석' }
+];
+
+const PLANTERS = [
+  { x: -4.8, z: -3.3 },
+  { x: -2.1, z: -3.3 },
+  { x: 0.6, z: -3.3 },
+  { x: 4.8, z: -3.3 },
+  { x: -4.8, z: 3.5 },
+  { x: 1.7, z: 3.5 },
+  { x: 4.8, z: 3.5 }
+];
+
+const CAFETERIA = {
+  bounds: { x1: 2.1, z1: -2.9, x2: 4.9, z2: 0.2 },
+  sofas: [
+    { x: 2.65, z: -2.2, w: 1.2, d: 0.44 },
+    { x: 2.65, z: -0.9, w: 1.2, d: 0.44 }
+  ],
+  tables: [
+    { x: 2.65, z: -1.55, r: 0.34 }
+  ],
+  dispenser: { x: 4.45, z: -2.35 },
+  fridge: { x: 4.45, z: -1.25 }
+};
+
+let selectedStaffId = 'COO';
+let is3D = true;
+let yaw = 0.62;
+let pitch = 0.52;
+let zoom = 54;
+let panX = 0;
+let panY = 14;
+let dragging = false;
+let dragButton = 0;
+let lastX = 0;
+let lastY = 0;
+const hitTargets = [];
+
+const officeCanvas = document.getElementById('officeCanvas');
+const ctx = officeCanvas.getContext('2d');
+
+function updateSelectedProfileHeader() {
+  const item = FLOOR_STAFF.find(s => s.id === selectedStaffId) || FLOOR_STAFF[1];
+  document.getElementById('selectedAvatar').textContent = item.name.slice(0, 1);
+  document.getElementById('selectedName').textContent = `${item.name} · ${item.role}`;
+  document.getElementById('selectedRole').textContent = `${item.area} · ${item.desc}`;
+  document.getElementById('selectedStatus').textContent = '대기 중 · 대표 지시 대기';
+}
+
+function resizeCanvas() {
+  const rect = officeCanvas.parentElement.getBoundingClientRect();
+  officeCanvas.width = Math.max(300, rect.width);
+  officeCanvas.height = Math.max(260, rect.height);
+  drawOffice();
+}
+
+function projectPt(x, y, z) {
+  const cx = officeCanvas.width * 0.5 + panX;
+  const cy = officeCanvas.height * 0.56 + panY;
+  if (!is3D) {
+    return {
+      x: cx + x * zoom * 0.85,
+      y: cy + z * zoom * 0.85 - y * zoom * 0.4
+    };
+  }
+  const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+  const x1 = x * cosY - z * sinY;
+  const z1 = x * sinY + z * cosY;
+  const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+  const y2 = y * cosP - z1 * sinP;
+  const z2 = y * sinP + z1 * cosP;
+  const isoX = (x1 - z2) * 0.86;
+  const isoY = (x1 + z2) * 0.46 - y2;
+  return {
+    x: cx + isoX * zoom * 0.72,
+    y: cy + isoY * zoom * 0.72
+  };
+}
+
+function drawPoly(pts, fill, stroke = '#8f816c', lw = 1) {
+  if (!pts.length) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+  }
+}
+
+function drawBox(x, y, z, w, h, d, topCol, leftCol, rightCol) {
+  const p001 = projectPt(x - w / 2, y, z + d / 2);
+  const p100 = projectPt(x + w / 2, y, z - d / 2);
+  const p101 = projectPt(x + w / 2, y, z + d / 2);
+  const p010 = projectPt(x - w / 2, y + h, z - d / 2);
+  const p110 = projectPt(x + w / 2, y + h, z - d / 2);
+  const p111 = projectPt(x + w / 2, y + h, z + d / 2);
+  const p011 = projectPt(x - w / 2, y + h, z + d / 2);
+
+  drawPoly([p010, p110, p111, p011], topCol);
+  drawPoly([p001, p101, p111, p011], leftCol);
+  drawPoly([p100, p101, p111, p110], rightCol);
+}
+
+function drawPlanter(x, z) {
+  drawBox(x, 0, z, 0.42, 0.34, 0.42, '#b5653b', '#8d4b29', '#733b1e');
+  drawBox(x, 0.34, z, 0.34, 0.32, 0.34, '#4e9a48', '#3a7a35', '#2d6129');
+}
+
+function drawCafeteria() {
+  const b = CAFETERIA.bounds;
+  drawPoly([
+    projectPt(b.x1, 0.01, b.z1),
+    projectPt(b.x2, 0.01, b.z1),
+    projectPt(b.x2, 0.01, b.z2),
+    projectPt(b.x1, 0.01, b.z2)
+  ], '#f7e6c4', '#cfa972', 1.5);
+
+  const labelPt = projectPt((b.x1 + b.x2) / 2, 0.05, b.z1 + 0.32);
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7a4919';
+  ctx.fillText('카페테리아', labelPt.x, labelPt.y);
+
+  CAFETERIA.sofas.forEach(s => {
+    drawBox(s.x, 0, s.z, s.w, 0.32, s.d, '#d97742', '#b85d2d', '#9a4b22');
+    drawBox(s.x, 0.32, s.z - s.d * 0.35, s.w, 0.24, s.d * 0.25, '#c96834', '#a85124', '#8a401a');
+  });
+
+  CAFETERIA.tables.forEach(t => {
+    drawBox(t.x, 0, t.z, 0.14, 0.36, 0.14, '#8d5b32', '#6e4524', '#57351a');
+    drawBox(t.x, 0.36, t.z, t.r * 2.1, 0.08, t.r * 2.1, '#fffaf0', '#dfd3bc', '#c8b99e');
+  });
+
+  drawBox(CAFETERIA.dispenser.x, 0, CAFETERIA.dispenser.z, 0.36, 0.92, 0.36, '#e3f2fd', '#90caf9', '#64b5f6');
+  drawBox(CAFETERIA.dispenser.x, 0.94, CAFETERIA.dispenser.z, 0.24, 0.26, 0.24, '#e0f7fa', '#4dd0e1', '#26c6da');
+  drawBox(CAFETERIA.fridge.x, 0, CAFETERIA.fridge.z, 0.56, 1.35, 0.52, '#f1f5f9', '#cbd5e1', '#94a3b8');
+}
+
+function drawCharacter(st) {
+  const isSel = st.id === selectedStaffId;
+  drawBox(st.x, 0, st.z, 0.42, 0.68, 0.32, st.color, st.color, '#2c2c2c');
+  drawBox(st.x, 0.68, st.z, 0.34, 0.34, 0.34, '#f4c7a1', '#e0ae86', '#c9966e');
+
+  const topPt = projectPt(st.x, 1.24, st.z);
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  const textW = ctx.measureText(st.name).width + 14;
+  const boxX = topPt.x - textW / 2;
+  const boxY = topPt.y - 18;
+
+  ctx.fillStyle = isSel ? '#8c5a2b' : '#fffaf0';
+  ctx.strokeStyle = isSel ? '#5a3715' : '#8d7b63';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(boxX, boxY, textW, 20, 5);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = isSel ? '#fff' : '#2d261e';
+  ctx.fillText(st.name, topPt.x, topPt.y - 4);
+
+  hitTargets.push({
+    id: st.id,
+    x: boxX,
+    y: boxY,
+    w: textW,
+    h: 20,
+    cx: topPt.x,
+    cy: topPt.y + 16,
+    r: 22
+  });
+}
+
+function drawOffice() {
+  hitTargets.length = 0;
+  ctx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
+
+  drawPoly([
+    projectPt(-5.4, 0, -4.0),
+    projectPt(5.4, 0, -4.0),
+    projectPt(5.4, 0, 4.1),
+    projectPt(-5.4, 0, 4.1)
+  ], '#fffaf0', '#cbbba0', 2);
+
+  const zones = [
+    { label: '대표이사실', x: -3.5, z: -3.0 },
+    { label: 'AI 본부장 업무실', x: -0.6, z: -3.0 },
+    { label: '경영관리팀', x: -3.2, z: 0.0 },
+    { label: '법무팀', x: -0.8, z: 0.0 },
+    { label: 'IR팀', x: 1.5, z: 0.0 },
+    { label: '총무팀', x: -2.0, z: 2.1 },
+    { label: '전략기획팀', x: 0.5, z: 2.1 }
+  ];
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7c6d5b';
+  zones.forEach(z => {
+    const pt = projectPt(z.x, 0.03, z.z);
+    ctx.fillText(z.label, pt.x, pt.y);
+  });
+
+  FLOOR_STAFF.forEach(s => {
+    drawBox(s.x, 0, s.z + 0.42, 0.95, 0.42, 0.52, '#e8dcc6', '#cbbba0', '#b3a286');
+  });
+
+  drawCafeteria();
+  PLANTERS.forEach(p => drawPlanter(p.x, p.z));
+  FLOOR_STAFF.forEach(s => drawCharacter(s));
+}
+
+function renderStaffStrip() {
+  const strip = document.getElementById('staffStrip');
+  strip.innerHTML = '';
+  FLOOR_STAFF.forEach(s => {
+    const card = document.createElement('div');
+    card.className = `staff-card ${s.id === selectedStaffId ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="staff-card-top">
+        <span>${s.name}</span>
+        <span class="staff-card-state">● 대기</span>
+      </div>
+      <div class="staff-card-meta">${s.role} · ${s.area}</div>
+    `;
+    card.addEventListener('click', () => {
+      selectedStaffId = s.id;
+      updateSelectedProfileHeader();
+      renderStaffStrip();
+      drawOffice();
+    });
+    strip.appendChild(card);
+  });
+}
+
+officeCanvas.addEventListener('mousedown', e => {
+  dragging = true;
+  dragButton = e.button;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+
+window.addEventListener('mouseup', e => {
+  if (!dragging) return;
+  const moved = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+  dragging = false;
+  if (moved < 5 && e.button === 0) {
+    const rect = officeCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hit = hitTargets.find(t =>
+      (mx >= t.x && mx <= t.x + t.w && my >= t.y && my <= t.y + t.h) ||
+      Math.hypot(mx - t.cx, my - t.cy) <= t.r
+    );
+    if (hit) {
+      selectedStaffId = hit.id;
+      updateSelectedProfileHeader();
+      renderStaffStrip();
+      drawOffice();
+    }
+  }
+});
+
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  if (dragButton === 2 || e.shiftKey || !is3D) {
+    panX += dx;
+    panY += dy;
+  } else {
+    yaw += dx * 0.008;
+    pitch = Math.max(0.15, Math.min(1.25, pitch + dy * 0.006));
+  }
+  drawOffice();
+});
+
+officeCanvas.addEventListener('contextmenu', e => e.preventDefault());
+officeCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom = Math.max(28, Math.min(110, zoom - e.deltaY * 0.04));
+  drawOffice();
+}, { passive: false });
+
+document.getElementById('btn2D').addEventListener('click', () => {
+  is3D = false;
+  document.getElementById('btn2D').classList.add('active');
+  document.getElementById('btn3D').classList.remove('active');
+  drawOffice();
+});
+
+document.getElementById('btn3D').addEventListener('click', () => {
+  is3D = true;
+  document.getElementById('btn3D').classList.add('active');
+  document.getElementById('btn2D').classList.remove('active');
+  drawOffice();
+});
+
+document.getElementById('modeSplitBtn').addEventListener('click', () => {
+  document.body.classList.remove('list-mode');
+  document.getElementById('modeSplitBtn').classList.add('active');
+  document.getElementById('modeListBtn').classList.remove('active');
+  resizeCanvas();
+});
+
+document.getElementById('modeListBtn').addEventListener('click', () => {
+  document.body.classList.add('list-mode');
+  document.getElementById('modeListBtn').classList.add('active');
+  document.getElementById('modeSplitBtn').classList.remove('active');
+});
+
+window.addEventListener('resize', resizeCanvas);
+updateSelectedProfileHeader();
+renderStaffStrip();
+resizeCanvas();
+
+// 쿼리 파라미터로 전달된 직원 선택 및 업무 지시 반영
+const officeParams = new URLSearchParams(window.location.search);
+const officeEmployeeId = officeParams.get('employee');
+const officeTask = officeParams.get('task') || '';
+if (officeEmployeeId) {
+  const officeEmployee = officeEmployeeId === 'CEO'
+    ? { id: 'CEO', name: '피터', position: '대표이사' }
+    : employeeDirectory.find(item => item.id === officeEmployeeId);
+  if (officeEmployee) {
+    selectedStaffId = officeEmployee.id;
+    updateSelectedProfileHeader();
+    renderStaffStrip();
+    drawOffice();
+    requestBox.value = '[가상 사무실 직원 선택 업무 요청]\n'
+      + '우선 담당 직원: ' + officeEmployee.name + ' (' + officeEmployee.position + ')\n'
+      + '선택한 직원이 직접 수행하도록 배정하고, 불가능하면 그 사유를 보고해 주세요.\n\n'
+      + officeTask;
+    requestBox.focus();
+  }
+}
 
 function normalizeEmployeeStatus(value, stage) {
   const raw = String(value || stage || '').toLowerCase();
@@ -366,10 +1102,8 @@ function syncEmployeeStates(data, taskId) {
 
   const stage = data.currentStage || data.workflow?.currentStage || '업무 처리';
   const now = new Date().toISOString();
-  const seen = new Set();
   const visited = new Set();
 
-  // 2차 최종 검수 결과를 전문 직원의 최종 상태에 우선 반영한다.
   const finalReviews = new Map(
     (Array.isArray(data.finalReviewResults) ? data.finalReviewResults : [])
       .filter(item => item && item.id != null)
@@ -408,7 +1142,6 @@ function syncEmployeeStates(data, taskId) {
       updatedAt: now,
       source: 'main-response'
     };
-    seen.add(employee.id);
   }
 
   function walk(value, depth = 0) {
@@ -442,8 +1175,6 @@ function syncEmployeeStates(data, taskId) {
 
   walk(data);
 
-  // 최종 응답(reply + workflow)이 도착하면 본부장도 보고 완료 상태로 전환한다.
-  // 중간 처리·쿼터 대기 응답에서는 완료로 오인하지 않는다.
   const isFinalReport = Boolean(data.reply && data.workflow);
   const isQuotaWaiting = data.status === 'WAITING_FOR_API_QUOTA';
   const headStatus = isQuotaWaiting
@@ -466,24 +1197,15 @@ function syncEmployeeStates(data, taskId) {
   localStorage.setItem(EMPLOYEE_STATE_KEY, JSON.stringify(states));
 }
 
-// 업무 진행 및 최종 검수 결과 표시
 function renderWorkflowReview(data) {
   currentWorkflowReviewData = data;
   const oldPanel = document.getElementById('workflowReviewPanel');
-
   if (oldPanel) oldPanel.remove();
-
   if (!data) return;
 
   const workflow = data.workflow || {};
-  const reviews = Array.isArray(data.finalReviewResults)
-    ? data.finalReviewResults
-    : [];
-
-  if (
-    !Object.keys(workflow).length &&
-    reviews.length === 0
-  ) return;
+  const reviews = Array.isArray(data.finalReviewResults) ? data.finalReviewResults : [];
+  if (!Object.keys(workflow).length && reviews.length === 0) return;
 
   const panel = document.createElement('div');
   panel.id = 'workflowReviewPanel';
@@ -495,14 +1217,11 @@ function renderWorkflowReview(data) {
 
   function addItem(label, value) {
     if (value === undefined || value === null || value === '') return;
-
     const section = document.createElement('section');
     const heading = document.createElement('strong');
     const content = document.createElement('div');
-
     heading.textContent = label;
     content.textContent = String(value);
-
     section.append(heading, content);
     panel.appendChild(section);
   }
@@ -514,20 +1233,14 @@ function renderWorkflowReview(data) {
   if (workflow.reviewGate) {
     addItem(
       '전문 직원 검수 승인',
-      workflow.reviewGate.allSpecialistsApproved === true
-        ? '전체 승인'
-        : '전체 승인 미확인'
+      workflow.reviewGate.allSpecialistsApproved === true ? '전체 승인' : '전체 승인 미확인'
     );
-
     addItem(
       '최종 결과 공개 가능 여부',
-      workflow.reviewGate.finalReleaseAllowed === true
-        ? '가능'
-        : '승인 또는 추가 확인 필요'
+      workflow.reviewGate.finalReleaseAllowed === true ? '가능' : '승인 또는 추가 확인 필요'
     );
   }
 
-  // 대표 승인·반려는 Worker D1에 별도 감사 이벤트로 기록한다.
   const decisionTaskId = String(data.taskId || '').trim();
   if (decisionTaskId) {
     const decisionBox = document.createElement('section');
@@ -535,14 +1248,13 @@ function renderWorkflowReview(data) {
     const decisionTitle = document.createElement('strong');
     decisionTitle.textContent = '대표 최종 결정';
     decisionBox.appendChild(decisionTitle);
+
     const decisionNotice = document.createElement('p');
-    decisionNotice.className = 'small';
+    decisionNotice.className = 'small-muted';
     decisionNotice.textContent = '업무 API 인증과 별도의 대표 승인 전용 인증을 추가로 확인합니다. 개인별 계정 로그인 및 신원 확인은 아직 구현되지 않았습니다.';
     decisionBox.appendChild(decisionNotice);
 
     const savedDecisionKey = 'swAIOfficeRepresentativeDecision:' + decisionTaskId;
-
-    // 브라우저 캐시는 표시의 근거로 사용하지 않는다. 서버 D1 기록만 최종 결정으로 인정한다.
     const decisionStatus = document.createElement('p');
     decisionStatus.textContent = '서버의 대표 결정 이력을 확인하고 있습니다.';
     decisionBox.appendChild(decisionStatus);
@@ -554,7 +1266,6 @@ function renderWorkflowReview(data) {
     reasonInput.rows = 3;
     reasonInput.placeholder = '반려할 경우 사유를 입력하세요.';
     reasonInput.setAttribute('aria-label', '대표 반려 사유');
-    reasonInput.style.width = '100%';
     reasonInput.style.margin = '8px 0';
     decisionBox.appendChild(reasonInput);
 
@@ -609,6 +1320,7 @@ function renderWorkflowReview(data) {
 
     const approveButton = document.createElement('button');
     approveButton.type = 'button';
+    approveButton.className = 'tool-btn';
     approveButton.textContent = '대표 승인 기록';
     approveButton.disabled = true;
     approveButton.title = workflow.reviewGate?.finalReleaseAllowed !== true
@@ -618,13 +1330,12 @@ function renderWorkflowReview(data) {
 
     const rejectButton = document.createElement('button');
     rejectButton.type = 'button';
+    rejectButton.className = 'tool-btn';
     rejectButton.textContent = '대표 반려 기록';
-    rejectButton.style.marginLeft = '8px';
     rejectButton.disabled = true;
     rejectButton.addEventListener('click', () => submitRepresentativeDecision('REJECT'));
     decisionBox.append(approveButton, rejectButton);
 
-    // 서버 조회 성공 시에만 결정 상태를 확정한다. 로컬 캐시가 서버 기록을 가리지 못하게 한다.
     const accessTokenForHistory = accessTokenBox.value.trim();
     if (accessTokenForHistory) {
       fetch('https://ai-office-api.creditor5120.workers.dev/', {
@@ -651,8 +1362,6 @@ function renderWorkflowReview(data) {
           decisionMessage.textContent = '서버에 저장된 기존 결정입니다.';
           return;
         }
-
-        // 서버에 결정이 없다는 응답을 받은 경우에만 오래된 로컬 캐시를 정리한다.
         localStorage.removeItem(savedDecisionKey);
         decisionStatus.textContent = '아직 대표 결정이 기록되지 않았습니다.';
         approveButton.disabled = workflow.reviewGate?.finalReleaseAllowed !== true;
@@ -671,11 +1380,8 @@ function renderWorkflowReview(data) {
 
   reviews.forEach((review, index) => {
     const section = document.createElement('section');
-
     const heading = document.createElement('strong');
-    heading.textContent =
-      review.name || `최종 검수 ${index + 1}`;
-
+    heading.textContent = review.name || `최종 검수 ${index + 1}`;
     section.appendChild(heading);
 
     const details = [
@@ -689,26 +1395,23 @@ function renderWorkflowReview(data) {
 
     details.forEach(([label, value]) => {
       if (value === undefined || value === null || value === '') return;
-
       const line = document.createElement('p');
-      line.textContent =
-        `${label}: ${Array.isArray(value) ? value.join(', ') : value}`;
-
+      line.textContent = `${label}: ${Array.isArray(value) ? value.join(', ') : value}`;
       section.appendChild(line);
     });
-
     panel.appendChild(section);
   });
 
-  // 서버 D1에 저장된 단계별 감사 이력을 표시한다.
   if (decisionTaskId) {
     const historySection = document.createElement('section');
     const historyHeading = document.createElement('strong');
     historyHeading.textContent = '서버 업무 처리 이력';
     historySection.appendChild(historyHeading);
+
     const historyStatus = document.createElement('p');
     historyStatus.textContent = '서버 이력을 확인하고 있습니다.';
     historySection.appendChild(historyStatus);
+
     const historyList = document.createElement('ol');
     historySection.appendChild(historyList);
     panel.appendChild(historySection);
@@ -760,8 +1463,8 @@ function renderWorkflowReview(data) {
   }
 
   responseBox.appendChild(panel);
-} 
-// 결과를 먼저 복원한 뒤 API 인증값을 입력하는 경우에도 서버 이력을 다시 불러온다.
+}
+
 accessTokenBox.addEventListener('change', () => {
   if (accessTokenBox.value.trim() && currentWorkflowReviewData) {
     renderWorkflowReview(currentWorkflowReviewData);
@@ -770,9 +1473,7 @@ accessTokenBox.addEventListener('change', () => {
 
 function loadTaskHistory() {
   try {
-    const history = JSON.parse(
-      localStorage.getItem(TASK_HISTORY_KEY) || '[]'
-    );
+    const history = JSON.parse(localStorage.getItem(TASK_HISTORY_KEY) || '[]');
     return Array.isArray(history) ? history : [];
   } catch (error) {
     console.error('업무 기록 불러오기 실패:', error);
@@ -780,16 +1481,8 @@ function loadTaskHistory() {
   }
 }
 
-function saveTaskHistory(
-  task,
-  taskId,
-  reply,
-  deliverables,
-  workflow,
-  finalReviewResults
-) {
+function saveTaskHistory(task, taskId, reply, deliverables, workflow, finalReviewResults) {
   const history = loadTaskHistory();
-
   const record = {
     taskId,
     task,
@@ -799,19 +1492,13 @@ function saveTaskHistory(
     finalReviewResults: finalReviewResults || [],
     savedAt: new Date().toISOString()
   };
-
   const updated = [
     record,
     ...history.filter(item => item.taskId !== taskId)
   ].slice(0, TASK_HISTORY_LIMIT);
-
-  localStorage.setItem(
-    TASK_HISTORY_KEY,
-    JSON.stringify(updated)
-  );
+  localStorage.setItem(TASK_HISTORY_KEY, JSON.stringify(updated));
 }
 
-// 실패·미완료 업무도 업무 ID로 서버 감사 이력을 조회한다. AI 실행 요청은 발생시키지 않는다.
 const serverHistoryTaskIdBox = document.getElementById('serverHistoryTaskId');
 const loadServerHistoryButton = document.getElementById('loadServerHistoryButton');
 const serverHistoryStatus = document.getElementById('serverHistoryStatus');
@@ -883,14 +1570,11 @@ function renderTaskHistory() {
   history.forEach((item, index) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.style.textAlign = 'left';
-    button.style.marginBottom = '8px';
+    button.className = 'history-btn';
 
     const date = new Date(item.savedAt).toLocaleString('ko-KR');
     const task = String(item.task || '업무 내용 없음');
-
-    button.textContent =
-      `${date}\n${task.slice(0, 100)}`;
+    button.textContent = `${date}\n${task.slice(0, 100)}`;
 
     button.addEventListener('click', () => {
       restoreTaskHistory(index);
@@ -903,16 +1587,12 @@ function renderTaskHistory() {
 function restoreTaskHistory(index) {
   const history = loadTaskHistory();
   const item = history[index];
-
   if (!item) return;
 
   responseBox.innerHTML = renderResponseContent(item.reply || '');
- renderWorkflowReview(item);
+  renderWorkflowReview(item);
 
-  const deliverables = Array.isArray(item.deliverables)
-    ? item.deliverables
-    : [];
-
+  const deliverables = Array.isArray(item.deliverables) ? item.deliverables : [];
   const deliverableText = deliverables
     .map((entry, i) => {
       const title = entry.title || `결과물 ${i + 1}`;
@@ -927,7 +1607,6 @@ function restoreTaskHistory(index) {
   if (deliverableText.trim()) {
     card.style.display = 'block';
     content.innerHTML = renderMarkdown(deliverableText);
-
     copyButton.onclick = async () => {
       await navigator.clipboard.writeText(deliverableText);
       copyButton.textContent = '복사 완료';
@@ -940,79 +1619,67 @@ function restoreTaskHistory(index) {
   localStorage.setItem(
     'myAIOfficeLastResult',
     JSON.stringify({
-  taskId: item.taskId,
-  reply: item.reply,
-  deliverables,
-  workflow: item.workflow || {},
-  finalReviewResults: item.finalReviewResults || [],
-  savedAt: item.savedAt
-})
+      taskId: item.taskId,
+      reply: item.reply,
+      deliverables,
+      workflow: item.workflow || {},
+      finalReviewResults: item.finalReviewResults || [],
+      savedAt: item.savedAt
+    })
   );
- 
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-  
+
 try {
-  const savedTask = JSON.parse(
-    localStorage.getItem(PENDING_TASK_KEY) || 'null'
-  );
+  const savedTask = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
 
   if (savedTask && savedTask.task) {
-   savedTask.taskId = savedTask.taskId || crypto.randomUUID();
-savedTask.idempotencyKey = savedTask.idempotencyKey || savedTask.taskId;
-
-localStorage.setItem(
-  PENDING_TASK_KEY,
-  JSON.stringify(savedTask)
-);
-   retryTaskButton.style.display = 'block';
+    savedTask.taskId = savedTask.taskId || crypto.randomUUID();
+    savedTask.idempotencyKey = savedTask.idempotencyKey || savedTask.taskId;
+    localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(savedTask));
+    retryTaskButton.style.display = 'block';
     requestBox.value = savedTask.task;
 
     responseBox.textContent =
       '이전에 접수했으나 처리가 완료되지 않은 업무가 보존되어 있어. ' +
       '기존 업무 지시를 확인하고 다시 처리할 수 있어.';
-   if (savedTask.status === 'WAITING_FOR_API_QUOTA' && savedTask.nextRetryAt) {
-  const remainingMs = Date.parse(savedTask.nextRetryAt) - Date.now();
 
-  if (remainingMs <= 0) {
-    responseBox.textContent =
-      '대기 시간이 종료되어 기존 업무를 자동 재개합니다.';
-    sendTask(true);
-  } else {
-    const remainingMinutes = Math.ceil(remainingMs / 60000);
-
-    responseBox.textContent =
-      `AI API 사용 한도로 대기 중입니다.\n` +
-      `기존 업무는 보존되어 있습니다.\n` +
-      `약 ${remainingMinutes}분 후 자동 재개합니다.`;
-
-    setTimeout(() => {
-      const currentTask = JSON.parse(
-        localStorage.getItem(PENDING_TASK_KEY) || 'null'
-      );
-
-      if (
-        currentTask &&
-        currentTask.taskId === savedTask.taskId &&
-        currentTask.status === 'WAITING_FOR_API_QUOTA'
-      ) {
-        requestBox.value = currentTask.task;
+    if (savedTask.status === 'WAITING_FOR_API_QUOTA' && savedTask.nextRetryAt) {
+      const remainingMs = Date.parse(savedTask.nextRetryAt) - Date.now();
+      if (remainingMs <= 0) {
+        responseBox.textContent = '대기 시간이 종료되어 기존 업무를 자동 재개합니다.';
         sendTask(true);
+      } else {
+        const remainingMinutes = Math.ceil(remainingMs / 60000);
+        responseBox.textContent =
+          `AI API 사용 한도로 대기 중입니다.\n` +
+          `기존 업무는 보존되어 있습니다.\n` +
+          `약 ${remainingMinutes}분 후 자동 재개합니다.`;
+
+        setTimeout(() => {
+          const currentTask = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
+          if (
+            currentTask &&
+            currentTask.taskId === savedTask.taskId &&
+            currentTask.status === 'WAITING_FOR_API_QUOTA'
+          ) {
+            requestBox.value = currentTask.task;
+            sendTask(true);
+          }
+        }, remainingMs);
       }
-    }, remainingMs);
-  }
-}
+    }
   }
 } catch (error) {
   console.error('미처리 업무 복원 실패:', error);
 }
- 
-// Markdown 출력 처리
+
 function renderMarkdown(text) {
   const escaped = String(text || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>');
 
   const normalized = escaped.replace(
     /\\(?=(?:#{1,6}\s|\*\*|__|[-*]\s|---))/g,
@@ -1028,7 +1695,6 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
-// JSON 검수 결과를 읽기 쉬운 보고서로 표시
 function renderResponseContent(text) {
   const raw = String(text || '');
 
@@ -1055,11 +1721,11 @@ function renderResponseContent(text) {
 
   function escapeHtml(value) {
     return String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, ''');
   }
 
   function renderValue(value, key = '') {
@@ -1100,11 +1766,10 @@ function renderResponseContent(text) {
     return `<div>${escapeHtml(value ?? '')}</div>`;
   }
 
-  // 일반 문장 속에 들어 있는 JSON도 찾아서 분리
   const parts = [];
-const seenJson = new Set();
-let textStart = 0;
-let i = 0;
+  const seenJson = new Set();
+  let textStart = 0;
+  let i = 0;
 
   while (i < raw.length) {
     if (raw[i] !== '{' && raw[i] !== '[') {
@@ -1138,9 +1803,7 @@ let i = 0;
         stack.push(ch);
       } else if (ch === '}' || ch === ']') {
         const expected = ch === '}' ? '{' : '[';
-
         if (stack.pop() !== expected) break;
-
         if (stack.length === 0) {
           end = j + 1;
           break;
@@ -1155,10 +1818,9 @@ let i = 0;
 
     const candidate = raw.slice(start, end);
     let parsed;
-
     try {
       parsed = JSON.parse(candidate);
-    } catch (error) {
+    } catch (_) {
       i = start + 1;
       continue;
     }
@@ -1168,20 +1830,18 @@ let i = 0;
     }
 
     const jsonKey = JSON.stringify(parsed);
+    if (!seenJson.has(jsonKey)) {
+      parts.push(`
+        <div class="structured-report">
+          <h3>검수 결과</h3>
+          ${renderValue(parsed)}
+        </div>
+      `);
+      seenJson.add(jsonKey);
+    }
 
-if (!seenJson.has(jsonKey)) {
-  parts.push(`
-    <div class="structured-report">
-      <h3>검수 결과</h3>
-      ${renderValue(parsed)}
-    </div>
-  `);
-
-  seenJson.add(jsonKey);
-}
-
-textStart = end;
-i = end;
+    textStart = end;
+    i = end;
   }
 
   if (textStart < raw.length) {
@@ -1191,15 +1851,12 @@ i = end;
   return parts.length ? parts.join('') : renderMarkdown(raw);
 }
 
-// 마지막 업무 결과 자동 복원
 (function restoreLastResult() {
   const saved = localStorage.getItem('myAIOfficeLastResult');
-
   if (!saved) return;
 
   try {
     const data = JSON.parse(saved);
-
     const deliverableCard = document.getElementById('deliverableCard');
     const deliverableContent = document.getElementById('deliverableContent');
     const copyDeliverable = document.getElementById('copyDeliverable');
@@ -1211,23 +1868,20 @@ i = end;
         </div>
       `;
     }
-   renderWorkflowReview(data);
-   const workflow = data.workflow || null;
+    renderWorkflowReview(data);
 
-const workflowSummary = workflow
-  ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
+    const workflow = data.workflow || null;
+    const workflowSummary = workflow
+      ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
 
 ${workflow.resultStatusReason || ''}
 
 ${workflow.reviewGate?.finalReleaseAllowed === true
   ? '최종 승인 게이트: 통과'
   : '최종 승인 게이트: 미통과 — 최종 승인·배포 전 사용 금지'}`
-  : '## 전체 업무 판정: 서버 판정 정보 없음';
+      : '## 전체 업무 판정: 서버 판정 정보 없음';
 
-    const deliverables = Array.isArray(data.deliverables)
-      ? data.deliverables
-      : [];
-
+    const deliverables = Array.isArray(data.deliverables) ? data.deliverables : [];
     const deliverableText = deliverables
       .map((item, index) => {
         const title = item.title || `결과물 ${index + 1}`;
@@ -1238,30 +1892,25 @@ ${workflow.reviewGate?.finalReleaseAllowed === true
     if (deliverableText.trim()) {
       deliverableCard.style.display = 'block';
       deliverableContent.innerHTML = renderMarkdown(
-  workflowSummary + '\n\n---\n\n' + deliverableText
-);
-
+        workflowSummary + '\n\n---\n\n' + deliverableText
+      );
       copyDeliverable.onclick = async () => {
         await navigator.clipboard.writeText(deliverableText);
         copyDeliverable.textContent = '복사 완료';
       };
     }
-
   } catch (error) {
     console.error('저장된 업무 결과 복원 실패:', error);
   }
-})(); 
- 
-// 업무 지시
+})();
+
 async function sendTask(reusePending = false) {
-   let pending = null;
+  let pending = null;
 
   if (reusePending) {
     try {
-      pending = JSON.parse(
-        localStorage.getItem(PENDING_TASK_KEY) || 'null'
-      );
-    } catch (error) {
+      pending = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
+    } catch (_) {
       pending = null;
     }
   }
@@ -1269,28 +1918,27 @@ async function sendTask(reusePending = false) {
   const taskId = pending?.taskId || crypto.randomUUID();
   const idempotencyKey = pending?.idempotencyKey || taskId;
   let quotaRetryCount = Math.max(0, Number(pending?.quotaRetryCount) || 0);
- let modelUnavailableRetryCount =
-  Math.max(0, Number(pending?.modelUnavailableRetryCount) || 0);
+  let modelUnavailableRetryCount = Math.max(0, Number(pending?.modelUnavailableRetryCount) || 0);
+  let timeoutRetryCount = Math.max(0, Number(pending?.timeoutRetryCount) || 0);
 
-let timeoutRetryCount =
-  Math.max(0, Number(pending?.timeoutRetryCount) || 0);
   const accessToken = accessTokenBox.value.trim();
   if (!accessToken) {
     responseBox.textContent = '서버 접속 인증값을 입력해 주세요. 인증값은 이 대화창에 보내지 마세요.';
     return;
   }
-   if (isTaskRunning) {
+
+  if (isTaskRunning) {
     responseBox.textContent = '이미 업무를 처리하고 있습니다. 중복 실행은 차단했습니다.';
     return;
   }
 
   const task = (reusePending && pending?.task)
-  ? pending.task
-  : requestBox.value.trim();
+    ? pending.task
+    : requestBox.value.trim();
 
-const employeesForTask = (reusePending && Array.isArray(pending?.employees))
-  ? pending.employees
-  : employeeDirectory;
+  const employeesForTask = (reusePending && Array.isArray(pending?.employees))
+    ? pending.employees
+    : employeeDirectory;
 
   if (!task) {
     alert('업무 지시 내용을 입력해주세요.');
@@ -1298,44 +1946,35 @@ const employeesForTask = (reusePending && Array.isArray(pending?.employees))
   }
 
   if (!headOfOffice) {
-    responseBox.textContent =
-      '본부장 정보를 찾을 수 없습니다. 직원 데이터 설정을 확인해 주세요.';
+    responseBox.textContent = '본부장 정보를 찾을 수 없습니다. 직원 데이터 설정을 확인해 주세요.';
     return;
   }
-  // 업무 중복 실행 방지
+
   isTaskRunning = true;
   sendButton.disabled = true;
   retryTaskButton.disabled = true;
- 
-   responseBox.textContent =
-    '업무 접수 및 팀 배정 준비 중...';
+  responseBox.textContent = '업무 접수 및 팀 배정 준비 중...';
 
   try {
-   
-    // 본부장 AI 호출 전에 업무 지시 원문 보존
     localStorage.setItem(
-  PENDING_TASK_KEY,
-  JSON.stringify({
-    task: task,
-    taskId: taskId,
-    idempotencyKey: idempotencyKey,
-    status: 'WAITING_FOR_PROCESSING',
-    quotaRetryCount: quotaRetryCount,
-   modelUnavailableRetryCount: modelUnavailableRetryCount,
-timeoutRetryCount: timeoutRetryCount,
-employees: employeesForTask,
-   
-savedAt: new Date().toISOString()
-  })
-);
-   
+      PENDING_TASK_KEY,
+      JSON.stringify({
+        task,
+        taskId,
+        idempotencyKey,
+        status: 'WAITING_FOR_PROCESSING',
+        quotaRetryCount,
+        modelUnavailableRetryCount,
+        timeoutRetryCount,
+        employees: employeesForTask,
+        savedAt: new Date().toISOString()
+      })
+    );
+
     let data = null;
     let completedResponse = false;
-
-    // API 한도 대기 중에도 기존 업무 ID로만 재시도한다.
     const MAX_QUOTA_RETRIES = 48;
-    // v51.15 Worker는 AI 호출 1회 단위로 체크포인트를 저장하고 202로 반환한다.
-    // 같은 업무 ID로 자동 재요청해 최종 보고서가 올 때까지 이어서 처리한다.
+
     for (let step = 1; step <= 1000; step++) {
       responseBox.textContent =
         `업무 처리 중 (${step}/1000)\n본부장 분석·배정, 전문 직원 수행 및 검수 단계를 이어서 처리하고 있습니다.`;
@@ -1377,75 +2016,55 @@ savedAt: new Date().toISOString()
         data = { error: raw || '서버 응답을 해석할 수 없습니다.' };
       }
 
-      // 서버가 반환한 실제 배정·진행 정보를 가상 사무실 직원 상태에 반영한다.
       syncEmployeeStates(data, taskId);
 
-      // v51.15의 최종 성공 응답은 top-level status가 아니라 reply + workflow로 식별한다.
       if (response.ok && data.reply && data.workflow) {
         completedResponse = true;
         break;
       }
 
-      
-if (response.status === 202 && data.status === 'PROCESSING') {
-  const resumeDelayMs = Math.max(
-    1200,
-    Number(data.resumeDelayMs) || 1200
-  );
+      if (response.status === 202 && data.status === 'PROCESSING') {
+        const resumeDelayMs = Math.max(1200, Number(data.resumeDelayMs) || 1200);
+        const savedForRetry = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null') || {};
 
-  // 서버 과부하 및 시간 초과 재시도 횟수 제한
-  const savedForRetry = JSON.parse(
-  localStorage.getItem(PENDING_TASK_KEY) || 'null'
-) || {};
+        if (data.modelUnavailableResumable || data.timeoutResumable) {
+          const retryType = data.modelUnavailableResumable ? 'modelUnavailable' : 'timeout';
+          const retryLimit = retryType === 'modelUnavailable' ? 5 : 10;
+          const retryCountKey = retryType === 'modelUnavailable'
+            ? 'modelUnavailableRetryCount'
+            : 'timeoutRetryCount';
+          const retryCount = retryType === 'modelUnavailable'
+            ? ++modelUnavailableRetryCount
+            : ++timeoutRetryCount;
 
-if (data.modelUnavailableResumable || data.timeoutResumable) {
-  const retryType = data.modelUnavailableResumable
-    ? 'modelUnavailable'
-    : 'timeout';
+          savedForRetry[retryCountKey] = retryCount;
+          savedForRetry.updatedAt = new Date().toISOString();
+          localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(savedForRetry));
 
-  const retryLimit = retryType === 'modelUnavailable' ? 5 : 10;
+          if (retryCount >= retryLimit) {
+            responseBox.textContent =
+              `Gemini ${retryType === 'modelUnavailable' ? '서버 과부하' : '응답 시간 초과'}가 ${retryCount}회 반복되어 자동 재시도를 중단했습니다.\n` +
+              '업무와 체크포인트는 보존되어 있습니다.\n' +
+              '서버 상태를 확인한 후 보존된 업무 재처리를 이용해 주세요.';
+            retryTaskButton.style.display = 'block';
+            return;
+          }
 
-  const retryCountKey = retryType === 'modelUnavailable'
-    ? 'modelUnavailableRetryCount'
-    : 'timeoutRetryCount';
+          responseBox.textContent =
+            `Gemini ${retryType === 'modelUnavailable' ? '서버 과부하' : '응답 시간 초과'}로 업무와 체크포인트를 보존했습니다.\n` +
+            `${Math.ceil(resumeDelayMs / 1000)}초 후 재시도합니다. (${retryCount}/${retryLimit})\n` +
+            `현재 단계: ${data.currentStage || '확인 중'}\n` +
+            `저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
+        } else {
+          responseBox.textContent =
+            `업무 처리 중 (${step}/1000)\n` +
+            `현재 단계: ${data.currentStage || '확인 중'}\n` +
+            `저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
+        }
 
-  const retryCount = retryType === 'modelUnavailable'
-  ? ++modelUnavailableRetryCount
-  : ++timeoutRetryCount;
-
-  savedForRetry[retryCountKey] = retryCount;
-  savedForRetry.updatedAt = new Date().toISOString();
-
-  localStorage.setItem(
-    PENDING_TASK_KEY,
-    JSON.stringify(savedForRetry)
-  );
-
-  if (retryCount >= retryLimit) {
-    responseBox.textContent =
-      `Gemini ${retryType === 'modelUnavailable' ? '서버 과부하' : '응답 시간 초과'}가 ${retryCount}회 반복되어 자동 재시도를 중단했습니다.\n` +
-      '업무와 체크포인트는 보존되어 있습니다.\n' +
-      '서버 상태를 확인한 후 보존된 업무 재처리를 이용해 주세요.';
-    retryTaskButton.style.display = 'block';
-    return;
-  }
-
-  responseBox.textContent =
-    `Gemini ${retryType === 'modelUnavailable' ? '서버 과부하' : '응답 시간 초과'}로 업무와 체크포인트를 보존했습니다.\n` +
-    `${Math.ceil(resumeDelayMs / 1000)}초 후 재시도합니다. ` +
-    `(${retryCount}/${retryLimit})\n` +
-    `현재 단계: ${data.currentStage || '확인 중'}\n` +
-    `저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
-} else {
-  responseBox.textContent =
-    `업무 처리 중 (${step}/1000)\n` +
-    `현재 단계: ${data.currentStage || '확인 중'}\n` +
-    `저장된 AI 결과: ${data.cachedAiCallCount ?? 0}건`;
-}
-
-  await sleep(resumeDelayMs);
-  continue;
-}
+        await sleep(resumeDelayMs);
+        continue;
+      }
 
       if (response.status === 409 && data.status === 'PROCESSING') {
         responseBox.textContent =
@@ -1454,53 +2073,34 @@ if (data.modelUnavailableResumable || data.timeoutResumable) {
         continue;
       }
 
-      // Gemini 한도 초과: 업무 ID/idempotencyKey를 유지하고 자동 재개
-if (data.status === 'WAITING_FOR_API_QUOTA') {
-  quotaRetryCount++;
+      if (data.status === 'WAITING_FOR_API_QUOTA') {
+        quotaRetryCount++;
+        const quotaWaitMs = Number(data.quotaRetryAfterMs) > 0
+          ? Number(data.quotaRetryAfterMs)
+          : 300000;
 
-  const quotaWaitMs = Number(data.quotaRetryAfterMs) > 0
-    ? Number(data.quotaRetryAfterMs)
-    : 300000;
+        const quotaPending = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
+        if (quotaPending && quotaPending.taskId === taskId) {
+          quotaPending.quotaRetryCount = quotaRetryCount;
+          quotaPending.status = 'WAITING_FOR_API_QUOTA';
+          quotaPending.updatedAt = new Date().toISOString();
+          quotaPending.nextRetryAt = new Date(Date.now() + quotaWaitMs).toISOString();
+          localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(quotaPending));
+        }
 
-  const quotaPending = JSON.parse(
-    localStorage.getItem(PENDING_TASK_KEY) || 'null'
-  );
-
-  if (quotaPending && quotaPending.taskId === taskId) {
-    quotaPending.quotaRetryCount = quotaRetryCount;
-    quotaPending.status = 'WAITING_FOR_API_QUOTA';
-    quotaPending.updatedAt = new Date().toISOString();
-    quotaPending.nextRetryAt = new Date(
-      Date.now() + quotaWaitMs
-    ).toISOString();
-
-    localStorage.setItem(
-      PENDING_TASK_KEY,
-      JSON.stringify(quotaPending)
-    );
-  }
-
-  if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
-    const quotaWaitMinutes = Math.ceil(quotaWaitMs / 60000);
-
-    responseBox.textContent =
-      `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n약 ${quotaWaitMinutes}분 후 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
-
-        await sleep(quotaWaitMs);
-    continue;
-  } else {
-    if (quotaPending && quotaPending.taskId === taskId) {
-      quotaPending.nextRetryAt = null;
-      quotaPending.status = 'WAITING_FOR_API_QUOTA';
-      quotaPending.updatedAt = new Date().toISOString();
-
-      localStorage.setItem(
-        PENDING_TASK_KEY,
-        JSON.stringify(quotaPending)
-      );
-    }
-  }
-}
+        if (quotaRetryCount <= MAX_QUOTA_RETRIES) {
+          const quotaWaitMinutes = Math.ceil(quotaWaitMs / 60000);
+          responseBox.textContent =
+            `AI API 사용 한도로 대기 중입니다.\n기존 업무를 보존했습니다.\n약 ${quotaWaitMinutes}분 후 같은 업무를 자동 재시도합니다. (${quotaRetryCount}/${MAX_QUOTA_RETRIES})\n이 화면을 닫지 마세요.`;
+          await sleep(quotaWaitMs);
+          continue;
+        } else if (quotaPending && quotaPending.taskId === taskId) {
+          quotaPending.nextRetryAt = null;
+          quotaPending.status = 'WAITING_FOR_API_QUOTA';
+          quotaPending.updatedAt = new Date().toISOString();
+          localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(quotaPending));
+        }
+      }
 
       const apiError = new Error(data.error || '서버 연결 오류');
       apiError.code = data.errorCode || '';
@@ -1516,196 +2116,150 @@ if (data.status === 'WAITING_FOR_API_QUOTA') {
     }
 
     const fullReply = data.reply || '응답 내용이 없습니다.';
+    responseBox.innerHTML = `
+      <div class="report-content">
+        ${renderResponseContent(fullReply)}
+      </div>
+    `;
 
-// 본부장 최종 보고서 표시
-responseBox.innerHTML = `
-  <div class="report-content">
-    ${renderResponseContent(fullReply)}
-  </div>
-`;
+    const deliverableCard = document.getElementById('deliverableCard');
+    const deliverableContent = document.getElementById('deliverableContent');
+    const copyDeliverable = document.getElementById('copyDeliverable');
 
-// Worker에서 별도로 전달한 실제 결과물 가져오기
-const deliverableCard = document.getElementById('deliverableCard');
-const deliverableContent = document.getElementById('deliverableContent');
-const copyDeliverable = document.getElementById('copyDeliverable');
+    const deliverables = Array.isArray(data.deliverables) ? data.deliverables : [];
+    const finalReviewResults = Array.isArray(data.finalReviewResults) ? data.finalReviewResults : [];
+    const workflow = data.workflow || null;
 
-const deliverables = Array.isArray(data.deliverables)
-  ? data.deliverables
-  : [];
+    renderWorkflowReview({
+      taskId,
+      workflow,
+      finalReviewResults
+    });
 
-const finalReviewResults = Array.isArray(data.finalReviewResults)
-  ? data.finalReviewResults
-  : [];
+    const deliverableText = deliverables
+      .map((item, index) => {
+        const title = item.title || `결과물 ${index + 1}`;
+        const review = finalReviewResults.find(reviewItem => reviewItem.id === item.id);
+        const judgment = review?.judgment || '검수 미확인';
+        const employeeStatus = item.status || '상태 미확인';
+        const reviewSummary = review?.details?.summary
+          || '검수 상세 의견은 본부장 최종 보고서를 확인해 주세요.';
 
-const workflow = data.workflow || null;
-   renderWorkflowReview({
-  taskId,
-  workflow,
-  finalReviewResults
-});
+        return [
+          `# ${title}`,
+          `**직원 수행 상태: ${employeeStatus}**`,
+          `**팀장 2차 최종 검수: ${judgment}**`,
+          `**검수 요약:** ${reviewSummary}`,
+          item.errors?.length ? `**수행 오류:** ${item.errors.join('; ')}` : '',
+          item.content || ''
+        ].filter(Boolean).join('\n\n');
+      })
+      .join('\n\n---\n\n');
 
-// 결과물별 팀장 2차 최종 검수 판정 연결
-const deliverableText = deliverables
-  .map((item, index) => {
-    const title = item.title || `결과물 ${index + 1}`;
-    const review = finalReviewResults.find(
-      reviewItem => reviewItem.id === item.id
-    );
-
-    const judgment = review?.judgment || '검수 미확인';
-    const employeeStatus = item.status || '상태 미확인';
-    const reviewSummary = review?.details?.summary
-      || '검수 상세 의견은 본부장 최종 보고서를 확인해 주세요.';
-
-    return [
-      `# ${title}`,
-      `**직원 수행 상태: ${employeeStatus}**`,
-      `**팀장 2차 최종 검수: ${judgment}**`,
-      `**검수 요약:** ${reviewSummary}`,
-      item.errors?.length
-        ? `**수행 오류:** ${item.errors.join('; ')}`
-        : '',
-      item.content || ''
-    ].filter(Boolean).join('\n\n');
-  })
-  .join('\n\n---\n\n');
-
-const workflowSummary = workflow
-  ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
+    const workflowSummary = workflow
+      ? `## 전체 업무 판정: ${workflow.resultStatus || workflow.status || '판정 정보 없음'}
 
 ${workflow.resultStatusReason || ''}
 
 ${workflow.reviewGate?.finalReleaseAllowed === true
   ? '최종 승인 게이트: 통과'
   : '최종 승인 게이트: 미통과 — 최종 승인·배포 전 사용 금지'}`
-  : '## 전체 업무 판정: 서버 판정 정보 없음';
+      : '## 전체 업무 판정: 서버 판정 정보 없음';
 
-// 결과물 카드 표시
-if (deliverableText.trim()) {
-  deliverableCard.style.display = 'block';
-  deliverableContent.innerHTML = renderMarkdown(
-  workflowSummary + '\n\n---\n\n' + deliverableText
-);
-
-  copyDeliverable.onclick = async () => {
-    await navigator.clipboard.writeText(deliverableText);
-    copyDeliverable.textContent = '복사 완료';
-  };
-} else {
-  deliverableCard.style.display = 'none';
-  deliverableContent.innerHTML = '';
-}
-// 마지막 업무 결과 자동 저장
-localStorage.setItem(
-  'myAIOfficeLastResult',
-  JSON.stringify({
-    taskId: taskId,
-    reply: fullReply,
-    deliverables: deliverables,
-    workflow: workflow,
-    finalReviewResults: finalReviewResults,
-    savedAt: new Date().toISOString()
-  })
-);    
-// 완료된 업무를 최근 업무 기록에 저장
-saveTaskHistory(
-  task,
-  taskId,
-  fullReply,
-  deliverables,
-  workflow,
-  finalReviewResults
-);
-renderTaskHistory();
-   
-   // 결과 저장이 완료된 경우에만 미처리 업무 기록 삭제
-localStorage.removeItem(PENDING_TASK_KEY);
-   retryTaskButton.style.display = 'none';
-
-   } catch (error) {
-
-  // 오류가 발생해도 원래 업무 지시는 보존
-  let savedTask = null;
-
-try {
-  savedTask = JSON.parse(
-    localStorage.getItem(PENDING_TASK_KEY) || 'null'
-  );
-} catch (storageError) {
-  console.error('보존된 업무 복원 실패:', storageError);
-}
-
-  if (savedTask) {
-
-    const isQuotaError =
-  error.status === 'WAITING_FOR_API_QUOTA' ||
-  error.code === 'API_QUOTA' ||
-  /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(
-    error.message
-  );
-    const isResumable = error.code === 'SW_AI_RESUME_LIMIT' ||
-      error.status === 'PROCESSING';
-
-    savedTask.status = isQuotaError
-      ? 'WAITING_FOR_API_QUOTA'
-      : isResumable
-        ? 'PROCESSING'
-        : 'PROCESSING_FAILED';
-
-    savedTask.lastError = error.message;
-    savedTask.updatedAt = new Date().toISOString();
+    if (deliverableText.trim()) {
+      deliverableCard.style.display = 'block';
+      deliverableContent.innerHTML = renderMarkdown(
+        workflowSummary + '\n\n---\n\n' + deliverableText
+      );
+      copyDeliverable.onclick = async () => {
+        await navigator.clipboard.writeText(deliverableText);
+        copyDeliverable.textContent = '복사 완료';
+      };
+    } else {
+      deliverableCard.style.display = 'none';
+      deliverableContent.innerHTML = '';
+    }
 
     localStorage.setItem(
-      PENDING_TASK_KEY,
-      JSON.stringify(savedTask)
+      'myAIOfficeLastResult',
+      JSON.stringify({
+        taskId,
+        reply: fullReply,
+        deliverables,
+        workflow,
+        finalReviewResults,
+        savedAt: new Date().toISOString()
+      })
     );
-   retryTaskButton.style.display = 'block';
 
-    responseBox.textContent = isQuotaError
-      ? 'AI API 사용량 한도로 처리가 중단됐습니다. 업무 지시는 보존했습니다. 한도가 복구된 후 같은 업무를 재처리할 수 있습니다.'
-      : isResumable
-        ? error.message
-        : '업무 처리 중 오류가 발생했습니다. 업무 지시는 보존했습니다. 오류를 확인한 후 다시 처리할 수 있습니다.\\n\\n오류 내용: ' + error.message;
+    saveTaskHistory(task, taskId, fullReply, deliverables, workflow, finalReviewResults);
+    renderTaskHistory();
 
-  } else {
+    localStorage.removeItem(PENDING_TASK_KEY);
+    retryTaskButton.style.display = 'none';
+  } catch (error) {
+    let savedTask = null;
+    try {
+      savedTask = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
+    } catch (storageError) {
+      console.error('보존된 업무 복원 실패:', storageError);
+    }
 
-    responseBox.textContent =
-      '오류가 발생했어: ' + error.message;
+    if (savedTask) {
+      const isQuotaError =
+        error.status === 'WAITING_FOR_API_QUOTA' ||
+        error.code === 'API_QUOTA' ||
+        /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(error.message);
+      const isResumable = error.code === 'SW_AI_RESUME_LIMIT' || error.status === 'PROCESSING';
 
+      savedTask.status = isQuotaError
+        ? 'WAITING_FOR_API_QUOTA'
+        : isResumable
+          ? 'PROCESSING'
+          : 'PROCESSING_FAILED';
+      savedTask.lastError = error.message;
+      savedTask.updatedAt = new Date().toISOString();
+      localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(savedTask));
+      retryTaskButton.style.display = 'block';
+
+      responseBox.textContent = isQuotaError
+        ? 'AI API 사용량 한도로 처리가 중단됐습니다. 업무 지시는 보존했습니다. 한도가 복구된 후 같은 업무를 재처리할 수 있습니다.'
+        : isResumable
+          ? error.message
+          : '업무 처리 중 오류가 발생했습니다. 업무 지시는 보존했습니다. 오류를 확인한 후 다시 처리할 수 있습니다.\n\n오류 내용: ' + error.message;
+    } else {
+      responseBox.textContent = '오류가 발생했어: ' + error.message;
+    }
+  } finally {
+    isTaskRunning = false;
+    sendButton.disabled = false;
+    retryTaskButton.disabled = false;
+    sendButton.textContent = '본부장에게 업무 지시';
   }
-
-}
-   
-finally {
-  isTaskRunning = false;
-  sendButton.disabled = false;
-  retryTaskButton.disabled = false;
-  sendButton.textContent = '본부장에게 업무 지시';
-}
 }
 
-renderTaskHistory();  
-sendButton.addEventListener('click', sendTask);
-// 보존된 업무 재처리
+renderTaskHistory();
+sendButton.addEventListener('click', () => sendTask(false));
+
 retryTaskButton.addEventListener('click', () => {
-  const savedTask = JSON.parse(
-    localStorage.getItem(PENDING_TASK_KEY) || 'null'
-  );
-
+  const savedTask = JSON.parse(localStorage.getItem(PENDING_TASK_KEY) || 'null');
   if (!savedTask || !savedTask.task) {
     responseBox.textContent = '재처리할 업무가 없습니다.';
     retryTaskButton.style.display = 'none';
     return;
   }
 
+  savedTask.modelUnavailableRetryCount = 0;
+  savedTask.timeoutRetryCount = 0;
+  savedTask.updatedAt = new Date().toISOString();
+  localStorage.setItem(PENDING_TASK_KEY, JSON.stringify(savedTask));
+
   requestBox.value = savedTask.task;
   sendTask(true);
 });
- 
 </script>
 
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
-
 <script>
 document.getElementById('downloadWord').addEventListener('click', async () => {
   const content = document.getElementById('deliverableContent');
@@ -1722,7 +2276,6 @@ document.getElementById('downloadWord').addEventListener('click', async () => {
   }
 
   const { Document, Paragraph, TextRun, Packer } = window.docx;
-
   const paragraphs = text.split('\n').map(line =>
     new Paragraph({
       children: [new TextRun(line)]
@@ -1738,24 +2291,20 @@ document.getElementById('downloadWord').addEventListener('click', async () => {
   const blob = await Packer.toBlob(doc);
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-
   link.href = url;
   link.download = 'SW_AI_OFFICE_결과물.docx';
   link.click();
-
   URL.revokeObjectURL(url);
 });
 
 document.getElementById('downloadPdf').addEventListener('click', () => {
   const content = document.getElementById('deliverableContent');
-
   if (!content.innerText.trim()) {
     alert('다운로드할 결과물이 없습니다.');
     return;
   }
 
   const printWindow = window.open('', '_blank');
-
   if (!printWindow) {
     alert('팝업이 차단됐어. 팝업을 허용해 줘.');
     return;
@@ -1797,9 +2346,6 @@ document.getElementById('downloadPdf').addEventListener('click', () => {
     printWindow.print();
   };
 });
-
-  
-  
 </script>
 </body>
 </html>
