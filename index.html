@@ -450,10 +450,48 @@ input:focus {
   border-radius: 8px;
   padding: 6px 8px;
   cursor: pointer;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.staff-portrait {
+  width: 38px;
+  height: 58px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 7px;
+  background: linear-gradient(145deg, var(--portrait-bg), #e9e3d8);
+  border: 1px solid rgba(50,55,65,.16);
+  align-self: center;
+}
+.staff-portrait .portrait-head {
+  position: absolute;
+  width: 17px;
+  height: 20px;
+  left: 10px;
+  top: 8px;
+  border-radius: 48% 48% 44% 44%;
+  background: #e9b995;
+  box-shadow: inset 0 2px 0 rgba(45,35,30,.55);
+}
+.staff-portrait .portrait-body {
+  position: absolute;
+  width: 29px;
+  height: 25px;
+  left: 4px;
+  bottom: -3px;
+  border-radius: 10px 10px 3px 3px;
+  background: var(--portrait-color);
+}
+.staff-card-info {
+  min-width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  flex-shrink: 0;
 }
 
 .staff-card.selected {
@@ -839,15 +877,21 @@ function renderRosterStrip() {
     const card = document.createElement('div');
     card.className = `staff-card ${isSel ? 'selected' : ''}`;
     card.innerHTML = `
-      <div class="staff-top">
-        <span class="staff-name">${emp.name}</span>
-        <span class="staff-state-tag">${st}</span>
+      <div class="staff-portrait" style="--portrait-color:${PALETTE[idx % PALETTE.length]};--portrait-bg:${['#dce7ed','#e8e0d2','#dce8df','#e9dce5'][idx % 4]}">
+        <span class="portrait-head"></span>
+        <span class="portrait-body"></span>
       </div>
-      <div class="staff-mid">
-        <span>${emp.position || 'AI'}</span>
-        <span>100%</span>
+      <div class="staff-card-info">
+        <div class="staff-top">
+          <span class="staff-name">${emp.name}</span>
+          <span class="staff-state-tag">${st}</span>
+        </div>
+        <div class="staff-mid">
+          <span>${emp.position || 'AI'}</span>
+          <span>100%</span>
+        </div>
+        <div class="staff-dept">${emp.department || ''}</div>
       </div>
-      <div class="staff-dept">${emp.department || ''}</div>
     `;
     card.addEventListener('click', () => {
       selectedEmployee = emp;
