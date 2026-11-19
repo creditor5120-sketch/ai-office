@@ -642,7 +642,7 @@ function readEmployeeHistory(){
  try{const value=JSON.parse(localStorage.getItem('swAIOfficeEmployeeHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}
 }
 function writeEmployeeStates(states){
- try{writeEmployeeStates(states);return true}
+ try{localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));return true}
  catch(error){console.warn('직원 상태 저장 실패:',error);return false}
 }
 function recordEmployeeHistory(id,state){
