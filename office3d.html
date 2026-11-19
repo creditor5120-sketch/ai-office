@@ -483,6 +483,19 @@ function renderTaskHistory(){
    selectedTaskForDecision=record;renderRepresentativeDecision(record);
    appendChat('이전 업무 지시',record.task||'');
    appendChat('이전 업무 결과',record.reply||'결과가 저장되지 않았습니다.');
+   const deliverables=Array.isArray(record.deliverables)?record.deliverables:[];
+   if(deliverables.length){
+    const restored=deliverables.map((item,index)=>{
+     const parts=[(index+1)+'. '+(item.title||'제목 미기재')+' · '+(item.department||'팀 미기재')+' · '+(item.status||'상태 미기재')];
+     if(item.teamLeader)parts.push('검수 담당: '+item.teamLeader);
+     if(item.content)parts.push(String(item.content).slice(0,8500));
+     if(Array.isArray(item.errors)&&item.errors.length)parts.push('오류·보완 사항: '+item.errors.map(String).join(' / '));
+     return parts.join('\n');
+    }).join('\n\n').slice(0,26000);
+    appendChat('복원된 결과물',restored);
+   }
+   const reviews=Array.isArray(record.finalReviewResults)?record.finalReviewResults:[];
+   if(reviews.length)appendChat('복원된 최종 검수',reviews.map(item=>(item.name||'검수 담당')+' · '+(item.judgment||item.status||'판정 미기재')+'\n'+(item.details?.summary||item.review||'')).join('\n\n').slice(0,12000));
    renderWorkflowSummary({workflow:record.workflow||{},finalReviewResults:record.finalReviewResults||[]},record.audit||null);
   });
   list.appendChild(item);
