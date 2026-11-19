@@ -303,18 +303,33 @@ async function submitSelectedTask(value){
  const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(states));recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
  const payload={task,taskId,idempotencyKey:taskId,employee:p.name,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory};
  try{
-  let data=null;
-  for(let step=0;step<1000;step++){
+  let data=null,completed=false,attempt=0;
+  const deadline=Date.now()+30*60*1000;
+  while(attempt<180&&Date.now()<deadline){
+   attempt++;
    const response=await fetch('https://ai-office-api.creditor5120.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
    const raw=await response.text();try{data=JSON.parse(raw)}catch(_){data={error:raw||'서버 응답을 해석할 수 없습니다.'}}
    if(data?.employeeStates)mergeEmployeeStates(data.employeeStates,taskId);
-   if(response.ok&&data.reply&&data.workflow)break;
-   if(response.status===202&&data.status==='PROCESSING'){pending.textContent='처리 중 · '+(data.currentStage||'업무 수행 및 검수')+'\n진행 상황을 확인하고 있습니다.';await new Promise(r=>setTimeout(r,Math.max(1200,Number(data.resumeDelayMs)||1200)));continue}
-   if(response.status===409&&data.status==='PROCESSING'){pending.textContent='기존 실행이 완료되기를 기다리고 있습니다.';await new Promise(r=>setTimeout(r,2500));continue}
-   if(data.status==='WAITING_FOR_API_QUOTA'){const waitMs=Math.max(30000,Number(data.quotaRetryAfterMs)||300000);pending.textContent='AI 사용 한도 회복을 기다리는 중입니다. 기존 업무는 보존됩니다.';await new Promise(r=>setTimeout(r,waitMs));continue}
+   if(response.ok&&data.reply&&data.workflow){completed=true;break}
+   if(response.status===202&&data.status==='PROCESSING'){
+    pending.textContent='처리 중 · '+(data.currentStage||'업무 수행 및 검수')+'\n진행 상황을 확인하고 있습니다. ('+attempt+'/180)';
+    await new Promise(r=>setTimeout(r,Math.min(10000,Math.max(1200,Number(data.resumeDelayMs)||1200))));
+    continue;
+   }
+   if(response.status===409&&data.status==='PROCESSING'){
+    pending.textContent='기존 실행이 완료되기를 기다리고 있습니다. ('+attempt+'/180)';
+    await new Promise(r=>setTimeout(r,2500));continue;
+   }
+   if(data.status==='WAITING_FOR_API_QUOTA'){
+    const remaining=Math.max(0,deadline-Date.now());
+    if(!remaining)break;
+    const waitMs=Math.min(remaining,Math.max(30000,Number(data.quotaRetryAfterMs)||300000));
+    pending.textContent='AI 사용 한도 회복을 기다리는 중입니다. 기존 업무는 보존됩니다.';
+    await new Promise(r=>setTimeout(r,waitMs));continue;
+   }
    throw new Error(data.error||'업무 처리에 실패했습니다.');
   }
-  if(!data?.reply)throw new Error('서버 응답이 완료되지 않았습니다. 업무 ID: '+taskId);
+  if(!completed||!data?.reply)throw new Error('업무 처리 대기 시간이 초과되었거나 완료 응답을 받지 못했습니다. 업무 ID: '+taskId);
   pending.textContent=data.reply;
   const finalStates=readEmployeeStates();
   finalStates[p.id]={...(finalStates[p.id]||{}),status:'완료',detail:task,taskId,updatedAt:new Date().toISOString()};
@@ -323,7 +338,12 @@ async function submitSelectedTask(value){
   renderTaskHistory();
   renderWorkflowSummary(data);
   refreshStaffCards();
- }catch(error){pending.textContent='처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId}
+ }catch(error){
+  const failedStates=readEmployeeStates();
+  failedStates[p.id]={...(failedStates[p.id]||{}),status:'오류',detail:(error.message||String(error)).slice(0,240),taskId,updatedAt:new Date().toISOString()};
+  localStorage.setItem('swAIOfficeEmployeeStates',JSON.stringify(failedStates));recordEmployeeHistory(p.id,failedStates[p.id]);refreshStaffCards();
+  pending.textContent='처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId;
+ }
 }
 function appendChat(who,message){const el=document.createElement('div');el.className='chatBubble';el.textContent=who+'\n'+message;document.getElementById('chatHistory').appendChild(el);document.getElementById('chatHistory').scrollTop=999999;return el}
 function saveTaskHistory(task,taskId,reply,deliverables,workflow,finalReviewResults){
