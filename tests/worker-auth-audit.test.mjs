@@ -119,3 +119,29 @@ test('returns workflow audit events from D1', async () => {
   assert.equal(result.body.eventCount, 1);
   assert.equal(result.body.events[0].detail.responsibleRole, '법무팀장');
 });
+
+test('serves CORS preflight without API credentials', async () => {
+  const request = new Request('https://worker.test/', { method: 'OPTIONS' });
+  const response = await worker.fetch(request, {});
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('Access-Control-Allow-Origin'), 'https://creditor5120-sketch.github.io');
+  assert.match(response.headers.get('Access-Control-Allow-Headers') || '', /X-Representative-Authorization/);
+});
+
+test('fails closed when the server API secret is not configured', async () => {
+  const request = new Request('https://worker.test/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer test-general-access-secret' },
+    body: JSON.stringify({ action: 'get_task_history', taskId: 'test-task-001' })
+  });
+  const response = await worker.fetch(request, { DB: new FakeD1() });
+  assert.equal(response.status, 503);
+  const body = await response.json();
+  assert.match(body.error, /인증 비밀값/);
+});
+
+test('rejects non-POST requests', async () => {
+  const request = new Request('https://worker.test/', { method: 'GET' });
+  const response = await worker.fetch(request, {});
+  assert.equal(response.status, 405);
+});
