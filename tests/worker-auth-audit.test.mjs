@@ -204,3 +204,13 @@ test('returns HTTP 400 for malformed JSON without entering task execution', asyn
   const body = await response.json();
   assert.match(body.error, /올바른 JSON 형식/);
 });
+
+test('rejects non-object JSON bodies and non-string explicit actions', async () => {
+  const nullBody = await call(null);
+  assert.equal(nullBody.status, 400);
+  assert.match(nullBody.body.error, /JSON 객체/);
+
+  const numericAction = await call({ action: 123, task: 'should never execute', employees: [{ id: 'COO' }] });
+  assert.equal(numericAction.status, 400);
+  assert.match(numericAction.body.error, /지원하지 않는 API action/);
+});
