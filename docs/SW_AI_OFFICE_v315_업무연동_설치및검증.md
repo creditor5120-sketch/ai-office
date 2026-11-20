@@ -41,11 +41,11 @@
 |---|---|
 | `OFFICE_ACCESS_TOKEN` | 일반 업무 요청 및 이력 조회 인증 |
 | `REPRESENTATIVE_ACCESS_TOKEN` | 대표 승인·반려 전용 인증. 일반 토큰과 다른 값 |
-| `GEMINI_API_KEY` | Worker의 Gemini API 호출 |
+| `OPENROUTER_API_KEY` | 우선 사용하는 기존 OpenRouter API 인증값 |\n| `GEMINI_API_KEY` | OpenRouter Secret이 없을 때 사용하는 Gemini API 인증값(선택) |
 | `DB` | 기존 D1 바인딩 |
 
 주의:
-- 이 브랜치의 Worker 코드가 사용하는 AI Secret은 `GEMINI_API_KEY`다. 기존 배포 문서에 남아 있는 `OPENROUTER_API_KEY` 표기는 이 코드의 실행 요건과 일치하지 않으므로, 운영 설정을 변경하기 전에 현재 운영 Worker의 실제 Secret 구성을 확인해야 한다.
+- 이 브랜치의 Worker 코드는 `OPENROUTER_API_KEY`가 있으면 OpenRouter를 우선 사용하고, 없으면 `GEMINI_API_KEY`로 Gemini를 사용한다. 기존 OpenRouter Secret을 유지한 채 연동할 수 있으며, 두 키가 모두 있으면 OpenRouter가 우선된다.
 - 기존 D1 데이터베이스를 새로 만들거나 교체하지 않는다.
 - 운영 Worker가 이 코드의 `get_task_history`, `get_representative_decision`, `representative_decision` action을 지원하는지 확인한다.
 - 대표 전용 Secret이 설정되지 않으면 대표 승인·반려 API는 503을 반환한다.
