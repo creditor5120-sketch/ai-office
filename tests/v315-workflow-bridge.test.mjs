@@ -258,7 +258,8 @@ test('workflow engine control is injected beside the original office settings bu
 
 test('workflow engine control does not replace or mutate the approved office HTML', async () => {
   const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
-  assert.equal(office, office.replace('SW_AI_Office_v3_15.html', 'SW_AI_Office_v3_15.html'));
+  assert.ok(office.includes('async function callConfiguredLLM(inputMsgs)'));
+  assert.ok(!office.includes('swWorkflowEngineButton'));
   assert.match(wrapperSource, /src="SW_AI_Office_v3_15\.html"/);
   assert.match(wrapperSource, /if\(doc\.getElementById\('sw-workflow-bridge-v315'\)\)return/);
   assert.doesNotMatch(wrapperSource, /id="bridgeToggle"/);
