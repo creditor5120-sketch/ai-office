@@ -37,6 +37,8 @@ try {
   await page.goto('http://127.0.0.1:4173/office-v315-integrated.html', { waitUntil: 'domcontentloaded' });
   const officeFrame = page.frameLocator('#office');
   await officeFrame.locator('#swWorkflowEngineButton').waitFor({ state: 'visible', timeout: 30000 });
+  await officeFrame.locator('#gl canvas').waitFor({ state: 'attached', timeout: 15000 });
+  assert.equal(await officeFrame.locator('#gl canvas').count(), 1, 'original 3D office renderer should create its canvas');
   assert.equal(await officeFrame.locator('header').count(), 1, 'original office header should render');
   assert.equal(await officeFrame.locator('#stage').count(), 1, 'original office stage should render');
   assert.equal(await officeFrame.locator('#chat').count(), 1, 'original office chat should render');
