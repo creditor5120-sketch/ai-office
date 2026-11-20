@@ -1,0 +1,84 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
+
+const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
+
+function makeContext({ selectedId = 'alex', fail = false } = {}) {
+  const calls = [];
+  const employees = [
+    { id: 'alex', name: '알렉스', badge: '본부장', room: 'hq', duty: '전사 업무 분석 및 배정' },
+    { id: 'ceo1', name: '단테', badge: '대표이사', room: 'ceo', duty: '최종 의사결정' },
+    { id: 'denis', name: '데니스', badge: '경영관리팀장', room: 'shared', duty: '경영관리 검수' },
+    { id: 'aiden', name: '에이든', badge: '총무팀장', room: 'shared', duty: '총무 검수' },
+    { id: 'eric', name: '에릭', badge: '전략기획팀장', room: 'shared', duty: '전략기획 검수' },
+    { id: 'peter', name: '피터', badge: '법무팀장', room: 'legal', duty: '법무 검수' },
+    { id: 'ryan', name: '라이언', badge: 'IR팀장', room: 'ir', duty: 'IR 검수' },
+    { id: 'teo', name: '테오', badge: 'IT·기술팀장', room: 'it', duty: '기술 검수' }
+  ];
+  const storage = new Map();
+  const localStorage = {
+    getItem: key => storage.has(key) ? storage.get(key) : null,
+    setItem: (key, value) => storage.set(key, String(value))
+  };
+  const sandbox = {
+    EMP: employees,
+    st: { sel: selectedId },
+    E: id => employees.find(person => person.id === id),
+    crypto: { randomUUID: () => 'test-task-id' },
+    CustomEvent: function CustomEvent(name) { this.type = name; },
+    localStorage,
+    callConfiguredLLM: async () => ({ text: '기존 개인 대화 응답' }),
+    dispatchEvent: () => true,
+    parent: {
+      SWWorkflowBridge: {
+        execute: async (payload) => {
+          calls.push(payload);
+          if (fail) throw new Error('인증값 누락');
+          return {
+            reply: '본부장 최종 보고',
+            deliverables: [{ title: '법무 검토서', department: '법무팀', status: '완료', teamLeader: '피터', content: '검토 결과' }],
+            workflow: { reviewGate: { finalReleaseAllowed: true } }
+          };
+        }
+      }
+    }
+  };
+  sandbox.window = sandbox;
+  vm.runInNewContext(source, sandbox, { filename: 'workflow-bridge-v315.js' });
+  return { sandbox, calls, storage };
+}
+
+test('Alex instruction is sent to the workflow engine with a COO record and team leaders', async () => {
+  const { sandbox, calls } = makeContext();
+  const result = await sandbox.callConfiguredLLM([
+    { role: 'user', content: '직원 시스템 프롬프트\n\n[사용자 요청]\n계약서 검토 및 수정안 작성' }
+  ]);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].task, '계약서 검토 및 수정안 작성');
+  assert.equal(calls[0].taskId, 'test-task-id');
+  assert.equal(calls[0].employeeId, 'alex');
+  assert.equal(calls[0].employees.find(person => person.id === 'COO').name, '단테');
+  for (const team of ['경영관리팀', '총무팀', '전략기획팀', '법무팀', 'IR팀', '기술·IT팀']) {
+    assert.ok(calls[0].employees.some(person => person.department === team && person.position.includes('팀장')), team);
+  }
+  assert.match(result.text, /본부장 최종 보고/);
+  assert.match(result.text, /법무 검토서/);
+  assert.match(result.text, /대표 승인 전 외부 실행: 수행하지 않음/);
+});
+
+test('a worker failure is shown as a failure and never falls back to a canned answer', async () => {
+  const { sandbox } = makeContext({ fail: true });
+  const result = await sandbox.callConfiguredLLM([{ role: 'user', content: '업무 지시' }]);
+  assert.match(result.text, /실제 업무처리 실패/);
+  assert.match(result.text, /인증값 누락/);
+  assert.doesNotMatch(result.text, /기존 개인 대화 응답/);
+});
+
+test('other employees retain their original one-to-one conversation behavior', async () => {
+  const { sandbox, calls } = makeContext({ selectedId: 'peter' });
+  const result = await sandbox.callConfiguredLLM([{ role: 'user', content: '계약서 조항 설명' }]);
+  assert.equal(result.text, '기존 개인 대화 응답');
+  assert.equal(calls.length, 0);
+});
