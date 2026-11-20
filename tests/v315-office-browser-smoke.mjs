@@ -48,6 +48,11 @@ try {
   assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
   assert.match(await toggle.getAttribute('aria-label'), /닫기/);
   assert.equal(await page.locator('#bridgePanel').evaluate(el => el.classList.contains('open')), true);
+  const generalTokenBox = await page.locator('#accessToken').boundingBox();
+  const representativeTokenBox = await page.locator('#representativeToken').boundingBox();
+  assert.ok(generalTokenBox && representativeTokenBox, 'both token fields should be visible');
+  assert.ok(representativeTokenBox.width >= generalTokenBox.width - 1,
+    'representative token field should fill the same panel width as the general token field');
 
   await mkdir('artifacts', { recursive: true });
   await page.screenshot({ path: 'artifacts/sw-ai-office-v315-integrated-desktop.png', fullPage: true });
