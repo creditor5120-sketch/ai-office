@@ -48,7 +48,13 @@ try {
   assert.equal(await page.locator('#bridgePanel').evaluate(el => el.classList.contains('open')), true);
 
   await mkdir('artifacts', { recursive: true });
-  await page.screenshot({ path: 'artifacts/sw-ai-office-v315-integrated.png', fullPage: true });
+  await page.screenshot({ path: 'artifacts/sw-ai-office-v315-integrated-desktop.png', fullPage: true });
+
+  await page.setViewportSize({ width: 820, height: 1180 });
+  const tabletButtonBox = await toggle.boundingBox();
+  assert.ok(tabletButtonBox && tabletButtonBox.x >= 0 && tabletButtonBox.x + tabletButtonBox.width <= 820,
+    'workflow control should remain visible within the iPad-width header');
+  await page.screenshot({ path: 'artifacts/sw-ai-office-v315-integrated-ipad.png', fullPage: true });
 
   await toggle.click();
   assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
