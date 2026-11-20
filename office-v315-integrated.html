@@ -215,8 +215,8 @@
    }
    if(!doc.getElementById('swWorkflowEngineButton')){
     const button=doc.createElement('button');button.id='swWorkflowEngineButton';button.type='button';button.textContent='업무 엔진';
-    button.title='업무 처리·이력·대표 승인';button.setAttribute('aria-label','업무 엔진 열기');
-    button.addEventListener('click',()=>{panel.classList.toggle('open');if(panel.classList.contains('open'))renderHistory()});
+    button.title='업무 처리·이력·대표 승인';button.setAttribute('aria-label','업무 엔진 열기');button.setAttribute('aria-expanded','false');
+    button.addEventListener('click',()=>{const opened=panel.classList.toggle('open');button.setAttribute('aria-label',opened?'업무 엔진 닫기':'업무 엔진 열기');button.setAttribute('aria-expanded',String(opened));if(opened)renderHistory()});
     settingsButton.insertAdjacentElement('afterend',button);
    }
    const script=doc.createElement('script');script.id='sw-workflow-bridge-v315';script.src='workflow-bridge-v315.js';
