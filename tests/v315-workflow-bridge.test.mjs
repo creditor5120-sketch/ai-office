@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
+const wrapperSource = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
 
 function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'completed' } = {}) {
   const calls = [];
@@ -184,4 +185,13 @@ test('an interrupted task older than 24 hours starts with a new task ID', async 
 
   assert.equal(calls.length, 2);
   assert.notEqual(calls[1].taskId, firstTaskId);
+});
+
+test('integrated wrapper JavaScript parses and includes server-side task recovery', () => {
+  const scripts = [...wrapperSource.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
+  assert.equal(scripts.length, 1);
+  assert.doesNotThrow(() => new vm.Script(scripts[0][1], { filename: 'office-v315-integrated.html' }));
+  assert.match(wrapperSource, /action:'get_recent_tasks'/);
+  assert.match(wrapperSource, /const saved=audit\.result\|\|\{\}/);
+  assert.match(wrapperSource, /\[본부장 최종 보고\]/);
 });
