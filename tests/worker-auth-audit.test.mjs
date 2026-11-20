@@ -401,9 +401,13 @@ test('uses a five-minute execution lease longer than the bounded AI provider ret
 });
 
 test('acquires execution ownership and increments attempt count in one conditional update', () => {
-  assert.match(source, /UPDATE tasks SET status = 'PROCESSING',[\\s\\S]*attempt_count = attempt_count \\+ 1[\\s\\S]*lock_token = \\?, lease_expires_at = \\?[\\s\\S]*WHERE task_id = \\? AND \\(lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= \\?\\)/);
-  assert.match(source, /const lockResult = await env\\.DB\\.prepare\\([\\s\\S]*\\)\\.bind\\(now, lockToken, leaseUntil, leaseNow, taskId, leaseNow\\)\\.run\\(\\)/);
-  assert.match(source, /WHERE task_id = \\? AND lock_token = \\?/);
+  const lockStart = source.indexOf("UPDATE tasks SET status = 'PROCESSING',");
+  const attemptUpdate = source.indexOf('attempt_count = attempt_count + 1', lockStart);
+  const tokenUpdate = source.indexOf('lock_token = ?, lease_expires_at = ?', lockStart);
+  const guardedWhere = source.indexOf('WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)', lockStart);
+  assert.ok(lockStart >= 0 && attemptUpdate > lockStart && tokenUpdate > attemptUpdate && guardedWhere > tokenUpdate);
+  assert.ok(source.includes('.bind(now, lockToken, leaseUntil, leaseNow, taskId, leaseNow).run()'));
+  assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
 });
 
 test('a stale execution cannot renew its lease or overwrite task state after ownership changes', () => {
