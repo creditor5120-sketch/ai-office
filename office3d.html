@@ -196,12 +196,12 @@ cube(56,.55,38,M.floor,0,-.38,0);
 // 바닥은 전 구역에 작은 정사각 타일을 깔고, 회의실·라운지에는 별도 색상 띠를 둔다.
 const floor2TileMaterials=[mat(0xd8dfe0),mat(0xe4e8e7),mat(0xd1d9da),mat(0xe9d8d2),mat(0xeee3d3),mat(0xded7c8)];
 let floor2TileCount=0;
-for(let x=-27;x<27;x+=2){
- for(let z=-18;z<18;z+=2){
-  let material=floor2TileMaterials[(Math.floor((x+27)/2)+Math.floor((z+18)/2))%3];
+for(let x=-27;x<27;x+=1.5){
+ for(let z=-18;z<18;z+=1.5){
+  let material=floor2TileMaterials[(Math.floor((x+27)/1.5)+Math.floor((z+18)/1.5))%3];
   if(z>=12) material=x<0?floor2TileMaterials[3]:floor2TileMaterials[4];
-  const tile=new THREE.Mesh(new THREE.PlaneGeometry(1.96,1.96),material);
-  tile.rotation.x=-Math.PI/2;tile.position.set(x+1,-.095,z+1);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
+  const tile=new THREE.Mesh(new THREE.PlaneGeometry(1.46,1.46),material);
+  tile.rotation.x=-Math.PI/2;tile.position.set(x+.75,-.095,z+.75);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
  }
 }
 // 외곽 벽체와 출입구
@@ -304,7 +304,7 @@ function makePixelSheet(person,index,seated=false){
 function makeAvatar(person,index,x,z){
  const tex=makePixelSheet(person,index,false),seatedTex=makePixelSheet(person,index,true);
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
- sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);
+ sprite.position.set(x,.82,z);sprite.scale.set(1.28,1.62,1);
  // 기존 픽셀 카드용 텍스처는 유지하되, 3D 장면에는 입체 인체 모델을 별도로 표시한다.
  sprite.material.opacity=0;sprite.material.transparent=true;
  const skinMaterial=new THREE.MeshStandardMaterial({color:0xe8bd9d,roughness:.88});
@@ -338,12 +338,13 @@ function makeAvatar(person,index,x,z){
  sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;
  sprite.userData.texture=tex;sprite.userData.walkTexture=tex;sprite.userData.seatedTexture=seatedTex;sprite.userData.frame=0;sprite.userData.isSeated=false;
  const labelCanvas=document.createElement('canvas');labelCanvas.width=384;labelCanvas.height=96;
- const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(248,251,255,.94)';
- ctx.fillRect(5,8,374,80);ctx.fillStyle='#263b50';ctx.font='bold 42px sans-serif';
+ const ctx=labelCanvas.getContext('2d');ctx.fillStyle='rgba(35,53,73,.97)';
+ ctx.beginPath();ctx.roundRect(5,8,374,80,30);ctx.fill();
+ ctx.fillStyle='#ffffff';ctx.font='bold 44px sans-serif';
  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(person.name,192,49);
  const labelTex=new THREE.CanvasTexture(labelCanvas);labelTex.colorSpace=THREE.SRGBColorSpace;
  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex,depthTest:false,transparent:true}));
- label.position.set(0,1.12,0);label.scale.set(1.8,.45,1);label.userData.avatar=sprite;sprite.add(label);
+ label.position.set(0,1.12,0);label.scale.set(2.15,.52,1);label.userData.avatar=sprite;sprite.add(label);
  const marker=new THREE.Mesh(new THREE.TorusGeometry(.48,.035,6,20),new THREE.MeshBasicMaterial({color:0x7fd0ff}));
  marker.rotation.x=Math.PI/2;marker.position.set(0,-.72,0);marker.visible=false;marker.userData.avatar=sprite;sprite.add(marker);sprite.userData.marker=marker;
 
