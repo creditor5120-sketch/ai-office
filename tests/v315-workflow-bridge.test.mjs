@@ -22,7 +22,8 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
   const progressBubble = { textContent: '…' };
   const localStorage = {
     getItem: key => storage.has(key) ? storage.get(key) : null,
-    setItem: (key, value) => storage.set(key, String(value))
+    setItem: (key, value) => storage.set(key, String(value)),
+    removeItem: key => storage.delete(key)
   };
   const sandbox = {
     EMP: employees,
