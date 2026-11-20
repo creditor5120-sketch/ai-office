@@ -73,10 +73,10 @@ export default {
     const MAX_NEW_AI_CALLS_PER_REQUEST = 1;
     const cachedAiCalls = new Map();
 
-    // Gemini API/Cloudflare 런타임별 Abort 오류 문구를 공통 시간 초과로 판별한다.
+    // AI API/Cloudflare 런타임별 Abort 오류 문구를 공통 시간 초과로 판별한다.
     // 내부 단계의 catch에서 오류가 포장되더라도 재개 판정이 원인을 놓치지 않게 한다.
     const isTimeoutFailure = value =>
-      /GEMINI_API_TIMEOUT|timeout|timed\s*out|aborted due to timeout|operation was aborted/i
+      /AI_PROVIDER_TIMEOUT|timeout|timed\s*out|aborted due to timeout|operation was aborted/i
         .test(String(value?.message || value || ""));
 
     const writeTaskEvent = async (eventType, stage, detail = {}) => {
@@ -167,7 +167,7 @@ export default {
       if (aiCallFailureEncountered) {
         // 시간 초과는 일반 단계 실패로 바꾸지 않고 상위 재개 처리까지 원인 코드를 보존한다.
         const failurePrefix = isTimeoutFailure(aiCallFailureMessage)
-          ? "GEMINI_API_TIMEOUT: "
+          ? "AI_PROVIDER_TIMEOUT: "
           : "SW_AI_STEP_FAILED: ";
         throw new Error(failurePrefix + aiCallFailureMessage);
       }
@@ -562,7 +562,14 @@ export default {
         cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.26"
       });
 
-      if (!env.GEMINI_API_KEY) throw new Error("Gemini API 키가 설정되지 않았습니다. Cloudflare Secret GEMINI_API_KEY를 확인하세요.");
+      // 기존 OpenRouter Secret을 우선 사용하고, 없으면 Gemini Secret으로 실행한다.
+      // 두 Secret 중 하나만 있어도 기존 배포 설정을 바꾸지 않고 업무 엔진을 사용할 수 있다.
+      const aiProvider = env.OPENROUTER_API_KEY ? "openrouter" : env.GEMINI_API_KEY ? "gemini" : "";
+      const aiProviderLabel = aiProvider === "openrouter" ? "OpenRouter" : "Google Gemini";
+      const aiModel = aiProvider === "openrouter"
+        ? "nvidia/nemotron-3-ultra-550b-a55b:free"
+        : "gemini-3.8-flash";
+      if (!aiProvider) throw new Error("AI API 키가 설정되지 않았습니다. Cloudflare Secret OPENROUTER_API_KEY 또는 GEMINI_API_KEY를 확인하세요.");
 
       await setCurrentStage("요청 처리");
 
@@ -606,35 +613,51 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
   let response;
   let rawBody = "";
 
-  // Gemini API 무료 등급을 사용한다. 429는 일일/분당 한도일 수 있으므로 즉시 상위 대기 처리한다.
+  // OpenRouter를 우선 사용한다. OpenRouter Secret이 없을 때 Gemini로 대체한다.
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
-      response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY
-        },
-        signal: AbortSignal.timeout(60000),
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
+      if (aiProvider === "openrouter") {
+        response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + env.OPENROUTER_API_KEY
           },
-          contents: [{
-            role: "user",
-            parts: [{ text: userPrompt }]
-          }],
-          generationConfig: {
+          signal: AbortSignal.timeout(60000),
+          body: JSON.stringify({
+            model: aiModel,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt }
+            ],
             temperature: 0.3,
-            maxOutputTokens: jsonMode ? 2048 : currentStage === "본부장 실행계획 수립" ? 3072 : 8192,
-            ...(jsonMode ? { responseMimeType: "application/json" } : {})
-          }
-        })
-      });
+            max_tokens: jsonMode ? 2048 : currentStage === "본부장 실행계획 수립" ? 3072 : 8192,
+            ...(jsonMode ? { response_format: { type: "json_object" } } : {})
+          })
+        });
+      } else {
+        response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + aiModel + ":generateContent", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": env.GEMINI_API_KEY
+          },
+          signal: AbortSignal.timeout(60000),
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: jsonMode ? 2048 : currentStage === "본부장 실행계획 수립" ? 3072 : 8192,
+              ...(jsonMode ? { responseMimeType: "application/json" } : {})
+            }
+          })
+        });
+      }
     } catch (error) {
       const errorName = String(error?.name || "");
       const errorMessage = String(error?.message || error || "");
-      const isTimeout = /timeout|timed\\s*out|aborted due to timeout|operation was aborted/i.test(
+      const isTimeout = /timeout|timed\s*out|aborted due to timeout|operation was aborted/i.test(
         errorName + " " + errorMessage
       );
       if (isTimeout) {
@@ -642,26 +665,23 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
           await new Promise(resolve => setTimeout(resolve, 1500));
           continue;
         }
-        throw new Error("GEMINI_API_TIMEOUT: Gemini API 응답 시간 초과(회당 60초, 1회 재시도 포함). " + errorMessage);
+        throw new Error("AI_PROVIDER_TIMEOUT: " + aiProviderLabel + " 응답 시간 초과(회당 60초, 1회 재시도 포함). " + errorMessage);
       }
       if (attempt === 2) {
-        throw new Error("Gemini API 네트워크 호출 실패: " + errorMessage);
+        throw new Error(aiProviderLabel + " 네트워크 호출 실패: " + errorMessage);
       }
       await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
       continue;
     }
 
     if (response.ok) break;
-
-    // 429는 무료 사용량 제한일 수 있어 불필요한 즉시 재호출을 하지 않는다.
     if (response.status === 429) break;
     const retryable = [500, 502, 503, 504, 524].includes(response.status);
     if (!retryable || attempt === 2) break;
     await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
   }
 
-  if (!response) throw new Error("Gemini API 응답을 받지 못했습니다.");
-
+  if (!response) throw new Error(aiProviderLabel + " API 응답을 받지 못했습니다.");
   rawBody = await response.text();
   if (!response.ok) {
     let errorData = null;
@@ -675,21 +695,37 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
   try {
     result = JSON.parse(rawBody);
   } catch (error) {
-    throw new Error("Gemini API 성공 응답 JSON 해석 실패: " + error.message + " / " + rawBody.slice(0, 300));
+    throw new Error(aiProviderLabel + " 성공 응답 JSON 해석 실패: " + error.message + " / " + rawBody.slice(0, 300));
   }
 
-  const candidate = result.candidates?.[0];
-  const text = (candidate?.content?.parts || [])
-    .map(part => typeof part.text === "string" ? part.text : "")
-    .join("");
+  let text = "";
+  let finishReason = "";
+  if (aiProvider === "openrouter") {
+    const choice = result.choices?.[0];
+    const content = choice?.message?.content;
+    text = typeof content === "string"
+      ? content
+      : Array.isArray(content)
+        ? content.map(part => typeof part === "string" ? part : part.text || "").join("")
+        : "";
+    finishReason = choice?.finish_reason || "";
+  } else {
+    const candidate = result.candidates?.[0];
+    text = (candidate?.content?.parts || [])
+      .map(part => typeof part.text === "string" ? part.text : "")
+      .join("");
+    finishReason = candidate?.finishReason || "";
+  }
 
   if (!text) {
-    const reason = candidate?.finishReason || result.promptFeedback?.blockReason || result.error?.message || "응답 내용 없음";
-    throw new Error("Gemini AI 답변을 받지 못했습니다: " + reason);
+    const reason = aiProvider === "openrouter"
+      ? result.choices?.[0]?.finish_reason || result.error?.message || "응답 내용 없음"
+      : result.candidates?.[0]?.finishReason || result.promptFeedback?.blockReason || result.error?.message || "응답 내용 없음";
+    throw new Error(aiProviderLabel + " AI 답변을 받지 못했습니다: " + reason);
   }
 
-  // 답변이 길이 제한으로 끝난 경우 한 차례 이어서 작성한다.
-  if (!jsonMode && candidate?.finishReason === "MAX_TOKENS" && continuationDepth < 1) {
+  const reachedOutputLimit = aiProvider === "openrouter" ? finishReason === "length" : finishReason === "MAX_TOKENS";
+  if (!jsonMode && reachedOutputLimit && continuationDepth < 1) {
     const continuation = await askAIBare(
       systemPrompt,
       "앞선 답변의 마지막 문장 다음부터 이어서 작성하라. 이미 작성한 내용을 반복하거나 요약하지 말고 문서의 나머지 부분을 완결하라.\n\n" +
@@ -699,7 +735,6 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
     );
     return text + "\n\n" + continuation;
   }
-
   return text;
 }
 async function askAI(systemPrompt, userPrompt, jsonMode = false) {
@@ -734,7 +769,7 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
         callIndex,
         elapsedMs: Date.now() - aiCallStartedAt,
         outputLength: String(value || "").length,
-        model: "gemini-3.8-flash"
+        model: aiModel
       });
     } catch (eventError) { console.error("AI 호출 완료 이력 기록 실패:", eventError.message); }
     return value;
@@ -744,7 +779,7 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
         callIndex,
         elapsedMs: Date.now() - aiCallStartedAt,
         error: String(error?.message || error),
-        timeout: /GEMINI_API_TIMEOUT/i.test(String(error?.message || error))
+        timeout: /AI_PROVIDER_TIMEOUT/i.test(String(error?.message || error))
       });
     } catch (eventError) { console.error("AI 호출 실패 이력 기록 실패:", eventError.message); }
     if (error.message === "SW_AI_YIELD") {
@@ -2360,7 +2395,7 @@ let finalReport;
 const finalReportFallback = true;
 
 // 본부장 최종 보고는 이미 확정된 업무 데이터로 코드가 작성한다.
-// 별도의 Gemini API 호출을 제거해 마지막 보고 단계에서 전체 요청이 524로 실패하는 일을 방지한다.
+// 별도의 AI API 호출을 제거해 마지막 보고 단계에서 전체 요청이 524로 실패하는 일을 방지한다.
 const reportLines = [
   "# SW AI OFFICE 본부장 업무 처리 보고",
   "",
@@ -2422,7 +2457,7 @@ const reportLines = [
   "",
   "- 본 보고서는 코드에 기록된 결과물과 검수 응답을 바탕으로 자동 구성했습니다.",
   "- Worker에는 공식 법령 원문을 조회하는 기능이 연결되어 있지 않습니다. 법률·조문·현행성은 공식 원문 대조 전까지 검증 완료로 보지 않습니다.",
-  "- 팀장 2차 검수는 동일 Gemini API 모델을 별도 검수 단계와 지시문으로 호출한 절차이며, 사람 또는 별도 AI 모델에 의한 외부 독립감사를 의미하지 않습니다.",
+  "- 팀장 2차 검수는 동일 AI API 모델을 별도 검수 단계와 지시문으로 호출한 절차이며, 사람 또는 별도 AI 모델에 의한 외부 독립감사를 의미하지 않습니다.",
   "- 법률·수치·외부 사실의 독립적인 검증이 이루어지지 않은 사항은 별도 확인이 필요합니다.",
   "- 조건부 승인 또는 부분 완료 상태의 결과물은 대표이사의 최종 승인 및 미해결 사항 해소 전까지 최종 배포본으로 취급하지 않습니다.",
   "- 본 보고서는 본부장 AI의 별도 생성문이 아닌, 확정된 처리 데이터에 따른 자동 보고서입니다."
@@ -2462,7 +2497,7 @@ const successPayload = {
       rule: "모든 전문 직원 결과물이 completed 상태이고 팀장 2차 검수 judgment가 승인인 경우에만 최종 완료로 판정합니다.",
       integrityGate: "1차 지적사항 고유 ID, 2차 판정, 실제 본문 인용 증거, 미해결 목록의 상호 모순을 코드로 대조합니다. 반영/미해결 충돌 또는 본문 상태 모순은 반려 처리합니다.",
       legalSourceVerification: "공식 법령 원문 조회 기능이 연결되지 않아 법령 원문 대조는 별도 확인이 필요합니다.",
-      reviewIndependence: "동일 Gemini API 모델을 별도 검수 단계로 호출한 절차이며 사람 또는 별도 AI 모델의 독립감사는 아닙니다."
+      reviewIndependence: "동일 AI API 모델을 별도 검수 단계로 호출한 절차이며 사람 또는 별도 AI 모델의 독립감사는 아닙니다."
     },
     completenessChecks: specialistResults.map(item => ({
       id: item.id,
@@ -2652,8 +2687,8 @@ return json(successPayload);
           status: "PROCESSING",
           retryCount: priorModelUnavailableCount + 1,
           maxRetriesForStage: 5,
-          provider: "Google Gemini",
-          model: "gemini-3.8-flash",
+          provider: aiProviderLabel,
+          model: aiModel,
           cachedAiCallCount: cachedAiCalls.size,
           nextAiCallIndex: aiCallCursor,
           error: error.message
@@ -2701,9 +2736,9 @@ return json(successPayload);
       : timeoutResumable
         ? "AI 응답 시간 초과가 발생했습니다. 저장된 체크포인트를 유지했으며 동일 단계 재개 횟수 한도 내에서 다시 처리할 수 있습니다."
       : modelUnavailableResumable
-        ? "Gemini 서버가 일시적으로 과부하 상태입니다. 업무와 체크포인트를 보존했으며 잠시 후 같은 업무를 이어서 처리할 수 있습니다."
+        ? "AI 제공자 서버가 일시적으로 과부하 상태입니다. 업무와 체크포인트를 보존했으며 잠시 후 같은 업무를 이어서 처리할 수 있습니다."
       : nextStatus === "WAITING_FOR_API_QUOTA"
-      ? "Gemini API 할당량 또는 호출 제한으로 대기 중입니다. 같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다."
+      ? "AI API 할당량 또는 호출 제한으로 대기 중입니다. 같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다."
       : nextStatus === "PAUSED"
         ? "업무가 안전한 AI 호출 경계에서 일시정지되었습니다."
         : nextStatus === "CANCELLED"
