@@ -1,4 +1,4 @@
-// SW AI OFFICE Worker v51.26 - Gemini free-tier API + completion audit integrity
+// SW AI OFFICE Worker v51.26 - OpenRouter/Gemini dual provider + completion audit integrity
 export default {
 
   async fetch(request, env) {
@@ -2609,7 +2609,7 @@ return json(successPayload);
         `SELECT COUNT(*) AS total FROM task_events
          WHERE task_id = ? AND event_type = 'AI_TIMEOUT_RESUME' AND stage = ?`
       ).bind(taskId, currentStage).first();
-      // Gemini 응답 시간 초과는 일시 장애로 보고 동일 단계 체크포인트 재개를 최대 5회 허용한다.
+      // AI 제공자 응답 시간 초과는 일시 장애로 보고 동일 단계 체크포인트 재개를 최대 5회 허용한다.
       priorTimeoutCount = Number(priorTimeout?.total || 0);
       timeoutResumable = priorTimeoutCount < 5;
     } catch (timeoutCheckError) {
