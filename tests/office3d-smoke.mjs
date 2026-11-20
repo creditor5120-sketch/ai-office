@@ -58,23 +58,6 @@ try {
   if (await page.locator('#floor1').getAttribute('aria-pressed') !== 'true') throw new Error('1층 복귀 상태가 반영되지 않았습니다');
   await page.waitForTimeout(500);
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor1.png' });
-  // 기준 사이트의 양 층을 같은 실행에서 캡처해 이후 시각 비교 자료로 보관한다.
-  let referenceCapture = 'skipped';
-  const referencePage = await browser.newPage({ viewport: { width: 1440, height: 960 } });
-  try {
-    await referencePage.goto('https://team.ai.id/showcase/?showcase=1', { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await referencePage.waitForTimeout(4000);
-    await referencePage.screenshot({ path: 'artifacts/team-ai-id-floor2-reference.png', fullPage: false, timeout: 15000 });
-    await referencePage.getByText('Lantai 1', { exact: true }).last().click({ timeout: 10000 });
-    await referencePage.waitForTimeout(1800);
-    await referencePage.screenshot({ path: 'artifacts/team-ai-id-floor1-reference.png', fullPage: false, timeout: 15000 });
-    referenceCapture = 'both floors captured';
-  } catch (error) {
-    console.warn('Optional TEAM.AI.ID reference capture skipped:', error.message);
-  } finally {
-    await referencePage.close();
-  }
-
   const staffCount = await page.locator('#staffStrip .staffCard').count();
   if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
   const visibleCount = Number((await page.locator('#activeCount').innerText()).trim());
