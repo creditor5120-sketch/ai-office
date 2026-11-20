@@ -200,11 +200,13 @@ const floor2TileGeometry=new THREE.PlaneGeometry(1.46,1.46);
 for(let x=-27;x<27;x+=1.5){
  for(let z=-18;z<18;z+=1.5){
   let material=floor2TileMaterials[(Math.floor((x+27)/1.5)+Math.floor((z+18)/1.5))%3];
-  if(z<-2&&x<-9) material=floor2TileMaterials[3];
-  else if(z<-2&&x>9) material=floor2TileMaterials[2];
-  else if(z>=-2&&z<11&&x<-9) material=floor2TileMaterials[5];
-  else if(z>=-2&&z<11&&x>9) material=floor2TileMaterials[2];
-  else if(z>=12) material=x<0?floor2TileMaterials[4]:floor2TileMaterials[3];
+  // 레퍼런스의 불규칙한 색상 구역: 좌측 분홍, 중앙 베이지, 하단 중앙 연녹색
+  if(x < -13 && z > -7 && z < 8) material=floor2TileMaterials[3];
+  else if(x < -5 && x > -16 && z >= 8) material=floor2TileMaterials[4];
+  else if(x >= 3 && x < 13 && z >= 7) material=floor2TileMaterials[5];
+  else if(x > 13 && z > -4 && z < 12) material=floor2TileMaterials[4];
+  else if(z < -8 && x < 2) material=floor2TileMaterials[0];
+  else if(z >= 13) material=floor2TileMaterials[1];
   const tile=new THREE.Mesh(floor2TileGeometry,material);
   tile.rotation.x=-Math.PI/2;tile.position.set(x+.75,-.095,z+.75);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
  }
@@ -225,29 +227,41 @@ function f2sign(label,x,z){
 // 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
 // 레퍼런스의 비대칭 팀 클러스터와 부분 유리 파티션을 반영한 공간 배치
 const floor2Teams=[
- {name:'경영관리팀',center:[-19,-9],back: -16,front:-2,slots:[[-24,-12],[-20,-12],[-16,-12],[-24,-7],[-20,-7],[-16,-7]]},
- {name:'법무팀',center:[-3,-10],back:-17,front:-3,slots:[[-7,-13],[-3,-13],[1,-13],[-7,-8],[-3,-8]]},
- {name:'IR팀',center:[15,-8],back:-15,front:0,slots:[[11,-12],[15,-12],[19,-12],[11,-7],[15,-7]]},
- {name:'총무팀',center:[-18,5],back:-1,front:12,slots:[[-23,2],[-18,2],[-13,2],[-23,7],[-18,7]]},
- {name:'전략기획팀',center:[0,6],back:-1,front:12,slots:[[-5,3],[0,3],[5,3],[-5,8],[0,8]]},
- {name:'기술·IT팀',center:[18,5],back:-1,front:12,slots:[[14,2],[18,2],[22,2],[14,7],[18,7]]}
+ {name:'경영관리팀',center:[-14,-12],slots:[[-18,-14],[-14,-14],[-10,-14],[-18,-10],[-14,-10],[-10,-10]]},
+ {name:'법무팀',center:[-20,0],slots:[[-24,-3],[-20,-3],[-16,-3],[-24,2],[-20,2]]},
+ {name:'IR팀',center:[-10,10],slots:[[-14,8],[-10,8],[-6,8],[-14,12],[-10,12]]},
+ {name:'총무팀',center:[5,11],slots:[[0,9],[4,9],[8,9],[0,13],[4,13]]},
+ {name:'전략기획팀',center:[9,-8],slots:[[5,-11],[9,-11],[13,-11],[5,-7],[9,-7]]},
+ {name:'기술·IT팀',center:[21,2],slots:[[17,-1],[21,-1],[25,-1],[17,4],[21,4]]}
 ];
 const floor2DeskSlots=[];
-for(let ti=0;ti<floor2Teams.length;ti++){
- const team=floor2Teams[ti], [cx,cz]=team.center;
- const back=team.back,front=team.front,depth=front-back;
- // 레퍼런스처럼 모든 팀실을 같은 크기의 상자로 만들지 않고 벽과 유리를 부분적으로 연결한다.
- const roomWidth=ti===0?14:ti===5?12:13;
- f2wall(roomWidth,2.45,.2,M.wall,cx,1.225,back);
- f2wall(.16,2.15,depth*.72,M.wall,cx-roomWidth/2,.02,(back+front)/2-1.2);
- f2wall(.16,2.15,depth*.72,M.glass,cx+roomWidth/2,.02,(back+front)/2-1.2);
- f2wall(roomWidth*.34,2.05,.14,M.glass,cx-roomWidth*.33,1.02,front);
- f2wall(roomWidth*.34,2.05,.14,M.glass,cx+roomWidth*.33,1.02,front);
- f2sign(team.name,cx-roomWidth*.37,back);
+for(const team of floor2Teams){
  for(const [x,z] of team.slots){
   desk(x,z);chair(x,z+1.0);floor2DeskSlots.push([x,z+1.0]);
  }
 }
+// 레퍼런스처럼 벽으로 완전히 둘러싸지 않고, 구역마다 길이가 다른 낮은 벽과 유리 파티션을 배치
+f2wall(18,2.7,.2,M.wall,-17,1.35,-17.9);
+f2wall(.18,2.1,8,M.wall,-26,1.05,-13);
+f2wall(8,2.2,.16,M.wall,-23,1.1,-6.0);
+f2wall(11,2.2,.16,M.glass,-12,1.1,-5.5);
+f2wall(.16,2.1,8,M.wall,-7,1.05,-1.5);
+f2wall(13,2.1,.16,M.glass,-18,.98,5.2);
+f2wall(.16,1.8,8,M.glass,-3,.9,9.0);
+f2wall(12,2.3,.16,M.wall,4,1.15,-14.0);
+f2wall(.16,2.1,10,M.glass,15,1.05,-9.0);
+f2wall(9,2.1,.16,M.wall,21,1.05,-3.5);
+f2wall(.16,2.1,9,M.glass,12,1.05,3.5);
+f2wall(12,1.6,.16,M.glass,7,.8,15.0);
+f2wall(.16,1.6,7,M.glass,13,.8,11.5);
+f2wall(8,1.4,.16,M.wall,-21,.7,13.8);
+f2wall(.16,1.4,6,M.wall,-25,.7,10.8);
+f2sign('경영관리팀',-14,-17.5);
+f2sign('법무팀',-25,-6.5);
+f2sign('IR팀',-10,5.4);
+f2sign('총무팀',5,15.0);
+f2sign('전략기획팀',9,-14.2);
+f2sign('기술·IT팀',22,-4.0);
 // 팀 구역을 잇는 꺾인 복도와 낮은 파티션
 f2wall(11,1.55,.16,M.glass,-11,.78,-1.0);
 f2wall(.16,1.55,9,M.glass,-5,.78,3.5);
