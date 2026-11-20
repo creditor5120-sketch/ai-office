@@ -45,7 +45,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
           if (shouldFail) throw new Error('인증값 누락');
           return {
             reply: '본부장 최종 보고',
-            deliverables: [{ title: '법무 검토서', department: '법무팀', status: '완료', teamLeader: '피터', content: '검토 결과' }],
+            deliverables: [{ title: '법무 검토서', department: '법무팀', status: '완료', teamLeader: '렉스', content: '검토 결과' }],
             workflow: { status: workflowStatus, reviewGate: { finalReleaseAllowed: workflowStatus === 'completed' } }
           };
         }
