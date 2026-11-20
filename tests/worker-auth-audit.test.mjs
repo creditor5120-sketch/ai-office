@@ -348,6 +348,7 @@ test('allows an interrupted RECEIVED task to enter the guarded resume path', () 
 test('checkpoint replay distinguishes an identical saved result from a conflicting result', () => {
   assert.match(source, /SELECT checkpoint_json FROM task_checkpoints WHERE task_id = \? AND stage_key = \?/);
   assert.match(source, /saved\.signature !== signature \|\| saved\.value !== value/);
+  assert.match(source, /if \(!raced\) throw new Error\("SW_AI_LOCK_LOST"\)/);
   assert.match(source, /SW_AI_CHECKPOINT_CONFLICT/);
   assert.match(source, /SW_AI_CHECKPOINT_CORRUPT/);
   assert.match(source, /idempotentReuse: reusedExisting/);
