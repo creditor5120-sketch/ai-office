@@ -416,6 +416,10 @@ test('persists quota exhaustion as a resumable waiting state with checkpoint met
 test('uses an eight-minute execution lease covering provider retries plus one output-continuation call', () => {
   assert.ok(source.includes('const TASK_LOCK_LEASE_MS = 8 * 60 * 1000'));
   assert.equal(source.split('Date.now() + TASK_LOCK_LEASE_MS').length - 1, 2);
+  assert.match(source, /for \(let attempt = 0; attempt < 3; attempt\+\+\)/);
+  assert.match(source, /AbortSignal\.timeout\(60000\)/);
+  assert.match(source, /continuationDepth < 1/);
+  assert.match(source, /continuationDepth \+ 1/);
   const maximumProviderWaitMs = 3 * 60000 + 1200 + 2400;
   const maximumWithOneContinuation = maximumProviderWaitMs * 2;
   assert.ok(8 * 60 * 1000 > maximumWithOneContinuation);
