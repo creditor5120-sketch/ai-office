@@ -1,6 +1,6 @@
 /* SW AI OFFICE workflow bridge for SW_AI_Office_Latest.html
- * Loaded by office-v315-integrated.html after the untouched office iframe finishes loading.
- * This file intentionally does not edit the source HTML file on disk or in the repository.
+ * Loaded by office-v315-integrated.html after SW_AI_Office_Latest.html finishes loading.
+ * The approved original SW_AI_Office_v3_15.html remains preserved as a separate file.
  */
 (function () {
   'use strict';
