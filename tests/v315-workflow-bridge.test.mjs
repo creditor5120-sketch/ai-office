@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
 const wrapperSource = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
 
-function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'completed' } = {}) {
+function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'completed', initialStorage = null } = {}) {
   const calls = [];
   let shouldFail = fail;
   const employees = [
@@ -19,7 +19,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
     { id: 'ryan', name: '라이언', badge: 'IR팀장', room: 'ir', duty: 'IR 검수' },
     { id: 'teo', name: '테오', badge: 'IT·기술팀장', room: 'it', duty: '기술 검수' }
   ];
-  const storage = new Map();
+  const storage = initialStorage || new Map();
   let taskSequence = 0;
   const progressBubble = { textContent: '…' };
   const localStorage = {
@@ -143,6 +143,25 @@ test('an interrupted workflow reuses its original task and idempotency keys on t
   assert.equal(calls[1].idempotencyKey, firstTaskId);
   assert.match(second.text, /본부장 최종 보고/);
   assert.equal(storage.has('swV315PendingWorkflowTask'), false);
+});
+
+test('a pending workflow survives a fresh browser script context and resumes with the same idempotency key', async () => {
+  const persistedStorage = new Map();
+  const firstContext = makeContext({ fail: true, initialStorage: persistedStorage });
+  const input = [{ role: 'user', content: '브라우저 재시작 후 업무 복구 검증' }];
+  const first = await firstContext.sandbox.callConfiguredLLM(input);
+  assert.match(first.text, /실제 업무처리 실패/);
+  const originalTaskId = firstContext.calls[0].taskId;
+  assert.ok(persistedStorage.has('swV315PendingWorkflowTask'));
+
+  // 새 페이지 로드처럼 JavaScript 실행 컨텍스트만 새로 만들고 localStorage는 유지한다.
+  const secondContext = makeContext({ initialStorage: persistedStorage });
+  const resumed = await secondContext.sandbox.callConfiguredLLM(input);
+  assert.equal(secondContext.calls.length, 1);
+  assert.equal(secondContext.calls[0].taskId, originalTaskId);
+  assert.equal(secondContext.calls[0].idempotencyKey, originalTaskId);
+  assert.match(resumed.text, /본부장 최종 보고/);
+  assert.equal(persistedStorage.has('swV315PendingWorkflowTask'), false);
 });
 
 test('a different instruction does not reuse the previous pending task ID', async () => {
