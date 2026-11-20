@@ -625,7 +625,7 @@ export default {
       }
 
       const savedCheckpoints = await env.DB.prepare(
-        `SELECT stage_key, checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key LIKE 'v51_ai_call_%' ORDER BY created_at, rowid`
+        `SELECT stage_key, checkpoint_json FROM task_checkpoints WHERE task_id = ? AND substr(stage_key, 1, 12) = 'v51_ai_call_' ORDER BY created_at, rowid`
       ).bind(taskId).all();
       for (const row of (savedCheckpoints.results || [])) {
         const match = String(row.stage_key || "").match(/^v51_ai_call_(\d+)$/);
