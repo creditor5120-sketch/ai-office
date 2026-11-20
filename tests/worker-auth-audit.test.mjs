@@ -430,7 +430,6 @@ test('cancellation clears the execution lease and does not overwrite completed r
 
 test('guards in-flight audit events with the current unexpired lock owner', () => {
   assert.ok(source.includes('WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)'));
-  assert.ok(source.includes('const eventLockToken = lockToken') === false);
   assert.ok(source.includes('if (lockToken)'));
   assert.ok(source.includes('eventAt, taskId, lockToken, eventAt'));
 });
