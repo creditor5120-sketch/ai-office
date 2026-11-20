@@ -385,9 +385,9 @@ const floor2AvatarRoot=new THREE.Group();
 floor2AvatarRoot.position.y=6.4;
 avatars.forEach((source,index)=>{
  const copy=new THREE.Sprite(source.material.clone());
- const floor2Position=floor2DeskSlots[index]||[index===30?-14:index===31?-10:13,10];
+ const floor2Position=index===0?[-18,15]:index===1?[18,15]:(floor2DeskSlots[index-2]||[0,9]);
  copy.position.set(floor2Position[0],source.position.y,floor2Position[1]);
- copy.scale.copy(source.scale);
+ copy.scale.copy(source.scale).multiplyScalar(1.1);
  copy.material.map=source.material.map;
  floor2AvatarRoot.add(copy);
  // 이름표와 선택 표시도 순환 참조 없이 별도 Sprite/Mesh로 복제한다.
