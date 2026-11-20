@@ -9,7 +9,7 @@ const wrapperSource = await readFile(new URL('../office-v315-integrated.html', i
 const latestOfficeSource = await readFile(new URL('../SW_AI_Office_Latest.html', import.meta.url), 'utf8');
 
 test('integrated wrapper loads the latest office baseline with the approved representative and team leads', () => {
-  assert.match(wrapperSource, /<iframe id="office"[^>]+src="SW_AI_Office_Latest\\.html"/);
+  assert.ok(wrapperSource.includes('<iframe id="office" title="SW AI OFFICE" src="SW_AI_Office_Latest.html">'));
   assert.ok(latestOfficeSource.includes('["ceo1","피터","대표이사"'));
   assert.ok(latestOfficeSource.includes('["rex","렉스","법무팀장"'));
   assert.ok(latestOfficeSource.includes('["alex","알렉스","본부장"'));
