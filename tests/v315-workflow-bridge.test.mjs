@@ -236,11 +236,11 @@ test('the approved office HTML is the live visual shell and the wrapper injects 
   const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
   const gitBlobSha = createHash('sha1').update(Buffer.from('blob ' + Buffer.byteLength(office) + '\0')).update(office).digest('hex');
   assert.equal(gitBlobSha, '5b42a3c1ee8bfdff1b5141057b0db21e2517d5c3');
-  assert.match(office, /async function callConfiguredLLM\\(inputMsgs\\)/);
-  assert.match(office, /const r=await callConfiguredLLM\\(input\\)/);
-  assert.match(wrapperSource, /src="SW_AI_Office_v3_15\\.html"/);
-  assert.match(wrapperSource, /script\\.src='workflow-bridge-v315\\.js'/);
-  assert.match(source, /window\\.callConfiguredLLM = async function \\(inputMsgs\\)/);
-  assert.match(source, /selected && selected\\.id === 'alex'/);
-  assert.match(source, /originalCallConfiguredLLM\\(inputMsgs\\)/);
+  assert.ok(office.includes('async function callConfiguredLLM(inputMsgs)'));
+  assert.ok(office.includes('const r=await callConfiguredLLM(input)'));
+  assert.ok(wrapperSource.includes('src="SW_AI_Office_v3_15.html"'));
+  assert.ok(wrapperSource.includes("script.src='workflow-bridge-v315.js'"));
+  assert.ok(source.includes('window.callConfiguredLLM = async function (inputMsgs)'));
+  assert.ok(source.includes("selected && selected.id === 'alex'"));
+  assert.ok(source.includes('originalCallConfiguredLLM(inputMsgs)'));
 });
