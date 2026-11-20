@@ -270,6 +270,27 @@ function makeAvatar(person,index,x,z){
  const tex=makePixelSheet(person,index,false),seatedTex=makePixelSheet(person,index,true);
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
  sprite.position.set(x,.82,z);sprite.scale.set(1.12,1.42,1);
+ // 기존 픽셀 카드용 텍스처는 유지하되, 3D 장면에는 입체 인체 모델을 별도로 표시한다.
+ sprite.material.opacity=0;sprite.material.transparent=true;
+ const skinMaterial=new THREE.MeshStandardMaterial({color:0xe8bd9d,roughness:.88});
+ const hairMaterial=new THREE.MeshStandardMaterial({color:hairColors[index%hairColors.length],roughness:.9});
+ const shirtMaterial=new THREE.MeshStandardMaterial({color:shirts[index%shirts.length],roughness:.86});
+ const pantsMaterial=new THREE.MeshStandardMaterial({color:0x46566a,roughness:.9});
+ const shoeMaterial=new THREE.MeshStandardMaterial({color:0x303943,roughness:.9});
+ const bodyOffset=-.25;
+ const bodyPart=(geometry,material,xp,yp,zp,rx=0,ry=0,rz=0)=>{
+  const part=new THREE.Mesh(geometry,material);
+  part.position.set(xp,yp+bodyOffset,zp);part.rotation.set(rx,ry,rz);
+  part.castShadow=true;part.receiveShadow=true;sprite.add(part);
+ };
+ bodyPart(new THREE.CylinderGeometry(.17,.21,.42,8),shirtMaterial,0,0,0);
+ bodyPart(new THREE.SphereGeometry(.15,10,8),skinMaterial,0,.34,0);
+ bodyPart(new THREE.SphereGeometry(.155,10,6,0,Math.PI*2,0,Math.PI*.55),hairMaterial,0,.39,0);
+ for(const side of [-1,1]){
+  bodyPart(new THREE.CylinderGeometry(.055,.065,.31,6),shirtMaterial,side*.22,.035,0,0,0,side*.12);
+  bodyPart(new THREE.CylinderGeometry(.07,.075,.34,6),pantsMaterial,side*.09,-.32,0);
+  bodyPart(new THREE.BoxGeometry(.14,.08,.22),shoeMaterial,side*.09,-.51,.055);
+ }
  sprite.userData.homeX=x;sprite.userData.homeZ=z;sprite.userData.targetX=x;sprite.userData.targetZ=z;sprite.userData.workStatus='업무 대기';
  sprite.userData.person=person;sprite.userData.avatar=sprite;sprite.userData.phase=index*.73;
  sprite.userData.texture=tex;sprite.userData.walkTexture=tex;sprite.userData.seatedTexture=seatedTex;sprite.userData.frame=0;sprite.userData.isSeated=false;
@@ -338,7 +359,7 @@ avatars.forEach((source,index)=>{
  });
 });
 scene.add(floor2AvatarRoot);
-window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2TileCount,floor2PartitionCount,floor2AgentCount:floor2AvatarRoot.children.length,activeFloor});
+window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2TileCount,floor2PartitionCount,floor2AgentCount:floor2AvatarRoot.children.length,floor2CharacterMeshCount:floor2AvatarRoot.children.reduce((count,avatar)=>count+avatar.children.filter(child=>child.isMesh).length,0),activeFloor});
 let activeFloor=1;
 function setOfficeFloor(level){
  activeFloor=level===2?2:1;
