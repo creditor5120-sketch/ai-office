@@ -234,7 +234,7 @@ test('integrated wrapper JavaScript parses and includes server-side task recover
 test('the approved office HTML is the live visual shell and the wrapper injects the workflow bridge into it', async () => {
   const { createHash } = await import('node:crypto');
   const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
-  const gitBlobSha = createHash('sha1').update(Buffer.from('blob ' + Buffer.byteLength(office) + '\\0')).update(office).digest('hex');
+  const gitBlobSha = createHash('sha1').update(Buffer.from('blob ' + Buffer.byteLength(office) + '\0')).update(office).digest('hex');
   assert.equal(gitBlobSha, '5b42a3c1ee8bfdff1b5141057b0db21e2517d5c3');
   assert.match(office, /async function callConfiguredLLM\\(inputMsgs\\)/);
   assert.match(office, /const r=await callConfiguredLLM\\(input\\)/);
