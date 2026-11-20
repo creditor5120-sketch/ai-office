@@ -2629,10 +2629,10 @@ const completionStatements = [
   env.DB.prepare(
     `UPDATE tasks SET status = ?, current_stage = ?, partial_result_json = COALESCE(?, partial_result_json),
      error_message = ?, updated_at = ?, started_at = COALESCE(started_at, ?), completed_at = ?
-     WHERE task_id = ? AND lock_token = ? AND control_request NOT IN ('PAUSE', 'CANCEL')`
+     WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND control_request NOT IN ('PAUSE', 'CANCEL')`
   ).bind(
     finalTaskStatus, "본부장 최종 검토 및 보고", JSON.stringify(successPayload),
-    null, completionAt, completionAt, completionAt, taskId, lockToken
+    null, completionAt, completionAt, completionAt, taskId, lockToken, completionAt
   )
 ];
 if (lastRecordedStage) {
@@ -2641,12 +2641,12 @@ if (lastRecordedStage) {
       `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
        SELECT ?, ?, 'WORKFLOW_STAGE_COMPLETED', ?, ?, ?, ?
        WHERE EXISTS (
-         SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
+         SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND completed_at = ?
        )`
     ).bind(
       crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.26", lastRecordedStage,
       JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
-      completionAt, taskId, lockToken, finalTaskStatus, completionAt
+      completionAt, taskId, lockToken, completionAt, finalTaskStatus, completionAt
     )
   );
 }
@@ -2741,8 +2741,8 @@ return json(successPayload);
       const failureStatements = [
         env.DB.prepare(
           `UPDATE tasks SET status = ?, current_stage = ?, error_message = ?, updated_at = ?, completed_at = NULL
-           WHERE task_id = ? AND lock_token = ?`
-        ).bind(nextStatus, currentStage, resumable ? null : error.message, failureAt, taskId, lockToken)
+           WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?`
+        ).bind(nextStatus, currentStage, resumable ? null : error.message, failureAt, taskId, lockToken, failureAt)
       ];
       const appendFailureEvent = (eventType, detail) => {
         failureStatements.push(
@@ -2750,12 +2750,12 @@ return json(successPayload);
             `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
              SELECT ?, ?, ?, ?, ?, ?, ?
              WHERE EXISTS (
-               SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
+               SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND updated_at = ?
              )`
           ).bind(
             crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.26",
             currentStage, JSON.stringify(detail), failureAt,
-            taskId, lockToken, nextStatus, failureAt
+            taskId, lockToken, failureAt, nextStatus, failureAt
           )
         );
       };
