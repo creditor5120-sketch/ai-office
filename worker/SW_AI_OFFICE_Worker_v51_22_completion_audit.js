@@ -58,8 +58,9 @@ export default {
       return json({ error: "API 인증에 실패했습니다." }, 401);
     }
 
-    // AI 공급자 호출은 최대 3회(각 60초) 재시도될 수 있으므로 실행 임대는 전체 대기시간보다 길게 둔다.
-    const TASK_LOCK_LEASE_MS = 5 * 60 * 1000;
+    // AI 응답이 출력 한도에 걸리면 이어쓰기 호출이 한 번 더 발생할 수 있다.
+    // 각 호출의 최대 재시도 대기(3×60초 + 1.2초 + 2.4초)를 두 번 합산하고 여유를 둔다.
+    const TASK_LOCK_LEASE_MS = 8 * 60 * 1000;
     let currentStage = "업무 접수 및 D1 저장";
     let body = null;
     let task = "";
