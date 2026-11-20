@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
 
-function makeContext({ selectedId = 'alex', fail = false } = {}) {
+function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'completed' } = {}) {
   const calls = [];
   const employees = [
     { id: 'alex', name: '알렉스', badge: '본부장', room: 'hq', duty: '전사 업무 분석 및 배정' },
@@ -42,7 +42,7 @@ function makeContext({ selectedId = 'alex', fail = false } = {}) {
           return {
             reply: '본부장 최종 보고',
             deliverables: [{ title: '법무 검토서', department: '법무팀', status: '완료', teamLeader: '피터', content: '검토 결과' }],
-            workflow: { reviewGate: { finalReleaseAllowed: true } }
+            workflow: { status: workflowStatus, reviewGate: { finalReleaseAllowed: workflowStatus === 'completed' } }
           };
         }
       }
@@ -98,4 +98,18 @@ test('integrated wrapper keeps accepted RECEIVED tasks in the polling flow', asy
   assert.match(wrapper, /response\.status===409&&data\.status==='RECEIVED'/);
   assert.match(wrapper, /업무 접수 완료 · 실행 대기 중/);
   assert.match(wrapper, /setTimeout\(resolve,1500\)/);
+});
+
+
+test('partial workflow results are explicitly labeled and stored as partial', async () => {
+  const { sandbox, storage } = makeContext({ workflowStatus: 'partial' });
+  const result = await sandbox.callConfiguredLLM([{ role: 'user', content: '검토 업무' }]);
+  assert.match(result.text, /부분 완료 · 추가 확인 필요/);
+  const history = JSON.parse(storage.get('swV315WorkflowTaskHistory'));
+  assert.equal(history[0].status, 'partial');
+});
+
+test('integrated wrapper does not label partial or failed results as completed', async () => {
+  const wrapper = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
+  assert.match(wrapper, /state==='completed'\?'업무 완료':state==='partial'\?'부분 완료 · 추가 확인 필요':'업무 미완료/);
 });
