@@ -381,6 +381,16 @@ test('allows an interrupted RECEIVED task to enter the guarded resume path', () 
 });
 
 
+test('resume rejects malformed or misindexed saved checkpoints before making another AI call', () => {
+  const loadStart = source.indexOf('for (const row of (savedCheckpoints.results || []))');
+  const loadEnd = source.indexOf('await writeTaskEvent("TASK_LOCK_ACQUIRED"', loadStart);
+  const loadBlock = source.slice(loadStart, loadEnd);
+  assert.match(loadBlock, /catch \(_\) \{ throw new Error\("SW_AI_CHECKPOINT_CORRUPT"\); \}/);
+  assert.match(loadBlock, /Number\(match\[1\]\) !== saved\.index/);
+  assert.match(loadBlock, /typeof saved\.signature !== "string" \|\| typeof saved\.value !== "string"/);
+  assert.doesNotMatch(loadBlock, /catch \(_\) \{\s*\}/);
+});
+
 test('checkpoint replay distinguishes an identical saved result from a conflicting result', () => {
   assert.match(source, /SELECT checkpoint_json FROM task_checkpoints WHERE task_id = \? AND stage_key = \?/);
   assert.match(source, /saved\.signature !== signature \|\| saved\.value !== value/);
