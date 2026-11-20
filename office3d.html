@@ -311,6 +311,7 @@ avatars.forEach((source,index)=>{
  });
 });
 scene.add(floor2AvatarRoot);
+window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2AgentCount:floor2AvatarRoot.children.length,activeFloor});
 let activeFloor=1;
 function setOfficeFloor(level){
  activeFloor=level===2?2:1;
