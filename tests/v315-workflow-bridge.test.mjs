@@ -196,4 +196,8 @@ test('integrated wrapper JavaScript parses and includes server-side task recover
   assert.match(wrapperSource, /action:'get_recent_tasks'/);
   assert.match(wrapperSource, /const saved=audit\.result\|\|\{\}/);
   assert.match(wrapperSource, /\[본부장 최종 보고\]/);
+  assert.match(wrapperSource, /function renderPendingRecovery\(\)/);
+  assert.match(wrapperSource, /swV315PendingWorkflowTask/);
+  assert.match(wrapperSource, /기존 업무 ID와 멱등성 키를 사용해 이어서 처리/);
+  assert.match(wrapperSource, /직원 명단이 바뀌면 새 업무로 접수/);
 });
