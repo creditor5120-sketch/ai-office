@@ -48,7 +48,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 </head>
 <body>
 <div id="loading">SW AI OFFICE 공간을 준비하고 있습니다...</div>
-<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./index.html" style="text-decoration:none">2D 사무실</a><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
+<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./index.html" style="text-decoration:none">2D 사무실</a><button id="floor1" aria-pressed="true">1층</button><button id="floor2" aria-pressed="false">2층</button><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
 <div id="appMain">
  <section id="officeStage"><div id="scene"></div><div id="officeStatus">● 전체 구성원 <b id="activeCount">-</b>명</div><div id="officeTools"><button id="zoomOut">－ 축소</button><button id="zoomIn">＋ 확대</button><button id="resetView">전체 보기</button><span class="interactionHint">드래그: 회전 · 휠: 확대/축소</span></div></section>
  <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
@@ -164,6 +164,14 @@ for(const t of businessTeams){
 
  for(const [x,z] of t.slots){desk(x,z);chair(x,z+1.02)}
 }
+// 1층 구조물을 별도 그룹으로 묶고 2층 복제 공간을 만든다.
+const floor1Structure=new THREE.Group();
+scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);floor1Structure.add(o)});
+scene.add(floor1Structure);
+const floor2Structure=floor1Structure.clone(true);
+floor2Structure.position.y=6.4;
+floor2Structure.traverse(o=>{if(o.isMesh&&o.geometry?.type==='PlaneGeometry'&&o.geometry.parameters?.width>=200)o.visible=false});
+scene.add(floor2Structure);
 // 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
@@ -247,6 +255,26 @@ for(const p of directory){
   const seatOffset=p.department==='기술·IT'?1.05:1.02;
   makeAvatar(displayPerson,avatars.length,x,z+seatOffset)
 }
+// 2층 직원 캐릭터를 복제하고 층 전환 시 해당 층만 표시한다.
+const floor2AvatarRoot=avatarRoot.clone(true);
+floor2AvatarRoot.position.y=6.4;
+scene.add(floor2AvatarRoot);
+let activeFloor=1;
+function setOfficeFloor(level){
+ activeFloor=level===2?2:1;
+ floor1Structure.visible=activeFloor===1;
+ floor2Structure.visible=activeFloor===2;
+ avatarRoot.visible=activeFloor===1;
+ floor2AvatarRoot.visible=activeFloor===2;
+ const y=activeFloor===2?6.4:0;
+ controls.target.set(0,y,0);
+ camera.position.set(43,39+y,45);
+ document.getElementById('floor1').setAttribute('aria-pressed',String(activeFloor===1));
+ document.getElementById('floor2').setAttribute('aria-pressed',String(activeFloor===2));
+ controls.update();
+}
+document.getElementById('floor1').onclick=()=>setOfficeFloor(1);
+document.getElementById('floor2').onclick=()=>setOfficeFloor(2);
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
 function makeStaffCard(p,detail=false){
