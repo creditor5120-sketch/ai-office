@@ -254,6 +254,9 @@ test('workflow engine control is injected beside the original office settings bu
   assert.match(wrapperSource, /button\.textContent='업무 엔진'/);
   assert.match(wrapperSource, /button\.addEventListener\('click',\(\)=>\{panel\.classList\.toggle\('open'\)/);
   assert.match(wrapperSource, /if\(panel\.classList\.contains\('open'\)\)renderHistory\(\)/);
+  assert.match(wrapperSource, /button\.setAttribute\('aria-expanded','false'\)/);
+  assert.match(wrapperSource, /button\.setAttribute\('aria-label',opened\?'업무 엔진 닫기':'업무 엔진 열기'\)/);
+  assert.match(wrapperSource, /button\.setAttribute\('aria-expanded',String\(opened\)\)/);
 });
 
 test('workflow engine control does not replace or mutate the approved office HTML', async () => {
