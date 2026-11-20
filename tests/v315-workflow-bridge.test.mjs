@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
 
@@ -90,4 +91,12 @@ test('other employees retain their original one-to-one conversation behavior', a
   const result = await sandbox.callConfiguredLLM([{ role: 'user', content: '계약서 조항 설명' }]);
   assert.equal(result.text, '기존 개인 대화 응답');
   assert.equal(calls.length, 0);
+});
+
+
+test('integrated wrapper keeps accepted RECEIVED tasks in the polling flow', async () => {
+  const wrapper = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
+  assert.match(wrapper, /response\.status===409&&data\.status==='RECEIVED'/);
+  assert.match(wrapper, /업무 접수 완료 · 실행 대기 중/);
+  assert.match(wrapper, /setTimeout\(resolve,1500\)/);
 });
