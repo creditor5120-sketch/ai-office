@@ -185,6 +185,7 @@ export default {
         `SELECT checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key = ? ORDER BY created_at, rowid LIMIT 1`
       ).bind(taskId, stageKey).first();
 
+      let reusedExisting = Boolean(existing);
       if (existing) {
         let saved;
         try { saved = JSON.parse(existing.checkpoint_json || "{}"); }
@@ -214,6 +215,7 @@ export default {
               saved.signature !== signature || saved.value !== value) {
             throw new Error("SW_AI_CHECKPOINT_CONFLICT");
           }
+          reusedExisting = true;
         }
       }
 
@@ -226,7 +228,7 @@ export default {
           `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
            SELECT ?, ?, 'AI_CALL_CHECKPOINT_SAVED', 'SW AI OFFICE Worker v51', ?, ?, ?
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2, idempotentReuse: Boolean(existing) }), now, taskId, lockToken)
+        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2, idempotentReuse: reusedExisting }), now, taskId, lockToken)
       ]);
       if ((results?.[0]?.meta?.changes ?? 0) !== 1 ||
           (results?.[1]?.meta?.changes ?? 0) !== 1) {
