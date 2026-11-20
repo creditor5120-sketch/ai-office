@@ -417,5 +417,5 @@ test('cancellation clears the execution lease and does not overwrite completed r
   const cancelAt = source.indexOf('if (String(savedTask.control_request || "NONE").toUpperCase() === "CANCEL")');
   assert.ok(completedAt >= 0 && cancelAt > completedAt);
   assert.match(source, /SET status = 'CANCELLED', lock_token = NULL, lease_expires_at = NULL/);
-  assert.match(source, /WHERE task_id = \\? AND \\(lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= \\?\\)/);
+  assert.ok(source.includes('WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)'));
 });
