@@ -6,6 +6,21 @@ import vm from 'node:vm';
 const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
 const wrapperSource = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
 
+const latestOfficeSource = await readFile(new URL('../SW_AI_Office_Latest.html', import.meta.url), 'utf8');
+
+test('integrated wrapper loads the latest office baseline with the approved representative and team leads', () => {
+  assert.match(wrapperSource, /<iframe id="office"[^>]+src="SW_AI_Office_Latest\\.html"/);
+  assert.match(latestOfficeSource, /\\["ceo1","피터","대표이사"/);
+  assert.match(latestOfficeSource, /\\["rex","렉스","법무팀장"/);
+  assert.match(latestOfficeSource, /\\["alex","알렉스","본부장"/);
+  assert.doesNotMatch(latestOfficeSource, /단테/);
+  assert.doesNotMatch(latestOfficeSource, /\\["peter","피터","법무팀장"/);
+  for (const name of ['데니스', '에이든', '에릭', '렉스', '라이언', '테오']) {
+    assert.ok(latestOfficeSource.includes(name), 'missing approved team lead: ' + name);
+  }
+});
+
+
 function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'completed', initialStorage = null } = {}) {
   const calls = [];
   let shouldFail = fail;
