@@ -35,6 +35,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sw-ai-office-3d-visual-evidence
-          path: artifacts/sw-ai-office-3d-stage.png
+          path: artifacts/*.png
           if-no-files-found: ignore
           retention-days: 7
