@@ -168,3 +168,20 @@ test('a changed employee roster does not resume an interrupted task with stale a
   assert.notEqual(calls[1].taskId, firstTaskId);
   assert.equal(calls[1].employees.find(person => person.id === 'peter').instruction, '변경된 법무 검수 업무');
 });
+
+test('an interrupted task older than 24 hours starts with a new task ID', async () => {
+  const { sandbox, calls, storage, setFail } = makeContext({ fail: true });
+  const input = [{ role: 'user', content: '장기 미완료 업무 재검토' }];
+  await sandbox.callConfiguredLLM(input);
+  const firstTaskId = calls[0].taskId;
+  const pending = JSON.parse(storage.get('swV315PendingWorkflowTask'));
+  pending.createdAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+  pending.lastAttemptAt = new Date().toISOString();
+  storage.set('swV315PendingWorkflowTask', JSON.stringify(pending));
+
+  setFail(false);
+  await sandbox.callConfiguredLLM(input);
+
+  assert.equal(calls.length, 2);
+  assert.notEqual(calls[1].taskId, firstTaskId);
+});
