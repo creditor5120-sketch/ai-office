@@ -64,6 +64,13 @@ try {
   }
   console.log('TEAM_AI_ID_REFERENCE_CAPTURE=' + referenceCapture);
 
+  // Verify that the new two-floor controls switch the rendered office without runtime errors.
+  await page.locator('#floor2').click();
+  if (await page.locator('#floor2').getAttribute('aria-pressed') !== 'true') throw new Error('2층 전환 상태가 반영되지 않았습니다');
+  await page.waitForTimeout(300);
+  await page.locator('#floor1').click();
+  if (await page.locator('#floor1').getAttribute('aria-pressed') !== 'true') throw new Error('1층 복귀 상태가 반영되지 않았습니다');
+
   const staffCount = await page.locator('#staffStrip .staffCard').count();
   if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
   const visibleCount = Number((await page.locator('#activeCount').innerText()).trim());
