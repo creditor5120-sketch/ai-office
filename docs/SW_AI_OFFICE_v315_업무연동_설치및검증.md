@@ -2,7 +2,7 @@
 
 ## 1. 목적과 보존 원칙
 
-이 구성은 완성된 `SW_AI_Office_v3_15.html`을 직접 편집하지 않고 기존 SW AI OFFICE 업무처리 Worker와 연결한다.
+이 구성은 사용자가 제공한 최신 사무실 파일 `SW_AI_Office_Latest.html`을 기준 화면으로 사용하고, 기존 SW AI OFFICE 업무처리 Worker와 연결한다. 기존 승인 원본 `SW_AI_Office_v3_15.html`은 비교·복구용으로 보존한다.
 
 - 사무실 원본 파일의 HTML·CSS·JavaScript를 수정하지 않는다.
 - `office-v315-integrated.html`이 원본 파일을 iframe으로 표시한다.
@@ -29,9 +29,10 @@
 
 ## 2-1. 실제 실행 HTML 선택 기준
 
-- 사용자가 제공한 원본 사무실 화면은 `SW_AI_Office_v3_15.html`이며, 디자인·직원 배치·기존 대화 기능을 보존한다.
-- 업무처리 기능까지 연결해 실행할 때는 원본 파일을 직접 열지 않고 **`office-v315-integrated.html`을 실행 진입점으로 사용한다.**
-- 실행 래퍼가 원본 HTML을 iframe으로 불러온 다음, 같은 화면 안에 `workflow-bridge-v315.js`를 주입한다. 따라서 사용자는 기존 사무실 화면에서 그대로 직원을 선택하고 대화할 수 있다.
+- 사용자가 제공한 최신 사무실 화면은 `SW_AI_Office_Latest.html`이며, 3D 공간·직원 표현·기존 대화 기능을 기준으로 삼는다.
+- 기존 승인 원본 `SW_AI_Office_v3_15.html`은 별도 보존하며 최신 기준 화면으로 덮어쓰지 않는다.
+- 업무처리 기능까지 연결해 실행할 때는 **`office-v315-integrated.html`을 실행 진입점으로 사용한다.**
+- 실행 래퍼가 `SW_AI_Office_Latest.html`을 iframe으로 불러온 다음, 같은 화면 안에 `workflow-bridge-v315.js`를 주입한다. 따라서 사용자는 기존 사무실 화면에서 그대로 직원을 선택하고 대화할 수 있다.
 - 업무 엔진 연결·이력·대표 승인 패널은 원본 상단의 AI 설정 버튼 옆에 `업무 엔진` 버튼으로 연결한다. 별도 화면 모서리에 떠 있는 버튼을 추가하지 않으며, 열림 상태는 `aria-expanded`와 접근성 이름에도 반영한다.
 - 알렉스에게 지시한 업무만 업무처리 Worker로 전달한다. 다른 직원과의 1:1 대화는 원본 HTML의 기존 대화 함수를 그대로 사용한다.
 - 원본 HTML을 직접 수정하지 않는 것은 기능 누락이 아니라 원본 보존을 위한 구조다. 원본 HTML 파일을 단독으로 열면 업무처리 브리지·서버 이력·대표 승인 화면은 연결되지 않는다.
@@ -39,7 +40,8 @@
 
 ## 3. 파일
 
-- `SW_AI_Office_v3_15.html`: 원본 사무실 파일
+- `SW_AI_Office_Latest.html`: 사용자가 제공한 최신 사무실 기준 화면
+- `SW_AI_Office_v3_15.html`: 변경하지 않고 보존하는 기존 승인 원본
 - `office-v315-integrated.html`: 원본을 변경하지 않고 표시하는 실행 래퍼
 - `workflow-bridge-v315.js`: 사무실 직원 데이터와 Worker API 사이의 어댑터
 - `worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js`: Worker v51.26 코드
@@ -76,7 +78,7 @@
 3. 운영 DB 백업 및 복구 가능성을 확인한다. 백업 파일 또는 시점 복구 지점을 확보한 뒤 운영 DB와 분리된 검증용 D1에 복원하고, `PRAGMA integrity_check`, 테이블별 행 수, 업무 상태별 건수, 업무별 이벤트·체크포인트 연결 상태를 대조한다. 운영 DB에 대한 복원·초기화 시험은 금지한다.
 4. 운영 반영 승인을 받은 후 Worker를 배포한다.
 5. GitHub Pages 배포 승인을 받은 후 다음 파일을 같은 경로에 게시한다.
-   - `SW_AI_Office_v3_15.html`
+   - `SW_AI_Office_Latest.html`
    - `office-v315-integrated.html`
    - `workflow-bridge-v315.js`
 6. `office-v315-integrated.html`을 열고 일반 인증값을 입력한다.
