@@ -1,4 +1,4 @@
-/* SW AI OFFICE workflow bridge for SW_AI_Office_v3_15.html
+/* SW AI OFFICE workflow bridge for SW_AI_Office_Latest.html
  * Loaded by office-v315-integrated.html after the untouched office iframe finishes loading.
  * This file intentionally does not edit the source HTML file on disk or in the repository.
  */
