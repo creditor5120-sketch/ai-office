@@ -1820,10 +1820,10 @@ ${String(specialist.result || "")}`,
       return !normalizedChecks.some(check => {
         const issueMatched = check.issue === expected ||
           (expected.length >= 18 && (check.issue.includes(expected) || expected.includes(check.issue)));
-        // 증거는 설명(detail)이 아니라 별도 evidenceQuote 필드로 검증한다.
+        // 지적사항 문구만 반복한 검수 응답은 증거가 아니다. 본문에 실제 존재하는 인용문까지 확인해야 대조 완료로 인정한다.
         const quote = normalizeIssueText(check.evidenceQuote);
         const evidenceQuotedInBody = quote.length >= 12 && normalizedDeliverable.includes(quote);
-        return issueMatched;
+        return issueMatched && evidenceQuotedInBody;
       });
     });
     for (const missingIssue of missingFirstReviewIssues) {
