@@ -56,8 +56,9 @@
     const pendingKey = 'swV315PendingWorkflowTask';
     let pending = null;
     try { pending = JSON.parse(localStorage.getItem(pendingKey) || 'null'); } catch (_) {}
-    const pendingAgeMs = pending && Date.parse(pending.lastAttemptAt || '') ?
-      Date.now() - Date.parse(pending.lastAttemptAt) : Number.POSITIVE_INFINITY;
+    const pendingCreatedAt = pending && (pending.createdAt || pending.lastAttemptAt);
+    const pendingAgeMs = pendingCreatedAt && Date.parse(pendingCreatedAt) ?
+      Date.now() - Date.parse(pendingCreatedAt) : Number.POSITIVE_INFINITY;
     // 이전 호출이 브라우저 종료·대기시간 초과 등으로 끝나지 않았다면
     // 24시간 이내 동일 지시·직원·조직 명단일 때만 최초 taskId/idempotencyKey를 재사용한다.
     const canResume = pending && pending.payload && pendingAgeMs >= 0 && pendingAgeMs < 24 * 60 * 60 * 1000 &&
@@ -74,7 +75,9 @@
     };
     try {
       localStorage.setItem(pendingKey, JSON.stringify({
-        payload, state: 'pending', lastAttemptAt: new Date().toISOString(),
+        payload, state: 'pending',
+        createdAt: canResume && pending.createdAt ? pending.createdAt : new Date().toISOString(),
+        lastAttemptAt: new Date().toISOString(),
         resumed: Boolean(canResume)
       }));
     } catch (_) {}
