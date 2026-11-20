@@ -87,6 +87,39 @@ WHERE sm.type = 'table'
   AND sm.name IN ('tasks', 'task_events', 'task_checkpoints')
 ORDER BY sm.name, il.name, ii.seqno;
 
+-- 3-1) Machine-readable required UNIQUE constraint check.
+-- An empty result means both concurrency/idempotency safeguards are backed by
+-- full (non-partial) UNIQUE indexes with the exact ordered column sets.
+WITH required(table_name, columns_csv) AS (
+  VALUES
+    ('tasks', 'idempotency_key'),
+    ('task_checkpoints', 'task_id,stage_key')
+),
+actual_unique(table_name, columns_csv, is_unique, is_partial) AS (
+  SELECT
+    sm.name,
+    group_concat(ii.name, ','),
+    il."unique",
+    il.partial
+  FROM sqlite_master AS sm
+  JOIN pragma_index_list(sm.name) AS il
+  JOIN pragma_index_info(il.name) AS ii
+  WHERE sm.type = 'table'
+    AND sm.name IN ('tasks', 'task_checkpoints')
+  GROUP BY sm.name, il.name, il."unique", il.partial
+)
+SELECT required.table_name, required.columns_csv AS missing_unique_index
+FROM required
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM actual_unique
+  WHERE actual_unique.table_name = required.table_name
+    AND actual_unique.columns_csv = required.columns_csv
+    AND actual_unique.is_unique = 1
+    AND actual_unique.is_partial = 0
+)
+ORDER BY required.table_name;
+
 -- 4) Database integrity and declared foreign-key consistency.
 PRAGMA integrity_check;
 PRAGMA foreign_key_check;
