@@ -207,7 +207,21 @@ export default {
     };
 
     try {
-      body = await request.json();
+      try {
+        body = await request.json();
+      } catch (_) {
+        return json({ error: "올바른 JSON 형식의 요청 본문이 필요합니다." }, 400);
+      }
+
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return json({ error: "요청 본문은 JSON 객체여야 합니다." }, 400);
+      }
+
+      // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없거나 잘못된 action이 업무 실행으로 흘러가지 않게 차단한다.
+      if (Object.prototype.hasOwnProperty.call(body, "action") &&
+          !["get_representative_decision", "get_task_history", "representative_decision"].includes(body.action)) {
+        return json({ error: "지원하지 않는 API action입니다." }, 400);
+      }
 
       // 다른 기기·브라우저에서도 서버에 저장된 대표 결정 이력을 조회한다.
       if (body.action === "get_representative_decision") {
