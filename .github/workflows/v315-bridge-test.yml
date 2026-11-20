@@ -10,6 +10,7 @@ on:
       - 'office-v315-integrated.html'
       - 'workflow-bridge-v315.js'
       - 'tests/v315-workflow-bridge.test.mjs'
+      - 'tests/v315-office-browser-smoke.mjs'
       - 'tests/worker-auth-audit.test.mjs'
       - 'worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js'
       - '.github/workflows/v315-bridge-test.yml'
@@ -33,3 +34,16 @@ jobs:
         run: node --test tests/worker-auth-audit.test.mjs
       - name: Run v3.15 workflow bridge tests
         run: node --test tests/v315-workflow-bridge.test.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Render original office and verify workflow panel
+        run: node tests/v315-office-browser-smoke.mjs
+      - name: Upload desktop and iPad browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sw-ai-office-v315-browser-smoke
+          path: artifacts/*.png
+          if-no-files-found: warn
