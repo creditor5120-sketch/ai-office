@@ -277,6 +277,8 @@ function makeAvatar(person,index,x,z){
  const shirtMaterial=new THREE.MeshStandardMaterial({color:shirts[index%shirts.length],roughness:.86});
  const pantsMaterial=new THREE.MeshStandardMaterial({color:0x46566a,roughness:.9});
  const shoeMaterial=new THREE.MeshStandardMaterial({color:0x303943,roughness:.9});
+ const eyeMaterial=new THREE.MeshStandardMaterial({color:0x252a30,roughness:.8});
+ const mouthMaterial=new THREE.MeshStandardMaterial({color:0x9b655d,roughness:.9});
  const bodyOffset=-.25;
  const bodyPart=(geometry,material,xp,yp,zp,rx=0,ry=0,rz=0)=>{
   const part=new THREE.Mesh(geometry,material);
@@ -286,7 +288,13 @@ function makeAvatar(person,index,x,z){
  bodyPart(new THREE.CylinderGeometry(.17,.21,.42,8),shirtMaterial,0,0,0);
  bodyPart(new THREE.SphereGeometry(.15,10,8),skinMaterial,0,.34,0);
  bodyPart(new THREE.SphereGeometry(.155,10,6,0,Math.PI*2,0,Math.PI*.55),hairMaterial,0,.39,0);
+ // 얼굴 방향을 읽을 수 있도록 눈·코·입과 귀를 작은 독립 메시로 추가한다.
+ bodyPart(new THREE.SphereGeometry(.025,6,5),eyeMaterial,-.05,.36,.135);
+ bodyPart(new THREE.SphereGeometry(.025,6,5),eyeMaterial,.05,.36,.135);
+ bodyPart(new THREE.SphereGeometry(.027,6,5),skinMaterial,0,.315,.15);
+ bodyPart(new THREE.BoxGeometry(.065,.018,.014),mouthMaterial,0,.275,.142);
  for(const side of [-1,1]){
+  bodyPart(new THREE.SphereGeometry(.045,6,5),skinMaterial,side*.145,.34,0);
   bodyPart(new THREE.CylinderGeometry(.055,.065,.31,6),shirtMaterial,side*.22,.035,0,0,0,side*.12);
   bodyPart(new THREE.CylinderGeometry(.07,.075,.34,6),pantsMaterial,side*.09,-.32,0);
   bodyPart(new THREE.BoxGeometry(.14,.08,.22),shoeMaterial,side*.09,-.51,.055);
