@@ -438,7 +438,7 @@ test('guards in-flight audit events with the current unexpired lock owner', () =
 test('requires an unexpired lease to commit successful completion or failure state', () => {
   assert.ok(source.includes("WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?"));
   assert.ok(source.includes('null, completionAt, completionAt, completionAt, taskId, lockToken, completionAt'));
-  assert.ok(source.includes('WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?\''));
+  assert.ok(source.includes("WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?"));
   assert.ok(source.includes('failureAt, taskId, lockToken, failureAt'));
   assert.ok(source.includes('SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND completed_at = ?'));
 });
