@@ -19,6 +19,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
     { id: 'teo', name: '테오', badge: 'IT·기술팀장', room: 'it', duty: '기술 검수' }
   ];
   const storage = new Map();
+  let taskSequence = 0;
   const progressBubble = { textContent: '…' };
   const localStorage = {
     getItem: key => storage.has(key) ? storage.get(key) : null,
@@ -29,7 +30,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
     EMP: employees,
     st: { sel: selectedId },
     E: id => employees.find(person => person.id === id),
-    crypto: { randomUUID: () => 'test-task-id' },
+    crypto: { randomUUID: () => 'test-task-id' + (++taskSequence === 1 ? '' : '-' + taskSequence) },
     CustomEvent: function CustomEvent(name) { this.type = name; },
     localStorage,
     document: { querySelector: () => progressBubble },
@@ -52,7 +53,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
   };
   sandbox.window = sandbox;
   vm.runInNewContext(source, sandbox, { filename: 'workflow-bridge-v315.js' });
-  return { sandbox, calls, storage, progressBubble, setFail: value => { shouldFail = value; } };
+  return { sandbox, calls, storage, progressBubble, employees, setFail: value => { shouldFail = value; } };
 }
 
 test('Alex instruction is sent to the workflow engine with a COO record and team leaders', async () => {
@@ -151,4 +152,19 @@ test('a different instruction does not reuse the previous pending task ID', asyn
   assert.notEqual(calls[1].taskId, firstTaskId);
   const pending = JSON.parse(storage.get('swV315PendingWorkflowTask'));
   assert.equal(pending.payload.task, '두 번째 업무');
+});
+
+test('a changed employee roster does not resume an interrupted task with stale assignments', async () => {
+  const { sandbox, calls, employees, setFail } = makeContext({ fail: true });
+  const input = [{ role: 'user', content: '조직 전체 업무 배정 검토' }];
+  await sandbox.callConfiguredLLM(input);
+  const firstTaskId = calls[0].taskId;
+
+  employees.find(person => person.id === 'legal' || person.id === 'peter').duty = '변경된 법무 검수 업무';
+  setFail(false);
+  await sandbox.callConfiguredLLM(input);
+
+  assert.equal(calls.length, 2);
+  assert.notEqual(calls[1].taskId, firstTaskId);
+  assert.equal(calls[1].employees.find(person => person.id === 'peter').instruction, '변경된 법무 검수 업무');
 });
