@@ -1,0 +1,27 @@
+name: SW AI OFFICE v3.15 workflow bridge tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'SW_AI_Office_v3_15.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'tests/v315-workflow-bridge.test.mjs'
+      - '.github/workflows/v315-bridge-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  bridge-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify untouched office source exists
+        run: test -s SW_AI_Office_v3_15.html
+      - name: Run v3.15 workflow bridge tests
+        run: node --test tests/v315-workflow-bridge.test.mjs
