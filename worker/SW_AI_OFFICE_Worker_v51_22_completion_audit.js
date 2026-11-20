@@ -3,9 +3,18 @@ export default {
 
   async fetch(request, env) {
 
+    const requestOrigin = String(request.headers.get("Origin") || "");
+    const allowedOrigins = new Set([
+      "https://creditor5120-sketch.github.io",
+      "https://work-v315-office-workflow-br.sw-ai-office-preview.pages.dev"
+    ]);
     const corsHeaders = {
 
-      "Access-Control-Allow-Origin": "https://creditor5120-sketch.github.io",
+      "Access-Control-Allow-Origin": allowedOrigins.has(requestOrigin)
+        ? requestOrigin
+        : "https://creditor5120-sketch.github.io",
+
+      "Vary": "Origin",
 
       "Access-Control-Allow-Methods": "POST, OPTIONS",
 
