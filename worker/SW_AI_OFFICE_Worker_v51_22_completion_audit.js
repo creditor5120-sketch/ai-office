@@ -533,7 +533,7 @@ export default {
       ).bind(taskId, idempotencyKey, task, JSON.stringify(inputPayload), now, now).run();
 
       const savedTask = await env.DB.prepare(
-        `SELECT task_id, task, status, current_stage, input_json, partial_result_json, attempt_count, control_request, lock_token, lease_expires_at FROM tasks WHERE idempotency_key = ?`
+        `SELECT task_id, task, status, current_stage, input_json, partial_result_json, attempt_count, control_request, lock_token, lease_expires_at, checkpoint_stage, checkpoint_json, execution_version FROM tasks WHERE idempotency_key = ?`
       ).bind(idempotencyKey).first();
 
       if (!savedTask) throw new Error("D1 업무 접수 기록을 확인할 수 없습니다.");
@@ -630,17 +630,43 @@ export default {
       const savedCheckpoints = await env.DB.prepare(
         `SELECT stage_key, checkpoint_json FROM task_checkpoints WHERE task_id = ? AND substr(stage_key, 1, 12) = 'v51_ai_call_' ORDER BY created_at, rowid`
       ).bind(taskId).all();
+      let expectedCheckpointIndex = 0;
       for (const row of (savedCheckpoints.results || [])) {
-        const match = String(row.stage_key || "").match(/^v51_ai_call_(\d+)$/);
+        const match = String(row.stage_key || "").match(/^v51_ai_call_(\\d+)$/);
         let saved;
         try { saved = JSON.parse(row.checkpoint_json || "{}"); }
         catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
         if (!match || saved.version !== 2 || !Number.isInteger(saved.index) ||
-            Number(match[1]) !== saved.index ||
+            Number(match[1]) !== saved.index || saved.index !== expectedCheckpointIndex ||
             typeof saved.signature !== "string" || typeof saved.value !== "string") {
           throw new Error("SW_AI_CHECKPOINT_CORRUPT");
         }
         cachedAiCalls.set(saved.index, { signature: saved.signature, value: saved.value });
+        expectedCheckpointIndex++;
+      }
+
+      // task 레코드의 요약 포인터와 개별 체크포인트가 다르면 누락·부분 복구된 상태다.
+      // 저장된 일부 결과를 정상 결과로 오인하지 않도록 새 AI 호출 전에 재개를 차단한다.
+      let taskCheckpoint = null;
+      try {
+        taskCheckpoint = savedTask.checkpoint_json
+          ? JSON.parse(savedTask.checkpoint_json)
+          : null;
+      } catch (_) {
+        throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+      }
+      if (cachedAiCalls.size === 0) {
+        if (taskCheckpoint !== null || savedTask.checkpoint_stage) {
+          throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+        }
+      } else {
+        const lastIndex = cachedAiCalls.size - 1;
+        if (!taskCheckpoint || taskCheckpoint.version !== 2 ||
+            taskCheckpoint.lastAiCallIndex !== lastIndex ||
+            taskCheckpoint.resumeStrategy !== "signature_checked_replay" ||
+            !savedTask.checkpoint_stage) {
+          throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+        }
       }
 
       await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.26", leaseExpiresAt: leaseUntil });
