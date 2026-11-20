@@ -168,65 +168,80 @@ for(const t of businessTeams){
 const floor1Structure=new THREE.Group();
 scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);floor1Structure.add(o)});
 scene.add(floor1Structure);
-// 2층은 1층 복제본이 아니라 독립된 업무·협업 공간으로 구성한다.
+// 2층은 TEAM.AI.ID 레퍼런스처럼 여러 독립 팀실이 중앙 복도를 둘러싸는 구조로 재구성한다.
 const floor2Structure=new THREE.Group();
 const floor2BuildStart=scene.children.length;
 cube(56,.55,38,M.floor,0,-.38,0);
-// 참조 화면처럼 업무·회의·라운지 구역을 서로 다른 톤의 타일 바닥으로 분리한다.
-const floor2TileMaterials=[
- mat(0xdce3e4),mat(0xe7ebea),mat(0xd3dcde),
- mat(0xe8d9d5),mat(0xf0e4d1),mat(0xe2d8c9)
-];
+// 바닥은 전 구역에 작은 정사각 타일을 깔고, 회의실·라운지에는 별도 색상 띠를 둔다.
+const floor2TileMaterials=[mat(0xd8dfe0),mat(0xe4e8e7),mat(0xd1d9da),mat(0xe9d8d2),mat(0xeee3d3),mat(0xded7c8)];
 let floor2TileCount=0;
 for(let x=-27;x<27;x+=2){
  for(let z=-18;z<18;z+=2){
-  const material=z>3?(x<0?floor2TileMaterials[3]:floor2TileMaterials[4]):(z>-2?floor2TileMaterials[5]:floor2TileMaterials[(Math.floor((x+27)/2)+Math.floor((z+18)/2))%3]);
+  let material=floor2TileMaterials[(Math.floor((x+27)/2)+Math.floor((z+18)/2))%3];
+  if(z>=12) material=x<0?floor2TileMaterials[3]:floor2TileMaterials[4];
   const tile=new THREE.Mesh(new THREE.PlaneGeometry(1.96,1.96),material);
   tile.rotation.x=-Math.PI/2;tile.position.set(x+1,-.095,z+1);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
  }
 }
-// 외곽 벽과 전면 출입구를 만들고, 업무 구역과 공용 공간을 분리한다.
+// 외곽 벽체와 출입구
 cube(56,2.8,.18,M.wall,0,1.4,-18.9);
 cube(.18,2.8,38,M.wall,-27.9,1.4,0);
 cube(.18,2.8,38,M.wall,27.9,1.4,0);
 cube(18,2.5,.18,M.wall,-18,1.25,18.9);
 cube(18,2.5,.18,M.wall,18,1.25,18.9);
 let floor2PartitionCount=0;
-// 다섯 팀 사이에 벽체와 유리 구획을 두고 중앙 복도로 연결한다.
-for(const x of [-16.5,-5.5,5.5,16.5]){
- cube(.18,2.25,3.2,M.wall,x,1.125,-16.2);
- cube(.18,2.25,3.2,M.wall,x,1.125,-3.2);
- cube(.12,1.25,8.2,M.glass,x,.625,-9.5);
- floor2PartitionCount+=3;
+function f2wall(w,h,d,material,x,y,z){
+ cube(w,h,d,material,x,y,z);floor2PartitionCount++;
 }
-cube(18,2.35,.18,M.wall,-18,1.175,-1.5);floor2PartitionCount++;
-cube(12,2.35,.18,M.wall,7,1.175,-1.5);floor2PartitionCount++;
-cube(.12,2.35,5.2,M.glass,0,1.175,1.1);floor2PartitionCount++;
+function f2sign(label,x,z){
+ wallTeamSign(label,x,z);
+}
+// 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
 const floor2Teams=[
- {name:'경영관리팀',x:-22},
- {name:'법무팀',x:-11},
- {name:'IR팀',x:0},
- {name:'총무팀',x:11},
- {name:'전략기획팀',x:22}
+ {name:'경영관리팀',center:[-18,-9],xs:[-22,-18,-14],zs:[-12,-7]},
+ {name:'법무팀',center:[0,-9],xs:[-4,0,4],zs:[-12,-7]},
+ {name:'IR팀',center:[18,-9],xs:[14,18,22],zs:[-12,-7]},
+ {name:'총무팀',center:[-10,5],xs:[-15,-10,-5],zs:[2,8]},
+ {name:'전략기획팀',center:[10,5],xs:[5,10,15],zs:[2,8]}
 ];
 const floor2DeskSlots=[];
 for(const team of floor2Teams){
- const slots=[[-2,-12],[0,-12],[2,-12],[-2,-5],[0,-5],[2,-5]];
- for(const [dx,z] of slots){
-  const x=team.x+dx;
-  desk(x,z);chair(x,z+1.05);
-  floor2DeskSlots.push([x,z+1.05]);
+ const [cx,cz]=team.center;
+ // 팀실의 뒷벽과 좌우 유리 파티션, 중앙 통로 쪽은 출입구를 남긴다.
+ f2wall(16,2.45,.18,M.wall,cx,1.225,cz-7.1);
+ f2wall(.14,2.1,14,M.glass,cx-8,.02,cz);
+ f2wall(.14,2.1,14,M.glass,cx+8,.02,cz);
+ f2wall(16,2.1,.14,M.glass,cx,1.05,cz+7.0);
+ f2sign(team.name,cx-5.8,cz-7.0);
+ for(const z of team.zs) for(const x of team.xs){
+  desk(x,z);chair(x,z+1.05);floor2DeskSlots.push([x,z+1.05]);
  }
- wallTeamSign(team.name,team.x-3.4,-8.5);
- if(team.x!==-22)cube(.12,1.1,15,M.glass,team.x-5.5,.02,-8.5);
 }
-room(-14,10,22,14,'회의·협업실',{glass:true});
-table(-14,9,8,2.8);
-for(let i=0;i<4;i++){chair(-18.2+i*2.8,6.8);chair(-18.2+i*2.8,11.2)}
-room(13,10,26,14,'라운지·휴게공간',{glass:true});
-sofa(7,10);sofa(7,14,Math.PI/2);table(13,10,2.4,1.8,true);
-for(const x of [10,16])chair(x,13);
-plant(23,15);plant(3,15);
+// 팀실 사이에는 시야가 통하는 유리벽과 중앙 복도만 둔다.
+for(const x of [-9,9]) f2wall(.14,1.55,13,M.glass,x,.78,-9);
+f2wall(20,1.35,.14,M.glass,0,.68,-1.1);
+f2wall(.14,1.35,10,M.glass,0,.68,5.2);
+// 왼쪽 전면 회의·협업실
+f2wall(12,2.3,.16,M.wall,-22,1.15,11.0);
+f2wall(.16,2.3,7,M.glass,-28,1.15,14.5);
+f2wall(.16,2.3,7,M.glass,-16,1.15,14.5);
+f2wall(12,2.3,.16,M.glass,-22,1.15,18);
+textSprite('회의·협업실',-22,11.8);
+table(-22,14.2,6.5,2.4);
+for(let i=0;i<3;i++){chair(-24.8+i*2.8,12.3);chair(-24.8+i*2.8,16.1)}
+// 오른쪽 전면 라운지·휴게공간
+f2wall(12,2.3,.16,M.wall,22,1.15,11.0);
+f2wall(.16,2.3,7,M.glass,16,1.15,14.5);
+f2wall(.16,2.3,7,M.glass,28,1.15,14.5);
+f2wall(12,2.3,.16,M.glass,22,1.15,18);
+textSprite('라운지·휴게공간',22,11.8);
+sofa(19,14.1);sofa(24,16.2,Math.PI/2);table(22,14.8,2.2,1.8,true);
+for(const x of [19,25])chair(x,12.5);
+plant(15.3,17);plant(-14.5,17);
+// 중앙 통로의 안내 표식과 공용 장비
+f2wall(.12,1.05,4.8,M.glass,0,.52,11.6);
+cube(.9,1.1,.75,M.metal,0,.55,9.5);
+const floor2Objects=scene.children.slice(floor2BuildStart);
 const floor2Objects=scene.children.slice(floor2BuildStart);
 for(const object of floor2Objects){scene.remove(object);floor2Structure.add(object)}
 floor2Structure.position.y=6.4;
