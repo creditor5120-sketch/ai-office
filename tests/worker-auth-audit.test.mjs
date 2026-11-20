@@ -545,3 +545,14 @@ test('requires a verifiable body quotation before treating a review issue as rec
   assert.match(block, /const evidenceQuotedInBody = quote\.length >= 12 && normalizedDeliverable\.includes\(quote\)/);
   assert.match(block, /return issueMatched && evidenceQuotedInBody;/);
 });
+
+
+test('blocks representative approval for PARTIAL_COMPLETED even if the review flag is true', async () => {
+  const result = await call(
+    { action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' },
+    { db: new FakeD1({ status: 'PARTIAL_COMPLETED', releaseAllowed: true }) }
+  );
+  assert.equal(result.status, 409);
+  assert.equal(result.db.events.length, 0);
+  assert.equal(result.body.taskStatus, 'PARTIAL_COMPLETED');
+});
