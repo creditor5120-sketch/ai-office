@@ -15,6 +15,58 @@ PRAGMA table_info('tasks');
 PRAGMA table_info('task_events');
 PRAGMA table_info('task_checkpoints');
 
+-- 2-1) Machine-readable missing-column check.
+-- An empty result means all Worker-required columns exist.
+WITH required(table_name, column_name) AS (
+  VALUES
+    ('tasks', 'task_id'),
+    ('tasks', 'idempotency_key'),
+    ('tasks', 'task'),
+    ('tasks', 'status'),
+    ('tasks', 'current_stage'),
+    ('tasks', 'input_json'),
+    ('tasks', 'partial_result_json'),
+    ('tasks', 'error_message'),
+    ('tasks', 'attempt_count'),
+    ('tasks', 'created_at'),
+    ('tasks', 'updated_at'),
+    ('tasks', 'started_at'),
+    ('tasks', 'completed_at'),
+    ('tasks', 'control_request'),
+    ('tasks', 'lock_token'),
+    ('tasks', 'lease_expires_at'),
+    ('tasks', 'execution_version'),
+    ('tasks', 'checkpoint_stage'),
+    ('tasks', 'checkpoint_json'),
+    ('task_events', 'event_id'),
+    ('task_events', 'task_id'),
+    ('task_events', 'event_type'),
+    ('task_events', 'actor'),
+    ('task_events', 'stage'),
+    ('task_events', 'detail_json'),
+    ('task_events', 'created_at'),
+    ('task_checkpoints', 'checkpoint_id'),
+    ('task_checkpoints', 'task_id'),
+    ('task_checkpoints', 'stage_key'),
+    ('task_checkpoints', 'stage_name'),
+    ('task_checkpoints', 'checkpoint_json'),
+    ('task_checkpoints', 'created_at')
+),
+actual(table_name, column_name) AS (
+  SELECT 'tasks', name FROM pragma_table_info('tasks')
+  UNION ALL
+  SELECT 'task_events', name FROM pragma_table_info('task_events')
+  UNION ALL
+  SELECT 'task_checkpoints', name FROM pragma_table_info('task_checkpoints')
+)
+SELECT required.table_name, required.column_name AS missing_column
+FROM required
+LEFT JOIN actual
+  ON actual.table_name = required.table_name
+ AND actual.column_name = required.column_name
+WHERE actual.column_name IS NULL
+ORDER BY required.table_name, required.column_name;
+
 -- 3) Inspect uniqueness, indexed columns, and index definitions used for
 -- idempotency (tasks.idempotency_key) and checkpoint replay
 -- (task_checkpoints.task_id + task_checkpoints.stage_key).
