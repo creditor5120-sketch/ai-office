@@ -410,6 +410,22 @@ test('acquires execution ownership and increments attempt count in one condition
   assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
 });
 
+test('an expired execution lease cannot be renewed even if its old token remains on the row', () => {
+  const renewStart = source.indexOf('const renewTaskLock = async () =>');
+  const renewEnd = source.indexOf('const checkTaskControl = async () =>', renewStart);
+  const renewBlock = source.slice(renewStart, renewEnd);
+  assert.ok(renewBlock.includes('WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?'));
+  assert.ok(renewBlock.includes('.bind(expires, now, taskId, lockToken, now).run()'));
+});
+
+test('normal request yielding is not written to the AI failure audit log', () => {
+  const catchStart = source.indexOf('} catch (error) {', source.indexOf('const aiCallStartedAt'));
+  const catchEnd = source.indexOf('function parseJSON', catchStart);
+  const catchBlock = source.slice(catchStart, catchEnd);
+  assert.match(catchBlock, /if \(error\.message !== "SW_AI_YIELD"\)/);
+  assert.ok(catchBlock.indexOf('if (error.message !== "SW_AI_YIELD")') < catchBlock.indexOf('writeTaskEvent("AI_CALL_FAILED"'));
+});
+
 test('a stale execution cannot renew its lease or overwrite task state after ownership changes', () => {
   assert.ok(source.includes('UPDATE tasks SET lease_expires_at = ?, updated_at = ?'));
   assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
