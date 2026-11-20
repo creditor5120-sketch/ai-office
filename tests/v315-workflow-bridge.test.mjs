@@ -11,11 +11,11 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
   let shouldFail = fail;
   const employees = [
     { id: 'alex', name: '알렉스', badge: '본부장', room: 'hq', duty: '전사 업무 분석 및 배정' },
-    { id: 'ceo1', name: '단테', badge: '대표이사', room: 'ceo', duty: '최종 의사결정' },
+    { id: 'ceo1', name: '피터', badge: '대표이사', room: 'ceo', duty: '최종 의사결정' },
     { id: 'denis', name: '데니스', badge: '경영관리팀장', room: 'shared', duty: '경영관리 검수' },
     { id: 'aiden', name: '에이든', badge: '총무팀장', room: 'shared', duty: '총무 검수' },
     { id: 'eric', name: '에릭', badge: '전략기획팀장', room: 'shared', duty: '전략기획 검수' },
-    { id: 'peter', name: '피터', badge: '법무팀장', room: 'legal', duty: '법무 검수' },
+    { id: 'rex', name: '렉스', badge: '법무팀장', room: 'legal', duty: '법무 검수' },
     { id: 'ryan', name: '라이언', badge: 'IR팀장', room: 'ir', duty: 'IR 검수' },
     { id: 'teo', name: '테오', badge: 'IT·기술팀장', room: 'it', duty: '기술 검수' }
   ];
@@ -66,7 +66,7 @@ test('Alex instruction is sent to the workflow engine with a COO record and team
   assert.equal(calls[0].task, '계약서 검토 및 수정안 작성');
   assert.equal(calls[0].taskId, 'test-task-id');
   assert.equal(calls[0].employeeId, 'alex');
-  assert.equal(calls[0].employees.find(person => person.id === 'COO').name, '단테');
+  assert.equal(calls[0].employees.find(person => person.id === 'COO').name, '피터');
   for (const team of ['경영관리팀', '총무팀', '전략기획팀', '법무팀', 'IR팀', '기술·IT팀']) {
     assert.ok(calls[0].employees.some(person => person.department === team && person.position.includes('팀장')), team);
   }
@@ -90,7 +90,7 @@ test('a worker failure is shown as a failure and never falls back to a canned an
 });
 
 test('other employees retain their original one-to-one conversation behavior', async () => {
-  const { sandbox, calls } = makeContext({ selectedId: 'peter' });
+  const { sandbox, calls } = makeContext({ selectedId: 'rex' });
   const result = await sandbox.callConfiguredLLM([{ role: 'user', content: '계약서 조항 설명' }]);
   assert.equal(result.text, '기존 개인 대화 응답');
   assert.equal(calls.length, 0);
@@ -188,13 +188,13 @@ test('a changed employee roster does not resume an interrupted task with stale a
   await sandbox.callConfiguredLLM(input);
   const firstTaskId = calls[0].taskId;
 
-  employees.find(person => person.id === 'legal' || person.id === 'peter').duty = '변경된 법무 검수 업무';
+  employees.find(person => person.id === 'legal' || person.id === 'rex').duty = '변경된 법무 검수 업무';
   setFail(false);
   await sandbox.callConfiguredLLM(input);
 
   assert.equal(calls.length, 2);
   assert.notEqual(calls[1].taskId, firstTaskId);
-  assert.equal(calls[1].employees.find(person => person.id === 'peter').instruction, '변경된 법무 검수 업무');
+  assert.equal(calls[1].employees.find(person => person.id === 'rex').instruction, '변경된 법무 검수 업무');
 });
 
 test('an interrupted task older than 24 hours starts with a new task ID', async () => {
@@ -231,14 +231,17 @@ test('integrated wrapper JavaScript parses and includes server-side task recover
 });
 
 
-test('the approved office HTML is the live visual shell and the wrapper injects the workflow bridge into it', async () => {
+test('latest uploaded office HTML is the live visual shell while the approved original remains untouched', async () => {
   const { createHash } = await import('node:crypto');
-  const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
-  const gitBlobSha = createHash('sha1').update(Buffer.from('blob ' + Buffer.byteLength(office) + '\0')).update(office).digest('hex');
+  const original = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
+  const office = await readFile(new URL('../SW_AI_Office_Latest.html', import.meta.url), 'utf8');
+  const gitBlobSha = createHash('sha1').update(Buffer.from('blob ' + Buffer.byteLength(original) + '\0')).update(original).digest('hex');
   assert.equal(gitBlobSha, '5b42a3c1ee8bfdff1b5141057b0db21e2517d5c3');
   assert.ok(office.includes('async function callConfiguredLLM(inputMsgs)'));
   assert.ok(office.includes('const r=await callConfiguredLLM(input)'));
-  assert.ok(wrapperSource.includes('src="SW_AI_Office_v3_15.html"'));
+  assert.ok(office.includes('["ceo1","피터","대표이사"'));
+  assert.ok(office.includes('["rex","렉스","법무팀장"'));
+  assert.ok(wrapperSource.includes('src="SW_AI_Office_Latest.html"'));
   assert.ok(wrapperSource.includes("script.src='workflow-bridge-v315.js'"));
   assert.ok(source.includes('window.callConfiguredLLM = async function (inputMsgs)'));
   assert.ok(source.includes("selected && selected.id === 'alex'"));
@@ -263,7 +266,7 @@ test('workflow engine control does not replace or mutate the approved office HTM
   const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
   assert.ok(office.includes('async function callConfiguredLLM(inputMsgs)'));
   assert.ok(!office.includes('swWorkflowEngineButton'));
-  assert.match(wrapperSource, /src="SW_AI_Office_v3_15\.html"/);
+  assert.match(wrapperSource, /src="SW_AI_Office_Latest\.html"/);
   assert.match(wrapperSource, /if\(doc\.getElementById\('sw-workflow-bridge-v315'\)\)return/);
   assert.doesNotMatch(wrapperSource, /id="bridgeToggle"/);
 });
