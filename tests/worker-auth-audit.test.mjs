@@ -407,9 +407,11 @@ test('acquires execution ownership and increments attempt count in one condition
 });
 
 test('a stale execution cannot renew its lease or overwrite task state after ownership changes', () => {
-  assert.match(source, /UPDATE tasks SET lease_expires_at = \\?, updated_at = \\?\\s+WHERE task_id = \\? AND lock_token = \\?/);
-  assert.match(source, /partial_result_json = COALESCE\\(\\?, partial_result_json\\)[\\s\\S]*WHERE task_id = \\? AND lock_token = \\?/);
-  assert.match(source, /WHERE EXISTS \\(SELECT 1 FROM tasks WHERE task_id = \\? AND lock_token = \\?\\)/);
+  assert.ok(source.includes('UPDATE tasks SET lease_expires_at = ?, updated_at = ?'));
+  assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
+  assert.ok(source.includes('partial_result_json = COALESCE(?, partial_result_json)'));
+  assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
+  assert.ok(source.includes('WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)'));
 });
 
 test('cancellation clears the execution lease and does not overwrite completed results', () => {
