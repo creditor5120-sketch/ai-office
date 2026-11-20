@@ -7,6 +7,7 @@ const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.
 
 function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'completed' } = {}) {
   const calls = [];
+  let shouldFail = fail;
   const employees = [
     { id: 'alex', name: '알렉스', badge: '본부장', room: 'hq', duty: '전사 업무 분석 및 배정' },
     { id: 'ceo1', name: '단테', badge: '대표이사', room: 'ceo', duty: '최종 의사결정' },
@@ -38,7 +39,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
         execute: async (payload, onProgress) => {
           calls.push(payload);
           if (typeof onProgress === 'function') onProgress({ currentStage: '전문 직원 수행' });
-          if (fail) throw new Error('인증값 누락');
+          if (shouldFail) throw new Error('인증값 누락');
           return {
             reply: '본부장 최종 보고',
             deliverables: [{ title: '법무 검토서', department: '법무팀', status: '완료', teamLeader: '피터', content: '검토 결과' }],
@@ -50,7 +51,7 @@ function makeContext({ selectedId = 'alex', fail = false, workflowStatus = 'comp
   };
   sandbox.window = sandbox;
   vm.runInNewContext(source, sandbox, { filename: 'workflow-bridge-v315.js' });
-  return { sandbox, calls, storage, progressBubble };
+  return { sandbox, calls, storage, progressBubble, setFail: value => { shouldFail = value; } };
 }
 
 test('Alex instruction is sent to the workflow engine with a COO record and team leaders', async () => {
@@ -119,4 +120,34 @@ test('partial workflow results are explicitly labeled and stored as partial', as
 test('integrated wrapper does not label partial or failed results as completed', async () => {
   const wrapper = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
   assert.match(wrapper, /state==='completed'\?'업무 완료':state==='partial'\?'부분 완료 · 추가 확인 필요':'업무 미완료/);
+});
+
+test('an interrupted workflow reuses its original task and idempotency keys on the next identical instruction', async () => {
+  const { sandbox, calls, storage, setFail } = makeContext({ fail: true });
+  const input = [{ role: 'user', content: '계약서 검토 및 수정안 작성' }];
+  const first = await sandbox.callConfiguredLLM(input);
+  assert.match(first.text, /실제 업무처리 실패/);
+  assert.equal(calls.length, 1);
+  const firstTaskId = calls[0].taskId;
+  const pending = JSON.parse(storage.get('swV315PendingWorkflowTask'));
+  assert.equal(pending.state, 'resume_required');
+  assert.equal(pending.payload.idempotencyKey, firstTaskId);
+
+  setFail(false);
+  const second = await sandbox.callConfiguredLLM(input);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].taskId, firstTaskId);
+  assert.equal(calls[1].idempotencyKey, firstTaskId);
+  assert.match(second.text, /본부장 최종 보고/);
+  assert.equal(storage.has('swV315PendingWorkflowTask'), false);
+});
+
+test('a different instruction does not reuse the previous pending task ID', async () => {
+  const { sandbox, calls, storage } = makeContext({ fail: true });
+  await sandbox.callConfiguredLLM([{ role: 'user', content: '첫 번째 업무' }]);
+  const firstTaskId = calls[0].taskId;
+  await sandbox.callConfiguredLLM([{ role: 'user', content: '두 번째 업무' }]);
+  assert.notEqual(calls[1].taskId, firstTaskId);
+  const pending = JSON.parse(storage.get('swV315PendingWorkflowTask'));
+  assert.equal(pending.payload.task, '두 번째 업무');
 });
