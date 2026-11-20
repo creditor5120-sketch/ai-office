@@ -14,14 +14,17 @@ class FakeD1 {
   constructor({ status = 'COMPLETED', releaseAllowed = true } = {}) {
     this.task = {
       task_id: 'test-task-001',
+      task: '테스트 업무',
       status,
       current_stage: '최종 보고',
       created_at: '2026-11-19T00:00:00.000Z',
       updated_at: '2026-11-19T00:01:00.000Z',
       completed_at: '2026-11-19T00:01:00.000Z',
-      partial_result_json: JSON.stringify({ workflow: { resultStatus: '검수 완료', reviewGate: { finalReleaseAllowed: releaseAllowed } } })
+      error_message: null,
+      partial_result_json: JSON.stringify({ taskId: 'test-task-001', reply: '서버에 저장된 보고서', deliverables: [{ title: '결과물 1', content: '저장된 내용' }], workflow: { resultStatus: '검수 완료', reviewGate: { finalReleaseAllowed: releaseAllowed } } })
     };
     this.events = [];
+    this.recentTasks = [];
   }
   prepare(sql) {
     const db = this;
@@ -47,6 +50,9 @@ class FakeD1 {
         return null;
       },
       async all() {
+        if (sql.includes('FROM tasks')) {
+          return { results: db.recentTasks.length ? db.recentTasks : [{ ...db.task }] };
+        }
         if (sql.includes('FROM task_events')) {
           const rows = db.events
             .map((event, index) => ({ ...event, __rowid: index }))
@@ -127,6 +133,36 @@ test('records one immutable approval and supports read-back', async () => {
   const readBack = await call({ action: 'get_representative_decision', taskId: 'test-task-001' }, { db });
   assert.equal(readBack.status, 200);
   assert.equal(readBack.body.decision, 'APPROVE');
+});
+
+test('lists recent tasks from server storage without relying on browser history', async () => {
+  const db = new FakeD1();
+  db.recentTasks = [
+    { task_id: 'task-new', task: '새 업무', status: 'COMPLETED', current_stage: '최종 보고', created_at: '2026-11-20T02:00:00.000Z', updated_at: '2026-11-20T02:01:00.000Z', completed_at: '2026-11-20T02:01:00.000Z', error_message: null },
+    { task_id: 'task-old', task: '이전 업무', status: 'PARTIAL_COMPLETED', current_stage: '검수', created_at: '2026-11-19T02:00:00.000Z', updated_at: '2026-11-19T02:01:00.000Z', completed_at: '2026-11-19T02:01:00.000Z', error_message: '일부 미완료' }
+  ];
+  const result = await call({ action: 'get_recent_tasks', limit: 20 }, { db });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.count, 2);
+  assert.equal(result.body.tasks[0].taskId, 'task-new');
+  assert.equal(result.body.tasks[1].error, '일부 미완료');
+});
+
+test('caps recent task list requests and fails closed without D1', async () => {
+  const db = new FakeD1();
+  const capped = await call({ action: 'get_recent_tasks', limit: 5000 }, { db });
+  assert.equal(capped.status, 200);
+  assert.match(source, /Math\.min\(50, Math\.max\(1, Math\.floor\(requestedLimit\)\)\)/);
+  const unavailable = await call({ action: 'get_recent_tasks' }, { db: null });
+  assert.equal(unavailable.status, 503);
+});
+
+test('returns saved final report and deliverables with task audit history', async () => {
+  const result = await call({ action: 'get_task_history', taskId: 'test-task-001' });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.result.reply, '서버에 저장된 보고서');
+  assert.equal(result.body.result.deliverables[0].content, '저장된 내용');
+  assert.equal(result.body.task.taskId, 'test-task-001');
 });
 
 test('returns workflow audit events from D1', async () => {
