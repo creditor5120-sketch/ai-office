@@ -9,6 +9,10 @@ on:
       - 'tests/office3d-smoke.mjs'
       - '.github/workflows/office3d-smoke.yml'
       - 'tests/worker-auth-audit.test.mjs'
+      - 'SW_AI_Office_v3_15.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'tests/v315-workflow-bridge.test.mjs'
 
 permissions:
   contents: read
@@ -30,6 +34,8 @@ jobs:
         run: node tests/office3d-smoke.mjs
       - name: Run Worker auth and approval audit contract tests
         run: node --test tests/worker-auth-audit.test.mjs
+      - name: Run v3.15 workflow bridge tests
+        run: node --test tests/v315-workflow-bridge.test.mjs
       - name: Upload 3D office visual evidence
         if: always()
         uses: actions/upload-artifact@v4
