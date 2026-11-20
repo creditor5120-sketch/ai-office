@@ -83,10 +83,23 @@ export default {
 
     const writeTaskEvent = async (eventType, stage, detail = {}) => {
       if (!env.DB || !taskId) return;
-      await env.DB.prepare(
-        `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
+      const eventId = crypto.randomUUID();
+      const eventAt = new Date().toISOString();
+      const eventDetail = JSON.stringify(detail);
+      if (lockToken) {
+        // 잠금이 만료되거나 다른 실행으로 소유권이 넘어간 뒤에는 이전 실행의 감사 이벤트도 기록하지 않는다.
+        await env.DB.prepare(
+          `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+           SELECT ?, ?, ?, ?, ?, ?, ?
+           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)`
+        ).bind(eventId, taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, eventDetail,
+          eventAt, taskId, lockToken, eventAt).run();
+      } else {
+        await env.DB.prepare(
+          `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`
+        ).bind(eventId, taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, eventDetail, eventAt).run();
+      }
     };
 
     let lastRecordedStage = null;
@@ -110,15 +123,16 @@ export default {
 
     const updateTask = async (values) => {
       if (!env.DB || !taskId || !lockToken) throw new Error("SW_AI_LOCK_LOST");
+      const updateAt = new Date().toISOString();
       const result = await env.DB.prepare(
         `UPDATE tasks SET status = ?, current_stage = ?, partial_result_json = COALESCE(?, partial_result_json),
          error_message = ?, attempt_count = COALESCE(?, attempt_count), updated_at = ?,
          started_at = COALESCE(started_at, ?), completed_at = ? WHERE task_id = ? AND lock_token = ?
-         AND (? = 0 OR control_request NOT IN ('PAUSE', 'CANCEL'))`
+         AND lease_expires_at > ? AND (? = 0 OR control_request NOT IN ('PAUSE', 'CANCEL'))`
       ).bind(
         values.status, values.stage || currentStage, values.resultJson ?? null,
-        values.error ?? null, values.attemptCount ?? null, new Date().toISOString(),
-        values.startedAt ?? null, values.completedAt ?? null, taskId, lockToken,
+        values.error ?? null, values.attemptCount ?? null, updateAt,
+        values.startedAt ?? null, values.completedAt ?? null, taskId, lockToken, updateAt,
         values.requireNoControl ? 1 : 0
       ).run();
       if ((result.meta?.changes ?? 0) !== 1) {
@@ -201,8 +215,8 @@ export default {
           `INSERT OR IGNORE INTO task_checkpoints
            (checkpoint_id, task_id, stage_key, stage_name, checkpoint_json, created_at)
            SELECT ?, ?, ?, ?, ?, ?
-           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, stageKey, currentStage, payload, now, taskId, lockToken).run();
+           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)`
+        ).bind(crypto.randomUUID(), taskId, stageKey, currentStage, payload, now, taskId, lockToken, now).run();
 
         // 동시 실행 또는 UNIQUE 제약 충돌로 삽입되지 않았다면 저장된 값을 재조회해
         // 같은 결과의 멱등 재시도인지, 다른 결과와의 충돌인지 확정한다.
@@ -225,13 +239,13 @@ export default {
       const results = await env.DB.batch([
         env.DB.prepare(
           `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.26', updated_at = ?
-           WHERE task_id = ? AND lock_token = ?`
-        ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
+           WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?`
+        ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken, now),
         env.DB.prepare(
           `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
            SELECT ?, ?, 'AI_CALL_CHECKPOINT_SAVED', 'SW AI OFFICE Worker v51', ?, ?, ?
-           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2, idempotentReuse: reusedExisting }), now, taskId, lockToken)
+           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)`
+        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2, idempotentReuse: reusedExisting }), now, taskId, lockToken, now)
       ]);
       if ((results?.[0]?.meta?.changes ?? 0) !== 1 ||
           (results?.[1]?.meta?.changes ?? 0) !== 1) {
