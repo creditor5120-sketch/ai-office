@@ -44,6 +44,11 @@ try {
   let referenceCapture = 'unavailable';
   const referencePage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   try {
+    const homeResponse = await referencePage.goto('https://team.ai.id/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await referencePage.waitForTimeout(9000);
+    await referencePage.screenshot({ path: 'artifacts/team-ai-id-homepage.png', fullPage: true, timeout: 20000 });
+    const homeText = (await referencePage.locator('body').innerText().catch(() => '')).slice(0, 2000);
+    console.log('TEAM_AI_ID_HOMEPAGE=' + JSON.stringify({ status: homeResponse?.status() ?? null, title: await referencePage.title(), bodyText: homeText }));
     const referenceResponse = await referencePage.goto('https://team.ai.id/showcase/?showcase=1', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await referencePage.waitForTimeout(12000);
     await referencePage.screenshot({ path: 'artifacts/team-ai-id-reference.png', fullPage: true, timeout: 20000 });
