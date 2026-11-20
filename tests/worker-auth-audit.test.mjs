@@ -350,5 +350,5 @@ test('checkpoint replay distinguishes an identical saved result from a conflicti
   assert.match(source, /saved\.signature !== signature \|\| saved\.value !== value/);
   assert.match(source, /SW_AI_CHECKPOINT_CONFLICT/);
   assert.match(source, /SW_AI_CHECKPOINT_CORRUPT/);
-  assert.match(source, /idempotentReuse: Boolean\(existing\)/);
+  assert.match(source, /idempotentReuse: reusedExisting/);
 });
