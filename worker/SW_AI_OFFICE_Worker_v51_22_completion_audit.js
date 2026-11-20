@@ -2655,13 +2655,13 @@ completionStatements.push(
     `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
      SELECT ?, ?, 'TASK_COMPLETED', ?, ?, ?, ?
      WHERE EXISTS (
-       SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
+       SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND completed_at = ?
      )`
   ).bind(
     crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.26",
     "본부장 최종 검토 및 보고",
     JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.26" }),
-    completionAt, taskId, lockToken, finalTaskStatus, completionAt
+    completionAt, taskId, lockToken, completionAt, finalTaskStatus, completionAt
   )
 );
 const completionResults = await env.DB.batch(completionStatements);
