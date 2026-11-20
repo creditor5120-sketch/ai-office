@@ -33,3 +33,16 @@ jobs:
         run: node --test tests/worker-auth-audit.test.mjs
       - name: Verify office integration, recovery and workflow engine control
         run: node --test tests/v315-workflow-bridge.test.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Render the original office and verify the workflow panel
+        run: node tests/v315-office-browser-smoke.mjs
+      - name: Upload actual browser screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sw-ai-office-v315-browser-smoke
+          path: artifacts/sw-ai-office-v315-integrated.png
+          if-no-files-found: warn
