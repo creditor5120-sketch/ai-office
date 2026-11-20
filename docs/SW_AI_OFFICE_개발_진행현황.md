@@ -27,7 +27,7 @@ PR: [#5 SW AI OFFICE v3.15 업무처리 기능 분리 연동](https://github.com
 - D1 사전 점검 SQL이 읽기 전용인지, 필수 테이블·컬럼·UNIQUE 제약을 검사하는 자동 테스트 추가.
 - Worker CORS에 GitHub Pages 운영 도메인과 승인된 Cloudflare Pages 미리보기 도메인만 허용하는 명시적 allowlist 및 미허용 Origin 차단 테스트 추가.
 - 데스크톱 및 iPad 폭 화면 캡처 아티팩트 업로드 통과.
-- 최신 HTML·브리지·D1 사전 점검 회귀 검증 실행: [GitHub Actions #44840435259](https://github.com/creditor5120-sketch/ai-office/actions/runs/44840435259) — 성공. CORS allowlist 변경은 후속 CI에서 재검증 중.
+- 최신 HTML·브리지·D1 사전 점검·Worker CORS allowlist·Chromium 데스크톱/iPad 검증 실행: [GitHub Actions #44840586026](https://github.com/creditor5120-sketch/ai-office/actions/runs/44840586026) — 전체 성공.
 
 ## 3. 아직 완료로 판정하지 않은 항목
 
