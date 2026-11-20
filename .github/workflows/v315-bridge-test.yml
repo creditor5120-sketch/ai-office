@@ -1,6 +1,8 @@
 name: SW AI OFFICE v3.15 workflow bridge tests
 
 on:
+  push:
+    branches: [work/v315-office-workflow-bridge]
   pull_request:
     branches: [main]
     paths:
