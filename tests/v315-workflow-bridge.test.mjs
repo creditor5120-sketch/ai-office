@@ -18,6 +18,7 @@ function makeContext({ selectedId = 'alex', fail = false } = {}) {
     { id: 'teo', name: '테오', badge: 'IT·기술팀장', room: 'it', duty: '기술 검수' }
   ];
   const storage = new Map();
+  const progressBubble = { textContent: '…' };
   const localStorage = {
     getItem: key => storage.has(key) ? storage.get(key) : null,
     setItem: (key, value) => storage.set(key, String(value))
@@ -29,12 +30,14 @@ function makeContext({ selectedId = 'alex', fail = false } = {}) {
     crypto: { randomUUID: () => 'test-task-id' },
     CustomEvent: function CustomEvent(name) { this.type = name; },
     localStorage,
+    document: { querySelector: () => progressBubble },
     callConfiguredLLM: async () => ({ text: '기존 개인 대화 응답' }),
     dispatchEvent: () => true,
     parent: {
       SWWorkflowBridge: {
         execute: async (payload) => {
           calls.push(payload);
+          if (typeof arguments[1] === 'function') arguments[1]({ currentStage: '전문 직원 수행' });
           if (fail) throw new Error('인증값 누락');
           return {
             reply: '본부장 최종 보고',
@@ -47,11 +50,11 @@ function makeContext({ selectedId = 'alex', fail = false } = {}) {
   };
   sandbox.window = sandbox;
   vm.runInNewContext(source, sandbox, { filename: 'workflow-bridge-v315.js' });
-  return { sandbox, calls, storage };
+  return { sandbox, calls, storage, progressBubble };
 }
 
 test('Alex instruction is sent to the workflow engine with a COO record and team leaders', async () => {
-  const { sandbox, calls } = makeContext();
+  const { sandbox, calls, storage, progressBubble } = makeContext();
   const result = await sandbox.callConfiguredLLM([
     { role: 'user', content: '직원 시스템 프롬프트\n\n[사용자 요청]\n계약서 검토 및 수정안 작성' }
   ]);
@@ -66,14 +69,20 @@ test('Alex instruction is sent to the workflow engine with a COO record and team
   assert.match(result.text, /본부장 최종 보고/);
   assert.match(result.text, /법무 검토서/);
   assert.match(result.text, /대표 승인 전 외부 실행: 수행하지 않음/);
+  assert.match(progressBubble.textContent, /전문 직원 수행/);
+  const history = JSON.parse(storage.get('swV315WorkflowTaskHistory'));
+  assert.equal(history[0].taskId, 'test-task-id');
 });
 
 test('a worker failure is shown as a failure and never falls back to a canned answer', async () => {
-  const { sandbox } = makeContext({ fail: true });
+  const { sandbox, storage } = makeContext({ fail: true });
   const result = await sandbox.callConfiguredLLM([{ role: 'user', content: '업무 지시' }]);
   assert.match(result.text, /실제 업무처리 실패/);
   assert.match(result.text, /인증값 누락/);
   assert.doesNotMatch(result.text, /기존 개인 대화 응답/);
+  const history = JSON.parse(storage.get('swV315WorkflowTaskHistory'));
+  assert.equal(history[0].taskId, 'test-task-id');
+  assert.match(history[0].error, /인증값 누락/);
 });
 
 test('other employees retain their original one-to-one conversation behavior', async () => {
