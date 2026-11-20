@@ -589,7 +589,10 @@ function appendChat(who,message,employeeId=selected?.userData.person.id||'SYSTEM
  const el=document.createElement('div');el.className='chatBubble';el.dataset.messageId=id;el.dataset.employeeId=key;el.textContent=who+'\n'+message;
  if(selected&&String(selected.userData.person.id)===key){
   const host=document.getElementById('chatHistory');if(host){host.appendChild(el);host.scrollTop=host.scrollHeight}
-  const detail=document.getElementById('detailMessages');if(detail){detail.appendChild(el.cloneNode(true));detail.scrollTop=detail.scrollHeight}
+ }
+ const detail=document.getElementById('detailMessages'),detailView=document.getElementById('detailView');
+ if(detail&&detailView&&getComputedStyle(detailView).display!=='none'){
+  detail.appendChild(el.cloneNode(true));detail.scrollTop=detail.scrollHeight;
  }
  return el;
 }
