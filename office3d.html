@@ -285,18 +285,26 @@ sofa(14,15.1);sofa(19,16.5,Math.PI/2);table(17,15.3,2.1,1.7,true);
 for(const x of [13,20])chair(x,13.3);
 plant(10,17);plant(-9,17);
 cube(1.2,1.5,.8,M.metal,24,.75,15.8);
-// 레퍼런스 하단 공용공간의 계단, 급수기, 출입문 등 공간 단서를 추가한다.
-for(let step=0;step<6;step++){
- const stair=cube(3,.22,.72,M.metal,7,.11+step*.22,16.8-step*.72);
- stair.receiveShadow=true;
-}
-cube(3,.18,.9,M.floor,7,1.34,12.1);
-for(const x of [5.55,8.45]){
- cube(.08,1.25,.08,M.metal,x,.65,14.3);
- cube(.08,1.25,.08,M.metal,x,.65,17.2);
-}
-cube(.06,.06,3.0,M.metal,5.55,1.15,15.75);
-cube(.06,.06,3.0,M.metal,8.45,1.15,15.75);
+// 중앙 임원 공간: 대표이사실은 넓게, 본부장실은 별도 유리 공간으로 구성한다.
+// 두 공간 모두 단층이며 계단이나 상부층으로 연결되지 않는다.
+// 대표이사실
+f2wall(9.5,2.5,.16,M.glass,0,1.25,-4.2);
+f2wall(.16,2.5,8.5,M.glass,-4.75,1.25,0);
+f2wall(.16,2.5,8.5,M.glass,4.75,1.25,0);
+f2wall(3,2.5,.16,M.glass,-3.25,1.25,4.2);
+f2wall(3,2.5,.16,M.glass,3.25,1.25,4.2);
+textSprite('대표이사실',0,-3.2);
+desk(0,-1.35);chair(0,-.15);
+sofa(-2.2,2.0);table(1.8,2.0,2.0,1.3);chair(1.8,.9);
+// 본부장실
+f2wall(7.5,2.4,.16,M.glass,11,1.2,-4.0);
+f2wall(.16,2.4,8,M.glass,7.25,1.2,0);
+f2wall(.16,2.4,8,M.glass,14.75,1.2,0);
+f2wall(2.3,2.4,.16,M.glass,8.4,1.2,4.0);
+f2wall(2.3,2.4,.16,M.glass,13.6,1.2,4.0);
+textSprite('본부장실',11,-3.0);
+desk(11,-1.35);chair(11,-.15);
+table(11,2.0,2.4,1.5);chair(9.3,2.0);chair(12.7,2.0);
 // 정수기와 수납장
 cube(.72,1.25,.72,M.wall,-10,.625,14.8);
 cube(.48,.35,.48,M.glass,-10,1.42,14.8);
@@ -428,8 +436,8 @@ for(const p of directory){
 avatarRoot.scale.set(.8,1,.8);
 avatars.forEach((avatar,index)=>{
  let x,z;
- if(index===0){x=18;z=-10;} // 대표이사 피터
- else if(index===1){x=-18;z=15;} // 본부장 알렉스
+ if(index===0){x=0;z=-.15;} // 대표이사 피터
+ else if(index===1){x=11;z=-.15;} // 본부장 알렉스
  else {[x,z]=floor2DeskSlots[index-2]||[0,0];}
  avatar.position.set(x*.8,.82,z*.8);
  avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
