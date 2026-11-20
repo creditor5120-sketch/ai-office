@@ -167,8 +167,8 @@ export default {
       const expires = new Date(Date.now() + TASK_LOCK_LEASE_MS).toISOString();
       const result = await env.DB.prepare(
         `UPDATE tasks SET lease_expires_at = ?, updated_at = ?
-         WHERE task_id = ? AND lock_token = ?`
-      ).bind(expires, now, taskId, lockToken).run();
+         WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?`
+      ).bind(expires, now, taskId, lockToken, now).run();
       if ((result.meta?.changes ?? 0) !== 1) throw new Error("SW_AI_LOCK_LOST");
     };
 
@@ -861,16 +861,18 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
     } catch (eventError) { console.error("AI 호출 완료 이력 기록 실패:", eventError.message); }
     return value;
   } catch (error) {
-    try {
-      await writeTaskEvent("AI_CALL_FAILED", currentStage, {
-        callIndex,
-        elapsedMs: Date.now() - aiCallStartedAt,
-        error: String(error?.message || error),
-        timeout: /AI_PROVIDER_TIMEOUT/i.test(String(error?.message || error))
-      });
-    } catch (eventError) { console.error("AI 호출 실패 이력 기록 실패:", eventError.message); }
+    if (error.message !== "SW_AI_YIELD") {
+      try {
+        await writeTaskEvent("AI_CALL_FAILED", currentStage, {
+          callIndex,
+          elapsedMs: Date.now() - aiCallStartedAt,
+          error: String(error?.message || error),
+          timeout: /AI_PROVIDER_TIMEOUT/i.test(String(error?.message || error))
+        });
+      } catch (eventError) { console.error("AI 호출 실패 이력 기록 실패:", eventError.message); }
+    }
     if (error.message === "SW_AI_YIELD") {
-      // 정상적인 분할 실행 신호이므로 AI 호출 실패로 기록하지 않는다.
+      // 정상적인 분할 실행 신호는 실패 이력으로 남기지 않는다.
       throw error;
     }
     if (/(?:HTTP\s+)?(?:402|429)\b|RESOURCE_EXHAUSTED|insufficient[_\s-]?quota|quota|rate.?limit|payment required|credit balance|no credits/i.test(error.message || "")) {
