@@ -503,3 +503,35 @@ test('requires an unexpired lease to commit successful completion or failure sta
   assert.ok(source.includes('SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND completed_at = ?'));
 });
 
+
+
+test('workflow execution preserves the agreed analyze-assign-execute-review-revise-recheck-report sequence', () => {
+  const stages = [
+    '본부장 업무 분석 및 배정',
+    '본부장 실행계획 수립',
+    '전문 직원 완성본 작성',
+    '팀장 1차 검수',
+    '전문 직원 결과물 수정',
+    '팀장 2차 최종 검수',
+    '본부장 최종 검토 및 보고'
+  ];
+  const positions = stages.map(stage => source.indexOf(stage));
+  assert.ok(positions.every(position => position >= 0));
+  assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
+  assert.ok(source.includes('모든 전문 직원 결과물이 completed 상태이고 팀장 2차 검수 judgment가 승인인 경우에만 최종 완료'));
+  assert.ok(source.includes('사용자의 명시적 승인 없이 계약 체결, 투자 실행, 대외 공시, 외부 발송을 완료한 것으로 판단하지 않는다.'));
+  assert.ok(source.includes('사실, 분석, 제안, 가정 및 미확인 사항을 구분한다.'));
+});
+
+test('D1 preflight remains read-only and checks schema, indexes, integrity, and orphan records', async () => {
+  const sql = await readFile(new URL('../docs/D1_READ_ONLY_PREFLIGHT.sql', import.meta.url), 'utf8');
+  const executable = sql.replace(/^\\s*--.*$/gm, '').trim();
+  assert.doesNotMatch(executable, /\\b(?:INSERT|UPDATE|DELETE|REPLACE|CREATE|DROP|ALTER)\\b/i);
+  assert.match(sql, /PRAGMA table_info/);
+  assert.match(sql, /pragma_index_list/);
+  assert.match(sql, /pragma_index_info/);
+  assert.match(sql, /PRAGMA integrity_check/);
+  assert.match(sql, /PRAGMA foreign_key_check/);
+  assert.match(sql, /task_events_without_task/);
+  assert.match(sql, /task_checkpoints_without_task/);
+});
