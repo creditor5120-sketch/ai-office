@@ -628,14 +628,16 @@ export default {
         `SELECT stage_key, checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key LIKE 'v51_ai_call_%' ORDER BY created_at, rowid`
       ).bind(taskId).all();
       for (const row of (savedCheckpoints.results || [])) {
-        try {
-          const match = String(row.stage_key).match(/^v51_ai_call_(\d+)$/);
-          const saved = JSON.parse(row.checkpoint_json || "{}");
-          if (match && saved.version === 2 && Number.isInteger(saved.index) &&
-              typeof saved.signature === "string" && typeof saved.value === "string") {
-            cachedAiCalls.set(Number(match[1]), { signature: saved.signature, value: saved.value });
-          }
-        } catch (_) {}
+        const match = String(row.stage_key || "").match(/^v51_ai_call_(\d+)$/);
+        let saved;
+        try { saved = JSON.parse(row.checkpoint_json || "{}"); }
+        catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
+        if (!match || saved.version !== 2 || !Number.isInteger(saved.index) ||
+            Number(match[1]) !== saved.index ||
+            typeof saved.signature !== "string" || typeof saved.value !== "string") {
+          throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+        }
+        cachedAiCalls.set(saved.index, { signature: saved.signature, value: saved.value });
       }
 
       await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.26", leaseExpiresAt: leaseUntil });
