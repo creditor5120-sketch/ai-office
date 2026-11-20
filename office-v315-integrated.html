@@ -128,7 +128,11 @@
      await new Promise(resolve=>setTimeout(resolve,Math.min(10000,Math.max(1200,Number(data.resumeDelayMs)||1200))));continue;
     }
     if(response.status===409&&data.status==='PROCESSING'){
-     if(onProgress)onProgress(data);setStatus('동일 업무의 기존 실행을 확인하는 중');await new Promise(resolve=>setTimeout(resolve,2500));continue;
+     if(onProgress)onProgress(data);setStatus('동일 업무의 기존 실행을 확인하는 중 · '+(data.currentStage||'기존 실행 확인'));await new Promise(resolve=>setTimeout(resolve,2500));continue;
+    }
+    // 접수 직후 Worker 실행이 아직 시작되지 않은 상태다. 실패로 종료하지 않고 같은 업무 ID로 상태를 재확인한다.
+    if(response.status===409&&data.status==='RECEIVED'){
+     if(onProgress)onProgress(data);setStatus('업무 접수 완료 · 실행 대기 중');await new Promise(resolve=>setTimeout(resolve,1500));continue;
     }
     if(data.status==='WAITING_FOR_API_QUOTA'){
      if(onProgress)onProgress(data);setStatus('AI 사용 한도 회복 대기 중 · 업무 기록 보존');
