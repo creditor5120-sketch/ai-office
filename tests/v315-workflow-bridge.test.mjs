@@ -8,6 +8,14 @@ const wrapperSource = await readFile(new URL('../office-v315-integrated.html', i
 
 const latestOfficeSource = await readFile(new URL('../SW_AI_Office_Latest.html', import.meta.url), 'utf8');
 
+test('latest office retains all DOM hooks required by the workflow bridge', () => {
+  for (const id of ['aiCfgBtn', 'gl', 'stage', 'chat', 'msgs']) {
+    assert.ok(latestOfficeSource.includes('id="' + id + '"'), 'missing bridge DOM hook: ' + id);
+  }
+  const ids = [...latestOfficeSource.matchAll(/<[a-zA-Z][^>]*\\sid=["']([^"']+)["']/g)].map(match => match[1]);
+  assert.equal(new Set(ids).size, ids.length, 'duplicate HTML id attributes found');
+});
+
 test('integrated wrapper loads the latest office baseline with the approved representative and team leads', () => {
   assert.ok(wrapperSource.includes('<iframe id="office" title="SW AI OFFICE" src="SW_AI_Office_Latest.html">'));
   assert.ok(latestOfficeSource.includes('["ceo1","피터","대표이사"'));
