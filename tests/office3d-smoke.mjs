@@ -44,7 +44,7 @@ try {
   if (await page.locator('#floor2').getAttribute('aria-pressed') !== 'true') throw new Error('2층 전환 상태가 반영되지 않았습니다');
   const secondFloorAudit = await page.evaluate(() => window.__officeFloorAudit?.());
   if (!secondFloorAudit || secondFloorAudit.activeFloor !== 2) throw new Error('2층 상태 감사 정보가 없습니다');
-  if (secondFloorAudit.floor2TeamCount !== 5 || secondFloorAudit.floor2DeskCount !== 30) throw new Error('2층 독립 팀 배치 또는 30개 작업석 구성이 누락되었습니다');
+  if (secondFloorAudit.floor2TeamCount !== 6 || secondFloorAudit.floor2DeskCount !== 31) throw new Error('2층 6개 팀 배치 또는 31개 작업석 구성이 누락되었습니다');
   if (secondFloorAudit.floor2TileCount < 480) throw new Error('2층 구역별 타일 바닥이 생성되지 않았습니다');
   if (secondFloorAudit.floor2PartitionCount < 14) throw new Error('2층 외곽 벽과 중앙 파티션 구성이 누락되었습니다');
   if (secondFloorAudit.floor2AgentCount !== 33) throw new Error(`2층 직원 복제 수가 일치하지 않습니다: ${secondFloorAudit.floor2AgentCount}`);
