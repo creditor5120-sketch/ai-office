@@ -406,7 +406,7 @@ test('checkpoint replay distinguishes an identical saved result from a conflicti
 
 test('persists quota exhaustion as a resumable waiting state with checkpoint metadata', () => {
   assert.match(source, /nextStatus === "WAITING_FOR_API_QUOTA"/);
-  assert.match(source, /appendFailureEvent\("TASK_WAITING_FOR_QUOTA"/);
+  assert.match(source, /nextStatus === "WAITING_FOR_API_QUOTA"\s*\?\s*"TASK_WAITING_FOR_QUOTA"/);
   assert.match(source, /cachedAiCallCount: cachedAiCalls\.size/);
   assert.match(source, /nextAiCallIndex: aiCallCursor/);
   assert.match(source, /nextStatus === "WAITING_FOR_API_QUOTA" \? 429/);
