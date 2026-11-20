@@ -417,10 +417,12 @@ export default {
           return json({ error: "저장된 최종 업무 보고서가 없어 결정을 기록할 수 없습니다.", taskId }, 409);
         }
         const releaseAllowed = result.workflow?.reviewGate?.finalReleaseAllowed === true;
-        if (decision === "APPROVE" && !releaseAllowed) {
+        // PARTIAL_COMPLETED는 검수 플래그가 잘못 설정되었더라도 대표 승인 대상이 될 수 없다.
+        if (decision === "APPROVE" && (saved.status !== "COMPLETED" || !releaseAllowed)) {
           return json({
-            error: "전문 직원의 최종 검수가 모두 승인되지 않아 대표 승인을 진행할 수 없습니다.",
+            error: "업무가 완전 완료 상태이고 전문 직원의 최종 검수가 모두 승인된 경우에만 대표 승인을 진행할 수 있습니다.",
             taskId,
+            taskStatus: saved.status,
             resultStatus: result.workflow?.resultStatus || result.workflow?.status || "미확인"
           }, 409);
         }
