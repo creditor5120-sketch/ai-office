@@ -219,49 +219,50 @@ function f2sign(label,x,z){
 }
 // 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
 const floor2Teams=[
- {name:'경영관리팀',center:[-18,-9],xs:[-22,-18,-14],zs:[-12,-7]},
- {name:'법무팀',center:[0,-9],xs:[-4,0,4],zs:[-12,-7]},
- {name:'IR팀',center:[18,-9],xs:[14,18,22],zs:[-12,-7]},
- {name:'총무팀',center:[-10,5],xs:[-15,-10,-5],zs:[2,8]},
- {name:'전략기획팀',center:[10,5],xs:[5,10,15],zs:[2,8]}
+ {name:'경영관리팀',center:[-18,-9],slots:[[-22,-12],[-18,-12],[-14,-12],[-22,-7],[-18,-7]]},
+ {name:'법무팀',center:[0,-9],slots:[[-4,-12],[0,-12],[4,-12],[-4,-7],[0,-7]]},
+ {name:'IR팀',center:[18,-9],slots:[[14,-12],[18,-12],[22,-12],[14,-7],[18,-7],[22,-7]]},
+ {name:'총무팀',center:[-18,5],slots:[[-22,2],[-18,2],[-14,2],[-22,7],[-18,7]]},
+ {name:'전략기획팀',center:[0,5],slots:[[-4,2],[0,2],[4,2],[-4,7],[0,7]]},
+ {name:'기술·IT팀',center:[18,5],slots:[[14,2],[18,2],[22,2],[14,7],[18,7]]}
 ];
 const floor2DeskSlots=[];
 for(const team of floor2Teams){
  const [cx,cz]=team.center;
- // 팀실의 뒷벽과 좌우 유리 파티션, 중앙 통로 쪽은 출입구를 남긴다.
- f2wall(16,2.45,.18,M.wall,cx,1.225,cz-7.1);
- f2wall(.14,2.1,14,M.glass,cx-8,.02,cz);
- f2wall(.14,2.1,14,M.glass,cx+8,.02,cz);
- f2wall(16,2.1,.14,M.glass,cx,1.05,cz+7.0);
- f2sign(team.name,cx-5.8,cz-7.0);
- for(const z of team.zs) for(const x of team.xs){
-  desk(x,z);chair(x,z+1.05);floor2DeskSlots.push([x,z+1.05]);
- }
+ const depth=cz<0?14:10;
+ const back=cz-depth/2,front=cz+depth/2;
+ // 팀실 뒤쪽 벽과 측면 유리벽
+ f2wall(16,2.45,.18,M.wall,cx,1.225,back);
+ f2wall(.14,2.1,depth,M.glass,cx-8,.02,cz);
+ f2wall(.14,2.1,depth,M.glass,cx+8,.02,cz);
+ // 복도 방향의 유리벽은 출입구를 남겨 좌우 두 구간으로 분리
+ f2wall(6.3,2.1,.14,M.glass,cx-4.85,1.05,front);
+ f2wall(6.3,2.1,.14,M.glass,cx+4.85,1.05,front);
+ f2sign(team.name,cx-5.8,back);
+ for(const [x,z] of team.slots){desk(x,z);chair(x,z+1.05);floor2DeskSlots.push([x,z+1.05])}
 }
-// 팀실 사이에는 시야가 통하는 유리벽과 중앙 복도만 둔다.
-for(const x of [-9,9]) f2wall(.14,1.55,13,M.glass,x,.78,-9);
-f2wall(20,1.35,.14,M.glass,0,.68,-1.1);
-f2wall(.14,1.35,10,M.glass,0,.68,5.2);
-// 왼쪽 전면 회의·협업실
-f2wall(12,2.3,.16,M.wall,-22,1.15,11.0);
-f2wall(.16,2.3,7,M.glass,-28,1.15,14.5);
-f2wall(.16,2.3,7,M.glass,-16,1.15,14.5);
-f2wall(12,2.3,.16,M.glass,-22,1.15,18);
-textSprite('회의·협업실',-22,11.8);
-table(-22,14.2,6.5,2.4);
-for(let i=0;i<3;i++){chair(-24.8+i*2.8,12.3);chair(-24.8+i*2.8,16.1)}
-// 오른쪽 전면 라운지·휴게공간
-f2wall(12,2.3,.16,M.wall,22,1.15,11.0);
-f2wall(.16,2.3,7,M.glass,16,1.15,14.5);
-f2wall(.16,2.3,7,M.glass,28,1.15,14.5);
-f2wall(12,2.3,.16,M.glass,22,1.15,18);
-textSprite('라운지·휴게공간',22,11.8);
-sofa(19,14.1);sofa(24,16.2,Math.PI/2);table(22,14.8,2.2,1.8,true);
-for(const x of [19,25])chair(x,12.5);
-plant(15.3,17);plant(-14.5,17);
-// 중앙 통로의 안내 표식과 공용 장비
-f2wall(.12,1.05,4.8,M.glass,0,.52,11.6);
-cube(.9,1.1,.75,M.metal,0,.55,9.5);
+// 중앙 복도와 전면 공용공간
+f2wall(.14,1.45,13,M.glass,-9,.72,-8.8);
+f2wall(.14,1.45,13,M.glass,9,.72,-8.8);
+f2wall(20,1.25,.14,M.glass,0,.62,-1.1);
+// 전면 왼쪽: 회의·협업실
+f2wall(12,2.3,.16,M.wall,-18,1.15,11.8);
+f2wall(.16,2.3,6,M.glass,-24,1.15,15);
+f2wall(.16,2.3,6,M.glass,-12,1.15,15);
+f2wall(12,2.3,.16,M.glass,-18,1.15,18);
+textSprite('회의·협업실',-18,12.6);
+table(-18,15,6.5,2.4);
+for(let i=0;i<3;i++){chair(-20.8+i*2.8,13.1);chair(-20.8+i*2.8,16.9)}
+// 전면 오른쪽: 라운지·휴게공간
+f2wall(12,2.3,.16,M.wall,18,1.15,11.8);
+f2wall(.16,2.3,6,M.glass,12,1.15,15);
+f2wall(.16,2.3,6,M.glass,24,1.15,15);
+f2wall(12,2.3,.16,M.glass,18,1.15,18);
+textSprite('라운지·휴게공간',18,12.6);
+sofa(15,14.6);sofa(21,16.4,Math.PI/2);table(18,14.9,2.2,1.8,true);
+for(const x of [15,21])chair(x,12.9);
+plant(11,17);plant(-11,17);
+const floor2Objects=scene.children.slice(floor2BuildStart);
 const floor2Objects=scene.children.slice(floor2BuildStart);
 const floor2Objects=scene.children.slice(floor2BuildStart);
 for(const object of floor2Objects){scene.remove(object);floor2Structure.add(object)}
