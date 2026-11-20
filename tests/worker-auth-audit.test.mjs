@@ -391,3 +391,31 @@ test('checkpoint replay distinguishes an identical saved result from a conflicti
   assert.match(source, /if \(cached\.signature !== signature\)\s*\{\s*throw new Error\("SW_AI_CHECKPOINT_CONFLICT"\);\s*\}/);
   assert.ok(source.indexOf('if (cached.signature !== signature)') < source.indexOf('const value = await askAIBare(effectiveSystemPrompt'));
 });
+
+
+test('uses a five-minute execution lease longer than the bounded AI provider retry window', () => {
+  assert.match(source, /const TASK_LOCK_LEASE_MS = 5 \\* 60 \\* 1000/);
+  assert.equal((source.match(/Date\\.now\\(\\) \\+ TASK_LOCK_LEASE_MS/g) || []).length, 2);
+  const maximumProviderWaitMs = 3 * 60000 + 1200 + 2400;
+  assert.ok(5 * 60 * 1000 > maximumProviderWaitMs);
+});
+
+test('acquires execution ownership and increments attempt count in one conditional update', () => {
+  assert.match(source, /UPDATE tasks SET status = 'PROCESSING',[\\s\\S]*attempt_count = attempt_count \\+ 1[\\s\\S]*lock_token = \\?, lease_expires_at = \\?[\\s\\S]*WHERE task_id = \\? AND \\(lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= \\?\\)/);
+  assert.match(source, /const lockResult = await env\\.DB\\.prepare\\([\\s\\S]*\\)\\.bind\\(now, lockToken, leaseUntil, leaseNow, taskId, leaseNow\\)\\.run\\(\\)/);
+  assert.match(source, /WHERE task_id = \\? AND lock_token = \\?/);
+});
+
+test('a stale execution cannot renew its lease or overwrite task state after ownership changes', () => {
+  assert.match(source, /UPDATE tasks SET lease_expires_at = \\?, updated_at = \\?\\s+WHERE task_id = \\? AND lock_token = \\?/);
+  assert.match(source, /partial_result_json = COALESCE\\(\\?, partial_result_json\\)[\\s\\S]*WHERE task_id = \\? AND lock_token = \\?/);
+  assert.match(source, /WHERE EXISTS \\(SELECT 1 FROM tasks WHERE task_id = \\? AND lock_token = \\?\\)/);
+});
+
+test('cancellation clears the execution lease and does not overwrite completed results', () => {
+  const completedAt = source.indexOf('if (savedTask.status === "COMPLETED" || savedTask.status === "PARTIAL_COMPLETED")');
+  const cancelAt = source.indexOf('if (String(savedTask.control_request || "NONE").toUpperCase() === "CANCEL")');
+  assert.ok(completedAt >= 0 && cancelAt > completedAt);
+  assert.match(source, /SET status = 'CANCELLED', lock_token = NULL, lease_expires_at = NULL/);
+  assert.match(source, /WHERE task_id = \\? AND \\(lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= \\?\\)/);
+});
