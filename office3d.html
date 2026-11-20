@@ -168,9 +168,41 @@ for(const t of businessTeams){
 const floor1Structure=new THREE.Group();
 scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);floor1Structure.add(o)});
 scene.add(floor1Structure);
-const floor2Structure=floor1Structure.clone(true);
+// 2층은 1층 복제본이 아니라 독립된 업무·협업 공간으로 구성한다.
+const floor2Structure=new THREE.Group();
+const floor2BuildStart=scene.children.length;
+cube(56,.55,38,M.floor,0,-.38,0);
+cube(56,.16,.18,M.wall,0,.12,-18.9);
+cube(.18,.16,38,M.wall,-27.9,.12,0);
+cube(.18,.16,38,M.wall,27.9,.12,0);
+const floor2Teams=[
+ {name:'경영관리팀',x:-22},
+ {name:'법무팀',x:-11},
+ {name:'IR팀',x:0},
+ {name:'총무팀',x:11},
+ {name:'전략기획팀',x:22}
+];
+const floor2DeskSlots=[];
+for(const team of floor2Teams){
+ const slots=[[-2,-12],[0,-12],[2,-12],[-2,-5],[0,-5],[2,-5]];
+ for(const [dx,z] of slots){
+  const x=team.x+dx;
+  desk(x,z);chair(x,z+1.05);
+  floor2DeskSlots.push([x,z+1.05]);
+ }
+ wallTeamSign(team.name,team.x-3.4,-8.5);
+ if(team.x!==-22)cube(.12,1.1,15,M.glass,team.x-5.5,.02,-8.5);
+}
+room(-14,10,22,14,'회의·협업실',{glass:true});
+table(-14,9,8,2.8);
+for(let i=0;i<4;i++){chair(-18.2+i*2.8,6.8);chair(-18.2+i*2.8,11.2)}
+room(13,10,26,14,'라운지·휴게공간',{glass:true});
+sofa(7,10);sofa(7,14,Math.PI/2);table(13,10,2.4,1.8,true);
+for(const x of [10,16])chair(x,13);
+plant(23,15);plant(3,15);
+const floor2Objects=scene.children.slice(floor2BuildStart);
+for(const object of floor2Objects){scene.remove(object);floor2Structure.add(object)}
 floor2Structure.position.y=6.4;
-floor2Structure.traverse(o=>{if(o.isMesh&&o.geometry?.type==='PlaneGeometry'&&o.geometry.parameters?.width>=200)o.visible=false});
 scene.add(floor2Structure);
 // 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
