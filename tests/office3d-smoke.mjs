@@ -39,6 +39,22 @@ try {
   await mkdir('artifacts', { recursive: true });
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-stage.png' });
 
+  // Capture the public reference in the same browser environment for a direct visual comparison.
+  // This is evidence collection only; reference-site availability must not fail the local smoke test.
+  let referenceCapture = 'unavailable';
+  const referencePage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  try {
+    const referenceResponse = await referencePage.goto('https://team.ai.id/office/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await referencePage.waitForTimeout(8000);
+    await referencePage.screenshot({ path: 'artifacts/team-ai-id-reference.png', fullPage: true, timeout: 20000 });
+    referenceCapture = JSON.stringify({ status: referenceResponse?.status() ?? null, title: await referencePage.title(), url: referencePage.url() });
+  } catch (error) {
+    referenceCapture = 'unavailable: ' + (error?.message || String(error));
+  } finally {
+    await referencePage.close();
+  }
+  console.log('TEAM_AI_ID_REFERENCE_CAPTURE=' + referenceCapture);
+
   const staffCount = await page.locator('#staffStrip .staffCard').count();
   if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
   const visibleCount = Number((await page.locator('#activeCount').innerText()).trim());
