@@ -464,6 +464,14 @@ test('cancellation clears the execution lease and does not overwrite completed r
 });
 
 
+test('records lock release before clearing ownership to preserve audit event order', () => {
+  const start = source.indexOf('const releaseTaskLock = async () =>');
+  const end = source.indexOf('const renewTaskLock = async () =>', start);
+  const block = source.slice(start, end);
+  assert.ok(block.indexOf('writeTaskEvent("TASK_LOCK_RELEASED"') < block.indexOf('UPDATE tasks SET lock_token = NULL'));
+  assert.ok(block.indexOf('UPDATE tasks SET lock_token = NULL') < block.indexOf('lockToken = null'));
+});
+
 test('guards in-flight audit events with the current unexpired lock owner', () => {
   assert.ok(source.includes('WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)'));
   assert.ok(source.includes('if (lockToken)'));
