@@ -343,3 +343,12 @@ test('allows an interrupted RECEIVED task to enter the guarded resume path', () 
   assert.match(source, /UPDATE tasks SET status = 'PROCESSING'[\s\S]*WHERE task_id = \?/);
   assert.match(source, /WHERE task_id = \? AND \(lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= \?\)/);
 });
+
+
+test('checkpoint replay distinguishes an identical saved result from a conflicting result', () => {
+  assert.match(source, /SELECT checkpoint_json FROM task_checkpoints WHERE task_id = \? AND stage_key = \?/);
+  assert.match(source, /saved\.signature !== signature \|\| saved\.value !== value/);
+  assert.match(source, /SW_AI_CHECKPOINT_CONFLICT/);
+  assert.match(source, /SW_AI_CHECKPOINT_CORRUPT/);
+  assert.match(source, /idempotentReuse: Boolean\(existing\)/);
+});
