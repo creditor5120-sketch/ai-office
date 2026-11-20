@@ -186,30 +186,30 @@ for(const t of businessTeams){
 
  for(const [x,z] of t.slots){desk(x,z);chair(x,z+1.02)}
 }
-// 1층 구조물을 별도 그룹으로 묶고 2층 복제 공간을 만든다.
-const floor1Structure=new THREE.Group();
-scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);floor1Structure.add(o)});
-scene.add(floor1Structure);
-// 2층은 TEAM.AI.ID 레퍼런스처럼 여러 독립 팀실이 중앙 복도를 둘러싸는 구조로 재구성한다.
-const floor2Structure=new THREE.Group();
-const floor2BuildStart=scene.children.length;
+// 1층 구조물을 별도 그룹으로 묶고 단층 복제 공간을 만든다.
+const legacyStructure=new THREE.Group();
+scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);legacyStructure.add(o)});
+scene.add(legacyStructure);
+// 단층은 TEAM.AI.ID 레퍼런스처럼 여러 독립 팀실이 중앙 복도를 둘러싸는 구조로 재구성한다.
+const officeStructure=new THREE.Group();
+const officeBuildStart=scene.children.length;
 cube(56,.55,38,M.floor,0,-.38,0);
 // 바닥은 전 구역에 작은 정사각 타일을 깔고, 회의실·라운지에는 별도 색상 띠를 둔다.
-const floor2TileMaterials=[mat(0xd8dfe0),mat(0xe4e8e7),mat(0xd1d9da),mat(0xe8d6d1),mat(0xeee2d0),mat(0xd8e2d7)];
-let floor2TileCount=0;
-const floor2TileGeometry=new THREE.PlaneGeometry(1.46,1.46);
+const officeTileMaterials=[mat(0xd8dfe0),mat(0xe4e8e7),mat(0xd1d9da),mat(0xe8d6d1),mat(0xeee2d0),mat(0xd8e2d7)];
+let officeTileCount=0;
+const officeTileGeometry=new THREE.PlaneGeometry(1.46,1.46);
 for(let x=-27;x<27;x+=1.5){
  for(let z=-18;z<18;z+=1.5){
-  let material=floor2TileMaterials[(Math.floor((x+27)/1.5)+Math.floor((z+18)/1.5))%3];
+  let material=officeTileMaterials[(Math.floor((x+27)/1.5)+Math.floor((z+18)/1.5))%3];
   // 레퍼런스의 불규칙한 색상 구역: 좌측 분홍, 중앙 베이지, 하단 중앙 연녹색
-  if(x < -13 && z > -7 && z < 8) material=floor2TileMaterials[3];
-  else if(x < -5 && x > -16 && z >= 8) material=floor2TileMaterials[4];
-  else if(x >= 3 && x < 13 && z >= 7) material=floor2TileMaterials[5];
-  else if(x > 13 && z > -4 && z < 12) material=floor2TileMaterials[4];
-  else if(z < -8 && x < 2) material=floor2TileMaterials[0];
-  else if(z >= 13) material=floor2TileMaterials[1];
-  const tile=new THREE.Mesh(floor2TileGeometry,material);
-  tile.rotation.x=-Math.PI/2;tile.position.set(x+.75,-.095,z+.75);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
+  if(x < -13 && z > -7 && z < 8) material=officeTileMaterials[3];
+  else if(x < -5 && x > -16 && z >= 8) material=officeTileMaterials[4];
+  else if(x >= 3 && x < 13 && z >= 7) material=officeTileMaterials[5];
+  else if(x > 13 && z > -4 && z < 12) material=officeTileMaterials[4];
+  else if(z < -8 && x < 2) material=officeTileMaterials[0];
+  else if(z >= 13) material=officeTileMaterials[1];
+  const tile=new THREE.Mesh(officeTileGeometry,material);
+  tile.rotation.x=-Math.PI/2;tile.position.set(x+.75,-.095,z+.75);tile.receiveShadow=true;scene.add(tile);officeTileCount++;
  }
 }
 // 외곽 벽체와 출입구
@@ -218,16 +218,16 @@ cube(.18,2.8,38,M.wall,-27.9,1.4,0);
 cube(.18,2.8,38,M.wall,27.9,1.4,0);
 cube(18,2.5,.18,M.wall,-18,1.25,18.9);
 cube(18,2.5,.18,M.wall,18,1.25,18.9);
-let floor2PartitionCount=0;
-function f2wall(w,h,d,material,x,y,z){
- cube(w,h,d,material,x,y,z);floor2PartitionCount++;
+let officePartitionCount=0;
+function officeWall(w,h,d,material,x,y,z){
+ cube(w,h,d,material,x,y,z);officePartitionCount++;
 }
-function f2sign(label,x,z){
+function officeSign(label,x,z){
  wallTeamSign(label,x,z);
 }
 // 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
 // 레퍼런스의 비대칭 팀 클러스터와 부분 유리 파티션을 반영한 공간 배치
-const floor2Teams=[
+const officeTeams=[
  {name:'경영관리팀',center:[-14,-12],slots:[[-17.2,-14],[-14.9,-14],[-12.6,-14],[-17.2,-11.7],[-14.9,-11.7],[-12.6,-11.7]]},
  {name:'법무팀',center:[-20,0],slots:[[-24,-2],[-21.7,-2],[-19.4,-2],[-24,.3],[-21.7,.3]]},
  {name:'IR팀',center:[-10,10],slots:[[-14,8],[-11.7,8],[-9.4,8],[-14,10.3],[-11.7,10.3]]},
@@ -235,51 +235,51 @@ const floor2Teams=[
  {name:'전략기획팀',center:[9,-8],slots:[[5,-11],[7.3,-11],[9.6,-11],[5,-8.7],[7.3,-8.7]]},
  {name:'기술·IT팀',center:[21,2],slots:[[17,-1],[19.3,-1],[21.6,-1],[17,1.3],[19.3,1.3]]}
 ];
-const floor2DeskSlots=[];
-for(const team of floor2Teams){
+const officeDeskSlots=[];
+for(const team of officeTeams){
  for(const [x,z] of team.slots){
-  desk(x,z);chair(x,z+1.18);floor2DeskSlots.push([x,z+1.18]);
+  desk(x,z);chair(x,z+1.18);officeDeskSlots.push([x,z+1.18]);
  }
 }
 // 레퍼런스처럼 벽으로 완전히 둘러싸지 않고, 구역마다 길이가 다른 낮은 벽과 유리 파티션을 배치
-f2wall(18,2.7,.2,M.wall,-17,1.35,-17.9);
-f2wall(.18,2.1,8,M.wall,-26,1.05,-13);
-f2wall(8,2.2,.16,M.wall,-23,1.1,-6.0);
-f2wall(11,2.2,.16,M.glass,-12,1.1,-5.5);
-f2wall(.16,2.1,8,M.wall,-7,1.05,-1.5);
-f2wall(13,2.1,.16,M.glass,-18,.98,5.2);
-f2wall(.16,1.8,8,M.glass,-3,.9,9.0);
-f2wall(12,2.3,.16,M.wall,4,1.15,-14.0);
-f2wall(.16,2.1,10,M.glass,15,1.05,-9.0);
-f2wall(9,2.1,.16,M.wall,21,1.05,-3.5);
-f2wall(.16,2.1,9,M.glass,12,1.05,3.5);
-f2wall(12,1.6,.16,M.glass,7,.8,15.0);
-f2wall(.16,1.6,7,M.glass,13,.8,11.5);
-f2wall(8,1.4,.16,M.wall,-21,.7,13.8);
-f2wall(.16,1.4,6,M.wall,-25,.7,10.8);
-f2sign('경영관리팀',-14,-17.5);
-f2sign('법무팀',-25,-6.5);
-f2sign('IR팀',-10,5.4);
-f2sign('총무팀',5,15.0);
-f2sign('전략기획팀',9,-14.2);
-f2sign('기술·IT팀',22,-4.0);
+officeWall(18,2.7,.2,M.wall,-17,1.35,-17.9);
+officeWall(.18,2.1,8,M.wall,-26,1.05,-13);
+officeWall(8,2.2,.16,M.wall,-23,1.1,-6.0);
+officeWall(11,2.2,.16,M.glass,-12,1.1,-5.5);
+officeWall(.16,2.1,8,M.wall,-7,1.05,-1.5);
+officeWall(13,2.1,.16,M.glass,-18,.98,5.2);
+officeWall(.16,1.8,8,M.glass,-3,.9,9.0);
+officeWall(12,2.3,.16,M.wall,4,1.15,-14.0);
+officeWall(.16,2.1,10,M.glass,15,1.05,-9.0);
+officeWall(9,2.1,.16,M.wall,21,1.05,-3.5);
+officeWall(.16,2.1,9,M.glass,12,1.05,3.5);
+officeWall(12,1.6,.16,M.glass,7,.8,15.0);
+officeWall(.16,1.6,7,M.glass,13,.8,11.5);
+officeWall(8,1.4,.16,M.wall,-21,.7,13.8);
+officeWall(.16,1.4,6,M.wall,-25,.7,10.8);
+officeSign('경영관리팀',-14,-17.5);
+officeSign('법무팀',-25,-6.5);
+officeSign('IR팀',-10,5.4);
+officeSign('총무팀',5,15.0);
+officeSign('전략기획팀',9,-14.2);
+officeSign('기술·IT팀',22,-4.0);
 // 팀 구역을 잇는 꺾인 복도와 낮은 파티션
-f2wall(11,1.55,.16,M.glass,-11,.78,-1.0);
-f2wall(.16,1.55,9,M.glass,-5,.78,3.5);
-f2wall(13,1.55,.16,M.glass,7,.78,8.8);
-f2wall(.16,1.55,9,M.glass,13,.78,3.5);
-f2wall(8,1.25,.16,M.wall,-19,.62,12.8);
-f2wall(9,1.25,.16,M.wall,0,.62,12.8);
+officeWall(11,1.55,.16,M.glass,-11,.78,-1.0);
+officeWall(.16,1.55,9,M.glass,-5,.78,3.5);
+officeWall(13,1.55,.16,M.glass,7,.78,8.8);
+officeWall(.16,1.55,9,M.glass,13,.78,3.5);
+officeWall(8,1.25,.16,M.wall,-19,.62,12.8);
+officeWall(9,1.25,.16,M.wall,0,.62,12.8);
 // 왼쪽 전면: 공용 협업·회의 공간
-f2wall(.16,2.1,7,M.glass,-27,1.05,14.8);
-f2wall(.16,2.1,7,M.glass,-11,1.05,14.8);
-f2wall(16,2.1,.14,M.glass,-19,1.05,18.2);
+officeWall(.16,2.1,7,M.glass,-27,1.05,14.8);
+officeWall(.16,2.1,7,M.glass,-11,1.05,14.8);
+officeWall(16,2.1,.14,M.glass,-19,1.05,18.2);
 textSprite('회의·협업실',-19,13.4);
 table(-19,15.5,6.8,2.6);
 for(let i=0;i<3;i++){chair(-21.8+i*2.8,13.5);chair(-21.8+i*2.8,17.1)}
 // 중앙 전면: 공용 라운지, 오른쪽 끝은 출입구·수납 공간
-f2wall(10,2.1,.14,M.glass,17,1.05,18.2);
-f2wall(.14,2.1,5,M.glass,22,1.05,15.7);
+officeWall(10,2.1,.14,M.glass,17,1.05,18.2);
+officeWall(.14,2.1,5,M.glass,22,1.05,15.7);
 textSprite('라운지·휴게공간',17,13.4);
 sofa(14,15.1);sofa(19,16.5,Math.PI/2);table(17,15.3,2.1,1.7,true);
 for(const x of [13,20])chair(x,13.3);
@@ -288,20 +288,20 @@ cube(1.2,1.5,.8,M.metal,24,.75,15.8);
 // 중앙 임원 공간: 대표이사실은 넓게, 본부장실은 별도 유리 공간으로 구성한다.
 // 두 공간 모두 단층이며 계단이나 상부층으로 연결되지 않는다.
 // 대표이사실
-f2wall(9.5,2.5,.16,M.glass,0,1.25,-4.2);
-f2wall(.16,2.5,8.5,M.glass,-4.75,1.25,0);
-f2wall(.16,2.5,8.5,M.glass,4.75,1.25,0);
-f2wall(3,2.5,.16,M.glass,-3.25,1.25,4.2);
-f2wall(3,2.5,.16,M.glass,3.25,1.25,4.2);
+officeWall(9.5,2.5,.16,M.glass,0,1.25,-4.2);
+officeWall(.16,2.5,8.5,M.glass,-4.75,1.25,0);
+officeWall(.16,2.5,8.5,M.glass,4.75,1.25,0);
+officeWall(3,2.5,.16,M.glass,-3.25,1.25,4.2);
+officeWall(3,2.5,.16,M.glass,3.25,1.25,4.2);
 textSprite('대표이사실',0,-3.2);
 desk(0,-1.35);chair(0,-.15);
 sofa(-2.2,2.0);table(1.8,2.0,2.0,1.3);chair(1.8,.9);
 // 본부장실
-f2wall(7.5,2.4,.16,M.glass,11,1.2,-4.0);
-f2wall(.16,2.4,8,M.glass,7.25,1.2,0);
-f2wall(.16,2.4,8,M.glass,14.75,1.2,0);
-f2wall(2.3,2.4,.16,M.glass,8.4,1.2,4.0);
-f2wall(2.3,2.4,.16,M.glass,13.6,1.2,4.0);
+officeWall(7.5,2.4,.16,M.glass,11,1.2,-4.0);
+officeWall(.16,2.4,8,M.glass,7.25,1.2,0);
+officeWall(.16,2.4,8,M.glass,14.75,1.2,0);
+officeWall(2.3,2.4,.16,M.glass,8.4,1.2,4.0);
+officeWall(2.3,2.4,.16,M.glass,13.6,1.2,4.0);
 textSprite('본부장실',11,-3.0);
 desk(11,-1.35);chair(11,-.15);
 table(11,2.0,2.4,1.5);chair(9.3,2.0);chair(12.7,2.0);
@@ -312,13 +312,13 @@ cube(.32,.12,.28,M.metal,-10,1.18,14.8);
 cube(1.1,1.7,.75,M.metal,25,.85,8.4);
 cube(.12,1.35,.08,M.wood2,26.25,.95,8.4);
 cube(.06,.08,.08,M.metal,26.3,1.0,8.05);
-const floor2Objects=scene.children.slice(floor2BuildStart);
-for(const object of floor2Objects){scene.remove(object);floor2Structure.add(object)}
+const officeObjects=scene.children.slice(officeBuildStart);
+for(const object of officeObjects){scene.remove(object);officeStructure.add(object)}
 // 단층 사무실: 층 전환 없이 하나의 공간만 표시한다.
-floor1Structure.visible=false;
-floor2Structure.position.y=0;
-floor2Structure.scale.set(.8,1,.8);
-scene.add(floor2Structure);
+legacyStructure.visible=false;
+officeStructure.position.y=0;
+officeStructure.scale.set(.8,1,.8);
+scene.add(officeStructure);
 // 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
@@ -438,12 +438,12 @@ avatars.forEach((avatar,index)=>{
  let x,z;
  if(index===0){x=0;z=-.15;} // 대표이사 피터
  else if(index===1){x=11;z=-.15;} // 본부장 알렉스
- else {[x,z]=floor2DeskSlots[index-2]||[0,0];}
+ else {[x,z]=officeDeskSlots[index-2]||[0,0];}
  avatar.position.set(x*.8,.82,z*.8);
  avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
  avatar.userData.targetX=x*.8;avatar.userData.targetZ=z*.8;
 });
-window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:floor2Teams.length,deskCount:floor2DeskSlots.length,avatarCount:avatars.length,visibleOffice:floor2Structure.visible});
+window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:officeTeams.length,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:officeStructure.visible});
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
 function makeStaffCard(p,detail=false){
@@ -801,7 +801,7 @@ let is2D=new URLSearchParams(location.search).get('view')==='2d';
 
 function setOfficeWallsVisible(visible){
  wallMeshes.forEach(w=>w.visible=visible);
- floor2Structure.traverse(o=>{if(o.isMesh&&(o.material===M.wall||o.material===M.glass))o.visible=visible});
+ officeStructure.traverse(o=>{if(o.isMesh&&(o.material===M.wall||o.material===M.glass))o.visible=visible});
 }
 function applyTeamLabelMode(){scene.traverse(o=>{if(o.isMesh&&o.geometry?.type==='PlaneGeometry'&&o.rotation.y===Math.PI/2)o.visible=!is2D})}
 applyTeamLabelMode();
