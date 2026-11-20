@@ -152,13 +152,15 @@ export default {
     const releaseTaskLock = async () => {
       if (!env.DB || !taskId || !lockToken) return;
       const releasedToken = lockToken;
+      // 해제 이력은 잠금이 아직 유효할 때 먼저 기록한다. 잠금 해제 후 기록하면
+      // 다음 실행의 시작 이벤트보다 늦게 이전 실행의 해제 이벤트가 들어갈 수 있다.
+      try { await writeTaskEvent("TASK_LOCK_RELEASED", "업무 실행 잠금 해제", {}); }
+      catch (eventError) { console.error("잠금 해제 이력 기록 실패:", eventError.message); }
       await env.DB.prepare(
         `UPDATE tasks SET lock_token = NULL, lease_expires_at = NULL, updated_at = ?
          WHERE task_id = ? AND lock_token = ?`
       ).bind(new Date().toISOString(), taskId, releasedToken).run();
       lockToken = null;
-      try { await writeTaskEvent("TASK_LOCK_RELEASED", "업무 실행 잠금 해제", {}); }
-      catch (eventError) { console.error("잠금 해제 이력 기록 실패:", eventError.message); }
     };
 
     const renewTaskLock = async () => {
