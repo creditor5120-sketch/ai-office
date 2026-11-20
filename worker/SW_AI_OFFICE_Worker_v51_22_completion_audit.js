@@ -255,8 +255,32 @@ export default {
 
       // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없거나 잘못된 action이 업무 실행으로 흘러가지 않게 차단한다.
       if (Object.prototype.hasOwnProperty.call(body, "action") &&
-          !["get_representative_decision", "get_task_history", "representative_decision"].includes(body.action)) {
+          !["get_representative_decision", "get_task_history", "get_recent_tasks", "representative_decision"].includes(body.action)) {
         return json({ error: "지원하지 않는 API action입니다." }, 400);
+      }
+
+      // 브라우저 로컬 기록이 없어도 서버에 저장된 최근 업무 목록을 복원한다.
+      if (body.action === "get_recent_tasks") {
+        if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 최근 업무를 조회할 수 없습니다." }, 503);
+        const requestedLimit = Number(body.limit);
+        const limit = Number.isFinite(requestedLimit) ? Math.min(50, Math.max(1, Math.floor(requestedLimit))) : 20;
+        const rows = await env.DB.prepare(
+          `SELECT task_id, task, status, current_stage, created_at, updated_at, completed_at, error_message
+           FROM tasks ORDER BY created_at DESC LIMIT ?`
+        ).bind(limit).all();
+        return json({
+          count: (rows.results || []).length,
+          tasks: (rows.results || []).map(row => ({
+            taskId: row.task_id,
+            task: row.task,
+            status: row.status,
+            currentStage: row.current_stage,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            completedAt: row.completed_at,
+            error: row.error_message || ""
+          }))
+        }, 200);
       }
 
       // 다른 기기·브라우저에서도 서버에 저장된 대표 결정 이력을 조회한다.
@@ -285,7 +309,8 @@ export default {
         taskId = String(body.taskId || "").trim();
         if (!taskId) return json({ error: "업무 ID가 없습니다." }, 400);
         const taskRow = await env.DB.prepare(
-          `SELECT task_id, status, current_stage, created_at, updated_at, completed_at
+          `SELECT task_id, status, current_stage, created_at, updated_at, completed_at,
+                  partial_result_json, error_message
            FROM tasks WHERE task_id = ?`
         ).bind(taskId).first();
         if (!taskRow) return json({ error: "해당 업무를 찾을 수 없습니다.", taskId }, 404);
@@ -310,6 +335,8 @@ export default {
         }).reverse();
         const truncated = events.length > 300;
         const visibleEvents = events.slice(-300);
+        let savedResult = null;
+        try { savedResult = JSON.parse(taskRow.partial_result_json || "null"); } catch (_) {}
         return json({
           task: {
             taskId: taskRow.task_id,
@@ -317,8 +344,10 @@ export default {
             currentStage: taskRow.current_stage,
             createdAt: taskRow.created_at,
             updatedAt: taskRow.updated_at,
-            completedAt: taskRow.completed_at
+            completedAt: taskRow.completed_at,
+            error: taskRow.error_message || ""
           },
+          result: savedResult,
           eventCount: visibleEvents.length,
           events: visibleEvents,
           truncated
