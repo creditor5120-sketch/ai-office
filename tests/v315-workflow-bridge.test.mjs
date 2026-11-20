@@ -270,8 +270,8 @@ test('workflow engine control does not replace or mutate the approved office HTM
 
 
 test('renders server and task content without unsafe HTML injection sinks', () => {
-  assert.doesNotMatch(wrapperSource, /\\.innerHTML\\s*=|\\.insertAdjacentHTML\\s*\\(/);
-  assert.doesNotMatch(source, /\\.innerHTML\\s*=|\\.insertAdjacentHTML\\s*\\(/);
+  assert.doesNotMatch(wrapperSource, /\.innerHTML\s*=|\.insertAdjacentHTML\s*\(/);
+  assert.doesNotMatch(source, /\.innerHTML\s*=|\.insertAdjacentHTML\s*\(/);
   assert.match(wrapperSource, /textContent/);
   assert.match(source, /textContent/);
 });
