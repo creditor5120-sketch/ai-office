@@ -12,7 +12,7 @@ test('latest office retains all DOM hooks required by the workflow bridge', () =
   for (const id of ['aiCfgBtn', 'gl', 'stage', 'chat', 'msgs']) {
     assert.ok(latestOfficeSource.includes('id="' + id + '"'), 'missing bridge DOM hook: ' + id);
   }
-  const ids = [...latestOfficeSource.matchAll(/<[a-zA-Z][^>]*\\sid=["']([^"']+)["']/g)].map(match => match[1]);
+  const ids = [...latestOfficeSource.matchAll(/ id=["']([^"']+)["']/g)].map(match => match[1]);
   assert.equal(new Set(ids).size, ids.length, 'duplicate HTML id attributes found');
 });
 
