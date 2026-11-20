@@ -256,8 +256,15 @@ for(const p of directory){
   makeAvatar(displayPerson,avatars.length,x,z+seatOffset)
 }
 // 2층 직원 캐릭터를 복제하고 층 전환 시 해당 층만 표시한다.
-const floor2AvatarRoot=avatarRoot.clone(true);
+const floor2AvatarRoot=new THREE.Group();
 floor2AvatarRoot.position.y=6.4;
+avatars.forEach(source=>{
+ const copy=new THREE.Sprite(source.material.clone());
+ copy.position.copy(source.position);
+ copy.scale.copy(source.scale);
+ copy.material.map=source.material.map;
+ floor2AvatarRoot.add(copy);
+});
 scene.add(floor2AvatarRoot);
 let activeFloor=1;
 function setOfficeFloor(level){
