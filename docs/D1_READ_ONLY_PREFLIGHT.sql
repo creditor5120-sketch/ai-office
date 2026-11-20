@@ -90,17 +90,16 @@ ORDER BY sm.name, il.name, ii.seqno;
 -- 3-1) Machine-readable required UNIQUE constraint check.
 -- An empty result means both concurrency/idempotency safeguards are backed by
 -- full (non-partial) UNIQUE indexes with the exact ordered column sets.
-WITH required(table_name, columns_csv) AS (
-  VALUES
-    ('tasks', 'idempotency_key'),
-    ('task_checkpoints', 'task_id,stage_key')
-),
-actual_unique(table_name, columns_csv, is_unique, is_partial) AS (
+WITH actual_unique AS (
   SELECT
-    sm.name,
-    group_concat(ii.name, ','),
-    il."unique",
-    il.partial
+    sm.name AS table_name,
+    il.name AS index_name,
+    il."unique" AS is_unique,
+    il.partial AS is_partial,
+    COUNT(*) AS column_count,
+    MAX(CASE WHEN ii.seqno = 0 AND ii.name = 'idempotency_key' THEN 1 ELSE 0 END) AS has_idempotency_key_first,
+    MAX(CASE WHEN ii.seqno = 0 AND ii.name = 'task_id' THEN 1 ELSE 0 END) AS has_task_id_first,
+    MAX(CASE WHEN ii.seqno = 1 AND ii.name = 'stage_key' THEN 1 ELSE 0 END) AS has_stage_key_second
   FROM sqlite_master AS sm
   JOIN pragma_index_list(sm.name) AS il
   JOIN pragma_index_info(il.name) AS ii
@@ -108,17 +107,20 @@ actual_unique(table_name, columns_csv, is_unique, is_partial) AS (
     AND sm.name IN ('tasks', 'task_checkpoints')
   GROUP BY sm.name, il.name, il."unique", il.partial
 )
-SELECT required.table_name, required.columns_csv AS missing_unique_index
-FROM required
+SELECT 'tasks' AS table_name, 'idempotency_key' AS missing_unique_index
 WHERE NOT EXISTS (
-  SELECT 1
-  FROM actual_unique
-  WHERE actual_unique.table_name = required.table_name
-    AND actual_unique.columns_csv = required.columns_csv
-    AND actual_unique.is_unique = 1
-    AND actual_unique.is_partial = 0
+  SELECT 1 FROM actual_unique
+  WHERE table_name = 'tasks' AND is_unique = 1 AND is_partial = 0
+    AND column_count = 1 AND has_idempotency_key_first = 1
 )
-ORDER BY required.table_name;
+UNION ALL
+SELECT 'task_checkpoints', 'task_id,stage_key'
+WHERE NOT EXISTS (
+  SELECT 1 FROM actual_unique
+  WHERE table_name = 'task_checkpoints' AND is_unique = 1 AND is_partial = 0
+    AND column_count = 2 AND has_task_id_first = 1 AND has_stage_key_second = 1
+)
+ORDER BY table_name;
 
 -- 4) Database integrity and declared foreign-key consistency.
 PRAGMA integrity_check;
