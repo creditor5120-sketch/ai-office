@@ -328,3 +328,11 @@ test('returns the immutable representative decision from the audit event', async
   assert.equal(fetched.body.reason, '근거 보완 필요');
   assert.equal(fetched.body.recordedAt, saved.body.recordedAt);
 });
+
+
+test('keeps the configured OpenRouter key compatible and provides Gemini fallback', () => {
+  assert.match(source, /env\.OPENROUTER_API_KEY\s*\?\s*"openrouter"\s*:\s*env\.GEMINI_API_KEY\s*\?\s*"gemini"/);
+  assert.match(source, /https:\/\/openrouter\.ai\/api\/v1\/chat\/completions/);
+  assert.match(source, /https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\//);
+  assert.match(source, /OPENROUTER_API_KEY 또는 GEMINI_API_KEY/);
+});
