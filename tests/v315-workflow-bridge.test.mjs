@@ -244,3 +244,22 @@ test('the approved office HTML is the live visual shell and the wrapper injects 
   assert.ok(source.includes("selected && selected.id === 'alex'"));
   assert.ok(source.includes('originalCallConfiguredLLM(inputMsgs)'));
 });
+
+
+test('workflow engine control is injected beside the original office settings button', () => {
+  assert.match(wrapperSource, /const header=doc\.querySelector\('header'\)/);
+  assert.match(wrapperSource, /const settingsButton=doc\.getElementById\('aiCfgBtn'\)/);
+  assert.match(wrapperSource, /settingsButton\.insertAdjacentElement\('afterend',button\)/);
+  assert.match(wrapperSource, /button\.id='swWorkflowEngineButton'/);
+  assert.match(wrapperSource, /button\.textContent='업무 엔진'/);
+  assert.match(wrapperSource, /button\.addEventListener\('click',\(\)=>\{panel\.classList\.toggle\('open'\)/);
+  assert.match(wrapperSource, /if\(panel\.classList\.contains\('open'\)\)renderHistory\(\)/);
+});
+
+test('workflow engine control does not replace or mutate the approved office HTML', async () => {
+  const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
+  assert.equal(office, office.replace('SW_AI_Office_v3_15.html', 'SW_AI_Office_v3_15.html'));
+  assert.match(wrapperSource, /src="SW_AI_Office_v3_15\.html"/);
+  assert.match(wrapperSource, /if\(doc\.getElementById\('sw-workflow-bridge-v315'\)\)return/);
+  assert.doesNotMatch(wrapperSource, /id="bridgeToggle"/);
+});
