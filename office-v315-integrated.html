@@ -117,10 +117,23 @@
   async execute(payload,onProgress){
    const token=sessionStorage.getItem('swOfficeAccessToken');
    if(!token)throw new Error('상단의 업무 엔진 연결 메뉴에서 서버 접속 인증값을 먼저 입력해 주세요.');
-   const deadline=Date.now()+30*60*1000;let attempt=0,lastData=null;
+   const deadline=Date.now()+30*60*1000;let attempt=0,lastData=null,networkFailures=0;
    while(Date.now()<deadline&&attempt<1200){
     attempt++;
-    const response=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+    let response;
+    try{
+     // 응답이 유실돼도 최초 taskId/idempotencyKey를 그대로 재전송해 중복 업무 생성을 막는다.
+     response=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+     networkFailures=0;
+    }catch(networkError){
+     networkFailures++;
+     if(networkFailures>8)throw new Error('서버 연결이 반복해서 끊겨 업무 재개를 중단했습니다. 같은 업무 ID로 다시 시도할 수 있습니다. '+(networkError&&networkError.message||'네트워크 오류'));
+     const delay=Math.min(10000,1000*Math.pow(2,networkFailures-1));
+     if(onProgress)onProgress({status:'NETWORK_RETRY',currentStage:'서버 연결 재시도 '+networkFailures+'/8'});
+     setStatus('서버 연결 재시도 중 · '+networkFailures+'/8회');
+     await new Promise(resolve=>setTimeout(resolve,delay));
+     continue;
+    }
     const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){data={error:raw||'서버 응답을 해석할 수 없습니다.'}}lastData=data;
     if(response.ok&&data.reply&&data.workflow){const state=String(data.workflow.status||'').toLowerCase();setStatus((state==='completed'?'업무 완료':state==='partial'?'부분 완료 · 추가 확인 필요':'업무 미완료 · 검수 또는 실행 확인 필요')+' · '+payload.taskId,state==='completed'?'ok':'error');renderHistory();return data;}
     if(response.status===202&&data.status==='PROCESSING'){
