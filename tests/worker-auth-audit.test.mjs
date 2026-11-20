@@ -535,3 +535,13 @@ test('D1 preflight remains read-only and checks schema, indexes, integrity, and 
   assert.match(sql, /task_events_without_task/);
   assert.match(sql, /task_checkpoints_without_task/);
 });
+
+
+test('requires a verifiable body quotation before treating a review issue as reconciled', () => {
+  const start = source.indexOf('const missingFirstReviewIssues = firstReviewIssues.filter(issue =>');
+  const end = source.indexOf('for (const missingIssue of missingFirstReviewIssues)', start);
+  const block = source.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(block, /const evidenceQuotedInBody = quote\.length >= 12 && normalizedDeliverable\.includes\(quote\)/);
+  assert.match(block, /return issueMatched && evidenceQuotedInBody;/);
+});
