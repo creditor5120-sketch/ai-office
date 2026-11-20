@@ -51,12 +51,29 @@
     if (!task) throw new Error('업무 지시 내용이 비어 있습니다.');
     const selected = typeof E === 'function' ? E(st.sel) : null;
     if (!selected) throw new Error('현재 선택된 직원을 확인할 수 없습니다.');
-    const taskId = crypto.randomUUID ? crypto.randomUUID() : 'sw-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-    const payload = {
+    const employeeId = textOf(selected.id);
+    const pendingKey = 'swV315PendingWorkflowTask';
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem(pendingKey) || 'null'); } catch (_) {}
+    // 이전 호출이 브라우저 종료·대기시간 초과 등으로 끝나지 않았다면
+    // 같은 직원에게 같은 지시를 다시 내릴 때 최초 taskId/idempotencyKey를 재사용한다.
+    const canResume = pending && pending.payload &&
+      pending.payload.task === task && pending.payload.employeeId === employeeId &&
+      pending.payload.taskId && pending.payload.idempotencyKey;
+    const taskId = canResume
+      ? pending.payload.taskId
+      : (crypto.randomUUID ? crypto.randomUUID() : 'sw-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+    const payload = canResume ? pending.payload : {
       task, taskId, idempotencyKey: taskId, employee: textOf(selected.name),
-      employeeId: textOf(selected.id), department: departmentOf(selected),
+      employeeId, department: departmentOf(selected),
       position: textOf(selected.badge), instruction: textOf(selected.duty), employees: toWorkerEmployees()
     };
+    try {
+      localStorage.setItem(pendingKey, JSON.stringify({
+        payload, state: 'pending', lastAttemptAt: new Date().toISOString(),
+        resumed: Boolean(canResume)
+      }));
+    } catch (_) {}
     let data;
     try {
       data = await window.parent.SWWorkflowBridge.execute(payload, progress => {
@@ -66,6 +83,15 @@
         if (progressBubble) progressBubble.textContent = '업무 처리 중 · ' + status;
       });
     } catch (error) {
+      try {
+        const savedPending = JSON.parse(localStorage.getItem(pendingKey) || 'null');
+        if (savedPending && savedPending.payload && savedPending.payload.taskId === taskId) {
+          savedPending.state = 'resume_required';
+          savedPending.lastError = textOf(error && error.message || error);
+          savedPending.lastAttemptAt = new Date().toISOString();
+          localStorage.setItem(pendingKey, JSON.stringify(savedPending));
+        }
+      } catch (_) {}
       try {
         const history = JSON.parse(localStorage.getItem('swV315WorkflowTaskHistory') || '[]');
         history.unshift({ taskId, task, reply: '', deliverables: [], workflow: {}, error: textOf(error && error.message || error), status: '처리 미완료 또는 재개 필요', savedAt: new Date().toISOString() });
@@ -89,6 +115,10 @@
       sections.push('최종 검수 통과: ' + (data.workflow.reviewGate.finalReleaseAllowed === true ? '예' : '아니오'));
       sections.push('대표 승인 전 외부 실행: 수행하지 않음');
     }
+    try {
+      const savedPending = JSON.parse(localStorage.getItem(pendingKey) || 'null');
+      if (savedPending && savedPending.payload && savedPending.payload.taskId === taskId) localStorage.removeItem(pendingKey);
+    } catch (_) {}
     try {
       const history = JSON.parse(localStorage.getItem('swV315WorkflowTaskHistory') || '[]');
       history.unshift({ taskId, task, reply: data.reply || '', deliverables: data.deliverables || [], workflow: data.workflow || {}, status: workflowStatus, savedAt: new Date().toISOString() });
