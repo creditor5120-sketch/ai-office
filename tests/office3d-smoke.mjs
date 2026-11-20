@@ -51,25 +51,16 @@ try {
   await mkdir('artifacts', { recursive: true });
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-stage.png' });
 
-  // Save both floor views as visual evidence and verify the floor controls update the active state.
-  await page.locator('#floor2').click();
-  if (await page.locator('#floor2').getAttribute('aria-pressed') !== 'true') throw new Error('2층 전환 상태가 반영되지 않았습니다');
-  const secondFloorAudit = await page.evaluate(() => window.__officeFloorAudit?.());
-  if (!secondFloorAudit || secondFloorAudit.activeFloor !== 2) throw new Error('2층 상태 감사 정보가 없습니다');
-  if (secondFloorAudit.floor2TeamCount !== 6 || secondFloorAudit.floor2DeskCount !== 31) throw new Error('2층 6개 팀 배치 또는 31개 작업석 구성이 누락되었습니다');
-  if (secondFloorAudit.floor2TileCount < 800) throw new Error('2층 세밀한 타일 바닥 구성이 누락되었습니다');
-  if (secondFloorAudit.floor2PartitionCount < 14) throw new Error('2층 외곽 벽과 중앙 파티션 구성이 누락되었습니다');
-  if (secondFloorAudit.floor2AgentCount !== 33) throw new Error(`2층 직원 복제 수가 일치하지 않습니다: ${secondFloorAudit.floor2AgentCount}`);
-  if (secondFloorAudit.floor2CharacterMeshCount < 250) throw new Error('2층 직원의 입체 캐릭터 모델이 누락되었습니다');
-  if (secondFloorAudit.floor2ObjectCount <= 0) throw new Error('2층 독립 공간 구조가 생성되지 않았습니다');
+  // Verify the office is a single continuous floor: no floor selector or duplicate upper-floor scene.
+  if (await page.locator('#floor1, #floor2').count() !== 0) throw new Error('단층 사무실에 층 전환 버튼이 남아 있습니다');
+  const officeAudit = await page.evaluate(() => window.__officeFloorAudit?.());
+  if (!officeAudit || officeAudit.floorCount !== 1 || officeAudit.activeFloor !== 1 || officeAudit.visibleOffice !== true) {
+    throw new Error('단층 사무실 상태 감사 정보가 올바르지 않습니다: ' + JSON.stringify(officeAudit));
+  }
+  if (officeAudit.teamCount !== 6 || officeAudit.deskCount !== 31) throw new Error('6개 팀 또는 31개 작업석 구성이 누락되었습니다');
+  if (officeAudit.avatarCount < 30) throw new Error('단층 사무실 직원 캐릭터가 충분하지 않습니다');
   await page.waitForTimeout(500);
-  await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor2.png' });
-  await page.locator('#floor1').click();
-  const firstFloorAudit = await page.evaluate(() => window.__officeFloorAudit?.());
-  if (!firstFloorAudit || firstFloorAudit.activeFloor !== 1) throw new Error('1층 복귀 상태가 반영되지 않았습니다');
-  if (await page.locator('#floor1').getAttribute('aria-pressed') !== 'true') throw new Error('1층 복귀 상태가 반영되지 않았습니다');
-  await page.waitForTimeout(500);
-  await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor1.png' });
+  await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-single-floor.png' });
   const staffCount = await page.locator('#staffStrip .staffCard').count();
   if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
   const visibleCount = Number((await page.locator('#activeCount').innerText()).trim());
