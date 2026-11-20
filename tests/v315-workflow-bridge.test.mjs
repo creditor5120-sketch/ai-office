@@ -218,6 +218,6 @@ test('integrated wrapper JavaScript parses and includes server-side task recover
   assert.match(wrapperSource, /function renderPendingRecovery\(\)/);
   assert.match(wrapperSource, /swV315PendingWorkflowTask/);
   assert.match(wrapperSource, /기존 업무 ID와 멱등성 키를 사용해 이어서 처리/);
-  assert.ok(wrapperSource.includes(String.raw\`중단 또는 재개 대기 중인 업무가 있습니다.\n업무 ID:\`));
+  assert.ok(wrapperSource.includes(String.raw`중단 또는 재개 대기 중인 업무가 있습니다.\n업무 ID:`));
   assert.match(wrapperSource, /직원 명단이 바뀌면 새 업무로 접수/);
 });
