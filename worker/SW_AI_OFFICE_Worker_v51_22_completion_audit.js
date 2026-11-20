@@ -208,10 +208,11 @@ export default {
           const raced = await env.DB.prepare(
             `SELECT checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key = ? ORDER BY created_at, rowid LIMIT 1`
           ).bind(taskId, stageKey).first();
+          if (!raced) throw new Error("SW_AI_LOCK_LOST");
           let saved;
-          try { saved = JSON.parse(raced?.checkpoint_json || "{}"); }
+          try { saved = JSON.parse(raced.checkpoint_json || "{}"); }
           catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
-          if (!raced || saved.version !== 2 || saved.index !== index ||
+          if (saved.version !== 2 || saved.index !== index ||
               saved.signature !== signature || saved.value !== value) {
             throw new Error("SW_AI_CHECKPOINT_CONFLICT");
           }
