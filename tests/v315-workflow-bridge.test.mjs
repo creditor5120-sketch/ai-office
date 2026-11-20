@@ -188,9 +188,11 @@ test('an interrupted task older than 24 hours starts with a new task ID', async 
 });
 
 test('integrated wrapper JavaScript parses and includes server-side task recovery', () => {
-  const scripts = [...wrapperSource.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
-  assert.equal(scripts.length, 1);
-  assert.doesNotThrow(() => new vm.Script(scripts[0][1], { filename: 'office-v315-integrated.html' }));
+  const scriptStart = wrapperSource.indexOf('<script>');
+  const scriptEnd = wrapperSource.indexOf('</script>', scriptStart);
+  assert.ok(scriptStart >= 0 && scriptEnd > scriptStart);
+  assert.equal(wrapperSource.indexOf('<script>', scriptStart + 1), -1);
+  assert.doesNotThrow(() => new vm.Script(wrapperSource.slice(scriptStart + 8, scriptEnd), { filename: 'office-v315-integrated.html' }));
   assert.match(wrapperSource, /action:'get_recent_tasks'/);
   assert.match(wrapperSource, /const saved=audit\.result\|\|\{\}/);
   assert.match(wrapperSource, /\[본부장 최종 보고\]/);
