@@ -415,7 +415,8 @@ test('a stale execution cannot renew its lease or overwrite task state after own
   assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
   assert.ok(source.includes('partial_result_json = COALESCE(?, partial_result_json)'));
   assert.ok(source.includes('WHERE task_id = ? AND lock_token = ?'));
-  assert.ok(source.includes('WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)'));
+  assert.ok(source.includes('WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)'));
+  assert.ok(source.includes('AND lease_expires_at > ? AND (? = 0 OR control_request NOT IN (\'PAUSE\', \'CANCEL\'))'));
 });
 
 test('cancellation clears the execution lease and does not overwrite completed results', () => {
@@ -424,4 +425,12 @@ test('cancellation clears the execution lease and does not overwrite completed r
   assert.ok(completedAt >= 0 && cancelAt > completedAt);
   assert.match(source, /SET status = 'CANCELLED', lock_token = NULL, lease_expires_at = NULL/);
   assert.ok(source.includes('WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)'));
+});
+
+
+test('guards in-flight audit events with the current unexpired lock owner', () => {
+  assert.ok(source.includes('WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)'));
+  assert.ok(source.includes('const eventLockToken = lockToken') === false);
+  assert.ok(source.includes('if (lockToken)'));
+  assert.ok(source.includes('eventAt, taskId, lockToken, eventAt'));
 });
