@@ -515,7 +515,7 @@ test('workflow execution preserves the agreed analyze-assign-execute-review-revi
     '팀장 2차 최종 검수',
     '본부장 최종 검토 및 보고'
   ];
-  const positions = stages.map(stage => source.indexOf(stage));
+  const positions = stages.map(stage => source.indexOf('await setCurrentStage("' + stage + '"'));
   assert.ok(positions.every(position => position >= 0));
   assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
   assert.ok(source.includes('모든 전문 직원 결과물이 completed 상태이고 팀장 2차 검수 judgment가 승인인 경우에만 최종 완료'));
