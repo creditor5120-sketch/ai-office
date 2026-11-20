@@ -182,6 +182,23 @@ test('serves CORS preflight without API credentials', async () => {
   assert.match(response.headers.get('Access-Control-Allow-Headers') || '', /X-Representative-Authorization/);
 });
 
+test('allows the configured Pages preview origin for browser workflow testing', async () => {
+  const origin = 'https://work-v315-office-workflow-br.sw-ai-office-preview.pages.dev';
+  const request = new Request('https://worker.test/', { method: 'OPTIONS', headers: { Origin: origin } });
+  const response = await worker.fetch(request, {});
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('Access-Control-Allow-Origin'), origin);
+  assert.equal(response.headers.get('Vary'), 'Origin');
+});
+
+test('does not reflect untrusted origins in CORS headers', async () => {
+  const origin = 'https://untrusted.example';
+  const request = new Request('https://worker.test/', { method: 'OPTIONS', headers: { Origin: origin } });
+  const response = await worker.fetch(request, {});
+  assert.equal(response.status, 200);
+  assert.notEqual(response.headers.get('Access-Control-Allow-Origin'), origin);
+});
+
 test('fails closed when the server API secret is not configured', async () => {
   const request = new Request('https://worker.test/', {
     method: 'POST',
