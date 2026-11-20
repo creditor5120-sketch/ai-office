@@ -90,7 +90,7 @@
       catch (error) {
         // The original office falls back to a canned local reply on thrown errors.
         // Return a visible failure result instead so an unsuccessful workflow is never presented as completed work.
-        return { text: '실제 업무처리 실패 · 완료된 업무가 아닙니다.\\n' + textOf(error && error.message || error) };
+        return { text: '실제 업무처리 실패 · 완료된 업무가 아닙니다.\n' + textOf(error && error.message || error) };
       }
     }
     if (typeof originalCallConfiguredLLM === 'function') return originalCallConfiguredLLM(inputMsgs);
