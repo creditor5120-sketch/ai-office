@@ -413,11 +413,13 @@ test('persists quota exhaustion as a resumable waiting state with checkpoint met
   assert.match(source, /같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다/);
 });
 
-test('uses a five-minute execution lease longer than the bounded AI provider retry window', () => {
-  assert.ok(source.includes('const TASK_LOCK_LEASE_MS = 5 * 60 * 1000'));
+test('uses an eight-minute execution lease covering provider retries plus one output-continuation call', () => {
+  assert.ok(source.includes('const TASK_LOCK_LEASE_MS = 8 * 60 * 1000'));
   assert.equal(source.split('Date.now() + TASK_LOCK_LEASE_MS').length - 1, 2);
   const maximumProviderWaitMs = 3 * 60000 + 1200 + 2400;
-  assert.ok(5 * 60 * 1000 > maximumProviderWaitMs);
+  const maximumWithOneContinuation = maximumProviderWaitMs * 2;
+  assert.ok(8 * 60 * 1000 > maximumWithOneContinuation);
+  assert.ok(8 * 60 * 1000 - maximumWithOneContinuation >= 50000);
 });
 
 test('acquires execution ownership and increments attempt count in one conditional update', () => {
