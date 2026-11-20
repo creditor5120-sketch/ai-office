@@ -10,6 +10,8 @@ on:
       - 'office-v315-integrated.html'
       - 'workflow-bridge-v315.js'
       - 'tests/v315-workflow-bridge.test.mjs'
+      - 'tests/worker-auth-audit.test.mjs'
+      - 'worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js'
       - '.github/workflows/v315-bridge-test.yml'
 
 permissions:
@@ -25,5 +27,7 @@ jobs:
           node-version: 20
       - name: Verify untouched office source exists
         run: test -s SW_AI_Office_v3_15.html
+      - name: Run Worker auth and approval contract tests
+        run: node --test tests/worker-auth-audit.test.mjs
       - name: Run v3.15 workflow bridge tests
         run: node --test tests/v315-workflow-bridge.test.mjs
