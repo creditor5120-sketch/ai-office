@@ -196,6 +196,7 @@ cube(56,.55,38,M.floor,0,-.38,0);
 // 바닥은 전 구역에 작은 정사각 타일을 깔고, 회의실·라운지에는 별도 색상 띠를 둔다.
 const floor2TileMaterials=[mat(0xd8dfe0),mat(0xe4e8e7),mat(0xd1d9da),mat(0xe8d6d1),mat(0xeee2d0),mat(0xd8e2d7)];
 let floor2TileCount=0;
+const floor2TileGeometry=new THREE.PlaneGeometry(1.46,1.46);
 for(let x=-27;x<27;x+=1.5){
  for(let z=-18;z<18;z+=1.5){
   let material=floor2TileMaterials[(Math.floor((x+27)/1.5)+Math.floor((z+18)/1.5))%3];
@@ -204,7 +205,7 @@ for(let x=-27;x<27;x+=1.5){
   else if(z>=-2&&z<11&&x<-9) material=floor2TileMaterials[5];
   else if(z>=-2&&z<11&&x>9) material=floor2TileMaterials[2];
   else if(z>=12) material=x<0?floor2TileMaterials[4]:floor2TileMaterials[3];
-  const tile=new THREE.Mesh(new THREE.PlaneGeometry(1.46,1.46),material);
+  const tile=new THREE.Mesh(floor2TileGeometry,material);
   tile.rotation.x=-Math.PI/2;tile.position.set(x+.75,-.095,z+.75);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
  }
 }
