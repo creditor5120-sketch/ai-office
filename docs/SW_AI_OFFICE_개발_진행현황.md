@@ -2,7 +2,7 @@
 
 기준일: 2026-11-21
 개발 브랜치: `work/v315-office-workflow-bridge`
-현재 브랜치 HEAD: `043613601a9d9bc62d6cdaedf2d272a5076fdadd`
+현재 브랜치 HEAD: [개발 브랜치에서 확인](https://github.com/creditor5120-sketch/ai-office/tree/work/v315-office-workflow-bridge)
 PR: [#5 SW AI OFFICE v3.15 업무처리 기능 분리 연동](https://github.com/creditor5120-sketch/ai-office/pull/5) — Open / Draft / 미병합
 
 ## 1. 현재 기준 화면
@@ -24,8 +24,10 @@ PR: [#5 SW AI OFFICE v3.15 업무처리 기능 분리 연동](https://github.com
 - 업무 지시·직원 명단 전달·진행 표시·실패 기록·직원 개인 대화 유지 테스트 통과.
 - Worker 인증·대표 승인·감사 이력 계약 테스트 통과.
 - Chromium 브라우저에서 최신 사무실 렌더링 및 업무 엔진 패널 열기/닫기 검증 통과.
+- D1 사전 점검 SQL이 읽기 전용인지, 필수 테이블·컬럼·UNIQUE 제약을 검사하는 자동 테스트 추가.
+- Worker CORS에 GitHub Pages 운영 도메인과 승인된 Cloudflare Pages 미리보기 도메인만 허용하는 명시적 allowlist 및 미허용 Origin 차단 테스트 추가.
 - 데스크톱 및 iPad 폭 화면 캡처 아티팩트 업로드 통과.
-- 최신 검증 실행: [GitHub Actions #44840109012](https://github.com/creditor5120-sketch/ai-office/actions/runs/44840109012) — 성공.
+- 최신 HTML·브리지·D1 사전 점검 회귀 검증 실행: [GitHub Actions #44840435259](https://github.com/creditor5120-sketch/ai-office/actions/runs/44840435259) — 성공. CORS allowlist 변경은 후속 CI에서 재검증 중.
 
 ## 3. 아직 완료로 판정하지 않은 항목
 
