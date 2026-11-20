@@ -387,6 +387,7 @@ test('resume rejects malformed or misindexed saved checkpoints before making ano
   const loadBlock = source.slice(loadStart, loadEnd);
   assert.match(loadBlock, /catch \(_\) \{ throw new Error\("SW_AI_CHECKPOINT_CORRUPT"\); \}/);
   assert.match(loadBlock, /Number\(match\[1\]\) !== saved\.index/);
+  assert.ok(source.includes("substr(stage_key, 1, 12) = 'v51_ai_call_'"));
   assert.match(loadBlock, /typeof saved\.signature !== "string" \|\| typeof saved\.value !== "string"/);
   assert.doesNotMatch(loadBlock, /catch \(_\) \{\s*\}/);
 });
