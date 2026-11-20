@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const root = process.cwd();
@@ -31,7 +30,7 @@ const server = createServer(async (req, res) => {
 let browser;
 try {
   await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, args: ['--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader'] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
