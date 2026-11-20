@@ -404,6 +404,15 @@ test('checkpoint replay distinguishes an identical saved result from a conflicti
 });
 
 
+test('persists quota exhaustion as a resumable waiting state with checkpoint metadata', () => {
+  assert.match(source, /nextStatus === "WAITING_FOR_API_QUOTA"/);
+  assert.match(source, /appendFailureEvent\("TASK_WAITING_FOR_QUOTA"/);
+  assert.match(source, /cachedAiCallCount: cachedAiCalls\.size/);
+  assert.match(source, /nextAiCallIndex: aiCallCursor/);
+  assert.match(source, /nextStatus === "WAITING_FOR_API_QUOTA" \? 429/);
+  assert.match(source, /같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다/);
+});
+
 test('uses a five-minute execution lease longer than the bounded AI provider retry window', () => {
   assert.ok(source.includes('const TASK_LOCK_LEASE_MS = 5 * 60 * 1000'));
   assert.equal(source.split('Date.now() + TASK_LOCK_LEASE_MS').length - 1, 2);
