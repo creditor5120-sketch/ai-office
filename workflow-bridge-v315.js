@@ -85,7 +85,14 @@
 
   window.callConfiguredLLM = async function (inputMsgs) {
     const selected = typeof E === 'function' ? E(st.sel) : null;
-    if (selected && selected.id === 'alex') return executeWithWorker(inputMsgs);
+    if (selected && selected.id === 'alex') {
+      try { return await executeWithWorker(inputMsgs); }
+      catch (error) {
+        // The original office falls back to a canned local reply on thrown errors.
+        // Return a visible failure result instead so an unsuccessful workflow is never presented as completed work.
+        return { text: '실제 업무처리 실패 · 완료된 업무가 아닙니다.\\n' + textOf(error && error.message || error) };
+      }
+    }
     if (typeof originalCallConfiguredLLM === 'function') return originalCallConfiguredLLM(inputMsgs);
     throw new Error('기존 대화 엔진을 사용할 수 없습니다.');
   };
