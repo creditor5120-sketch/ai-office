@@ -229,3 +229,18 @@ test('integrated wrapper JavaScript parses and includes server-side task recover
   assert.ok(wrapperSource.includes(String.raw`중단 또는 재개 대기 중인 업무가 있습니다.\n업무 ID:`));
   assert.match(wrapperSource, /직원 명단이 바뀌면 새 업무로 접수/);
 });
+
+
+test('the approved office HTML is the live visual shell and the wrapper injects the workflow bridge into it', async () => {
+  const { createHash } = await import('node:crypto');
+  const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
+  const gitBlobSha = createHash('sha1').update(Buffer.from('blob ' + Buffer.byteLength(office) + '\\0')).update(office).digest('hex');
+  assert.equal(gitBlobSha, '5b42a3c1ee8bfdff1b5141057b0db21e2517d5c3');
+  assert.match(office, /async function callConfiguredLLM\\(inputMsgs\\)/);
+  assert.match(office, /const r=await callConfiguredLLM\\(input\\)/);
+  assert.match(wrapperSource, /src="SW_AI_Office_v3_15\\.html"/);
+  assert.match(wrapperSource, /script\\.src='workflow-bridge-v315\\.js'/);
+  assert.match(source, /window\\.callConfiguredLLM = async function \\(inputMsgs\\)/);
+  assert.match(source, /selected && selected\\.id === 'alex'/);
+  assert.match(source, /originalCallConfiguredLLM\\(inputMsgs\\)/);
+});
