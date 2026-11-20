@@ -1,0 +1,35 @@
+name: SW AI OFFICE v3.15 integration regression
+
+on:
+  push:
+    branches:
+      - work/v315-office-workflow-bridge
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'SW_AI_Office_v3_15.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'worker/**'
+      - 'tests/**'
+      - '.github/workflows/sw-ai-office-v315-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  integration-regression:
+    name: Worker and office bridge tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify untouched office source and Worker contracts
+        run: node --test tests/worker-auth-audit.test.mjs
+      - name: Verify office integration, recovery and workflow engine control
+        run: node --test tests/v315-workflow-bridge.test.mjs
