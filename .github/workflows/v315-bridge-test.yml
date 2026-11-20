@@ -25,8 +25,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Verify untouched office source exists
-        run: test -s SW_AI_Office_v3_15.html
+      - name: Verify untouched office source matches the approved original
+        run: |
+          test -s SW_AI_Office_v3_15.html
+          test "$(git hash-object SW_AI_Office_v3_15.html)" = "5b42a3c1ee8bfdff1b5141057b0db21e2517d5c3"
       - name: Run Worker auth and approval contract tests
         run: node --test tests/worker-auth-audit.test.mjs
       - name: Run v3.15 workflow bridge tests
