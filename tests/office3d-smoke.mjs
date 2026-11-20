@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -36,6 +36,8 @@ try {
     throw new Error('3D initialization failed. Loading panel: ' + loadingText + '\\nBrowser errors: ' + pageErrors.join('\\n'));
   }
   await page.locator('#scene canvas').waitFor({ state: 'attached', timeout: 10000 });
+  await mkdir('artifacts', { recursive: true });
+  await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-stage.png' });
 
   const staffCount = await page.locator('#staffStrip .staffCard').count();
   if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
