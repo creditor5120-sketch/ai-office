@@ -336,3 +336,10 @@ test('keeps the configured OpenRouter key compatible and provides Gemini fallbac
   assert.match(source, /https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\//);
   assert.match(source, /OPENROUTER_API_KEY 또는 GEMINI_API_KEY/);
 });
+
+
+test('allows an interrupted RECEIVED task to enter the guarded resume path', () => {
+  assert.doesNotMatch(source, /if \(savedTask\.status === "RECEIVED"\)\s*\{\s*return json\(\{ error: "동일한 업무가 이미 접수되어 처리 대기 중입니다\."/);
+  assert.match(source, /UPDATE tasks SET status = 'PROCESSING'[\s\S]*WHERE task_id = \?/);
+  assert.match(source, /WHERE task_id = \? AND \(lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= \?\)/);
+});
