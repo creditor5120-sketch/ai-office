@@ -35,9 +35,9 @@ function makeContext({ selectedId = 'alex', fail = false } = {}) {
     dispatchEvent: () => true,
     parent: {
       SWWorkflowBridge: {
-        execute: async (payload) => {
+        execute: async (payload, onProgress) => {
           calls.push(payload);
-          if (typeof arguments[1] === 'function') arguments[1]({ currentStage: '전문 직원 수행' });
+          if (typeof onProgress === 'function') onProgress({ currentStage: '전문 직원 수행' });
           if (fail) throw new Error('인증값 누락');
           return {
             reply: '본부장 최종 보고',
