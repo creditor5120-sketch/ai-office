@@ -45,6 +45,7 @@ try {
   const secondFloorAudit = await page.evaluate(() => window.__officeFloorAudit?.());
   if (!secondFloorAudit || secondFloorAudit.activeFloor !== 2) throw new Error('2층 상태 감사 정보가 없습니다');
   if (secondFloorAudit.floor2TeamCount !== 5 || secondFloorAudit.floor2DeskCount !== 30) throw new Error('2층 독립 팀 배치 또는 30개 작업석 구성이 누락되었습니다');
+  if (secondFloorAudit.floor2TileCount < 500) throw new Error('2층 구역별 타일 바닥이 생성되지 않았습니다');
   if (secondFloorAudit.floor2AgentCount !== 33) throw new Error(`2층 직원 복제 수가 일치하지 않습니다: ${secondFloorAudit.floor2AgentCount}`);
   if (secondFloorAudit.floor2ObjectCount <= 0) throw new Error('2층 독립 공간 구조가 생성되지 않았습니다');
   await page.waitForTimeout(500);
