@@ -514,9 +514,8 @@ export default {
         if (savedTask.status === "CANCELLED") {
           return json({ error: "취소된 업무는 재개할 수 없습니다.", taskId, status: savedTask.status }, 409);
         }
-        if (savedTask.status === "RECEIVED") {
-          return json({ error: "동일한 업무가 이미 접수되어 처리 대기 중입니다.", taskId, status: savedTask.status }, 409);
-        }
+        // RECEIVED는 최초 접수 직후 실행 프로세스가 끊긴 경우 남을 수 있다.
+        // 동일 요청 지문을 확인한 재시도이므로 아래 조건부 실행 잠금 경쟁에 맡겨 안전하게 재개한다.
         if (savedTask.status === "PROCESSING" && savedTask.lease_expires_at && savedTask.lease_expires_at > now) {
           return json({ error: "동일한 업무가 이미 처리 중이야.", taskId, status: savedTask.status, currentStage: savedTask.current_stage }, 409);
         }
