@@ -223,50 +223,54 @@ function f2sign(label,x,z){
  wallTeamSign(label,x,z);
 }
 // 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
+// 레퍼런스의 비대칭 팀 클러스터와 부분 유리 파티션을 반영한 공간 배치
 const floor2Teams=[
- {name:'경영관리팀',center:[-18,-9],slots:[[-22,-12],[-18,-12],[-14,-12],[-22,-7],[-18,-7]]},
- {name:'법무팀',center:[0,-9],slots:[[-4,-12],[0,-12],[4,-12],[-4,-7],[0,-7]]},
- {name:'IR팀',center:[18,-9],slots:[[14,-12],[18,-12],[22,-12],[14,-7],[18,-7],[22,-7]]},
- {name:'총무팀',center:[-18,5],slots:[[-22,2],[-18,2],[-14,2],[-22,7],[-18,7]]},
- {name:'전략기획팀',center:[0,5],slots:[[-4,2],[0,2],[4,2],[-4,7],[0,7]]},
- {name:'기술·IT팀',center:[18,5],slots:[[14,2],[18,2],[22,2],[14,7],[18,7]]}
+ {name:'경영관리팀',center:[-19,-9],back: -16,front:-2,slots:[[-24,-12],[-20,-12],[-16,-12],[-24,-7],[-20,-7],[-16,-7]]},
+ {name:'법무팀',center:[-3,-10],back:-17,front:-3,slots:[[-7,-13],[-3,-13],[1,-13],[-7,-8],[-3,-8]]},
+ {name:'IR팀',center:[15,-8],back:-15,front:0,slots:[[11,-12],[15,-12],[19,-12],[11,-7],[15,-7]]},
+ {name:'총무팀',center:[-18,5],back:-1,front:12,slots:[[-23,2],[-18,2],[-13,2],[-23,7],[-18,7]]},
+ {name:'전략기획팀',center:[0,6],back:-1,front:12,slots:[[-5,3],[0,3],[5,3],[-5,8],[0,8]]},
+ {name:'기술·IT팀',center:[18,5],back:-1,front:12,slots:[[14,2],[18,2],[22,2],[14,7],[18,7]]}
 ];
 const floor2DeskSlots=[];
-for(const team of floor2Teams){
- const [cx,cz]=team.center;
- const depth=cz<0?14:10;
- const back=cz-depth/2,front=cz+depth/2;
- // 팀실 뒤쪽 벽과 측면 유리벽
- f2wall(16,2.45,.18,M.wall,cx,1.225,back);
- f2wall(.14,2.1,depth,M.glass,cx-8,.02,cz);
- f2wall(.14,2.1,depth,M.glass,cx+8,.02,cz);
- // 복도 방향의 유리벽은 출입구를 남겨 좌우 두 구간으로 분리
- f2wall(6.3,2.1,.14,M.glass,cx-4.85,1.05,front);
- f2wall(6.3,2.1,.14,M.glass,cx+4.85,1.05,front);
- f2sign(team.name,cx-5.8,back);
- for(const [x,z] of team.slots){desk(x,z);chair(x,z+1.05);floor2DeskSlots.push([x,z+1.05])}
+for(let ti=0;ti<floor2Teams.length;ti++){
+ const team=floor2Teams[ti], [cx,cz]=team.center;
+ const back=team.back,front=team.front,depth=front-back;
+ // 레퍼런스처럼 모든 팀실을 같은 크기의 상자로 만들지 않고 벽과 유리를 부분적으로 연결한다.
+ const roomWidth=ti===0?14:ti===5?12:13;
+ f2wall(roomWidth,2.45,.2,M.wall,cx,1.225,back);
+ f2wall(.16,2.15,depth*.72,M.wall,cx-roomWidth/2,.02,(back+front)/2-1.2);
+ f2wall(.16,2.15,depth*.72,M.glass,cx+roomWidth/2,.02,(back+front)/2-1.2);
+ f2wall(roomWidth*.34,2.05,.14,M.glass,cx-roomWidth*.33,1.02,front);
+ f2wall(roomWidth*.34,2.05,.14,M.glass,cx+roomWidth*.33,1.02,front);
+ f2sign(team.name,cx-roomWidth*.37,back);
+ for(const [x,z] of team.slots){
+  desk(x,z);chair(x,z+1.0);floor2DeskSlots.push([x,z+1.0]);
+ }
 }
-// 중앙 복도와 전면 공용공간
-f2wall(.14,1.45,13,M.glass,-9,.72,-8.8);
-f2wall(.14,1.45,13,M.glass,9,.72,-8.8);
-f2wall(20,1.25,.14,M.glass,0,.62,-1.1);
-// 전면 왼쪽: 회의·협업실
-f2wall(12,2.3,.16,M.wall,-18,1.15,11.8);
-f2wall(.16,2.3,6,M.glass,-24,1.15,15);
-f2wall(.16,2.3,6,M.glass,-12,1.15,15);
-f2wall(12,2.3,.16,M.glass,-18,1.15,18);
-textSprite('회의·협업실',-18,12.6);
-table(-18,15,6.5,2.4);
-for(let i=0;i<3;i++){chair(-20.8+i*2.8,13.1);chair(-20.8+i*2.8,16.9)}
-// 전면 오른쪽: 라운지·휴게공간
-f2wall(12,2.3,.16,M.wall,18,1.15,11.8);
-f2wall(.16,2.3,6,M.glass,12,1.15,15);
-f2wall(.16,2.3,6,M.glass,24,1.15,15);
-f2wall(12,2.3,.16,M.glass,18,1.15,18);
-textSprite('라운지·휴게공간',18,12.6);
-sofa(15,14.6);sofa(21,16.4,Math.PI/2);table(18,14.9,2.2,1.8,true);
-for(const x of [15,21])chair(x,12.9);
-plant(11,17);plant(-11,17);
+// 팀 구역을 잇는 꺾인 복도와 낮은 파티션
+f2wall(11,1.55,.16,M.glass,-11,.78,-1.0);
+f2wall(.16,1.55,9,M.glass,-5,.78,3.5);
+f2wall(13,1.55,.16,M.glass,7,.78,8.8);
+f2wall(.16,1.55,9,M.glass,13,.78,3.5);
+f2wall(8,1.25,.16,M.wall,-19,.62,12.8);
+f2wall(9,1.25,.16,M.wall,0,.62,12.8);
+// 왼쪽 전면: 공용 협업·회의 공간
+f2wall(.16,2.1,7,M.glass,-27,1.05,14.8);
+f2wall(.16,2.1,7,M.glass,-11,1.05,14.8);
+f2wall(16,2.1,.14,M.glass,-19,1.05,18.2);
+textSprite('회의·협업실',-19,13.4);
+table(-19,15.5,6.8,2.6);
+for(let i=0;i<3;i++){chair(-21.8+i*2.8,13.5);chair(-21.8+i*2.8,17.1)}
+// 중앙 전면: 공용 라운지, 오른쪽 끝은 출입구·수납 공간
+f2wall(10,2.1,.14,M.glass,17,1.05,18.2);
+f2wall(.14,2.1,5,M.glass,22,1.05,15.7);
+textSprite('라운지·휴게공간',17,13.4);
+sofa(14,15.1);sofa(19,16.5,Math.PI/2);table(17,15.3,2.1,1.7,true);
+for(const x of [13,20])chair(x,13.3);
+plant(10,17);plant(-9,17);
+cube(1.2,1.5,.8,M.metal,24,.75,15.8);
+const floor2Objects=scene.children.slice(floor2BuildStart);
 const floor2Objects=scene.children.slice(floor2BuildStart);
 for(const object of floor2Objects){scene.remove(object);floor2Structure.add(object)}
 floor2Structure.position.y=6.4;
