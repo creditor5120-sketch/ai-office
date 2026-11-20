@@ -70,7 +70,7 @@
    if(!pending||!pending.payload||!pending.payload.taskId){notice.style.display='none';notice.textContent='';return}
    const payload=pending.payload;
    const created= pending.createdAt ? new Date(pending.createdAt).toLocaleString('ko-KR') : '시각 미확인';
-   notice.textContent='중단 또는 재개 대기 중인 업무가 있습니다.\\n업무 ID: '+payload.taskId+'\\n최초 지시: '+(payload.task||'')+'\\n저장 시각: '+created+'\\n\\n재개 방법: 사무실에서 알렉스를 선택하고 위 지시 문구를 그대로 다시 보내세요. 기존 업무 ID와 멱등성 키를 사용해 이어서 처리하며, 같은 업무를 새로 생성하지 않습니다. 24시간이 지나거나 직원 명단이 바뀌면 새 업무로 접수됩니다.';
+   notice.textContent='중단 또는 재개 대기 중인 업무가 있습니다.\n업무 ID: '+payload.taskId+'\n최초 지시: '+(payload.task||'')+'\n저장 시각: '+created+'\n\n재개 방법: 사무실에서 알렉스를 선택하고 위 지시 문구를 그대로 다시 보내세요. 기존 업무 ID와 멱등성 키를 사용해 이어서 처리하며, 같은 업무를 새로 생성하지 않습니다. 24시간이 지나거나 직원 명단이 바뀌면 새 업무로 접수됩니다.';
    notice.style.display='block';
   }catch(error){notice.style.display='none';notice.textContent=''}
  }
