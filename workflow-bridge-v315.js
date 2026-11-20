@@ -57,10 +57,22 @@
       employeeId: textOf(selected.id), department: departmentOf(selected),
       position: textOf(selected.badge), instruction: textOf(selected.duty), employees: toWorkerEmployees()
     };
-    const data = await window.parent.SWWorkflowBridge.execute(payload, progress => {
-      const status = progress.currentStage || progress.status || '업무 처리 중';
-      try { localStorage.setItem('sw_v315_last_progress', JSON.stringify({ taskId, status, at: new Date().toISOString() })); } catch (_) {}
-    });
+    let data;
+    try {
+      data = await window.parent.SWWorkflowBridge.execute(payload, progress => {
+        const status = progress.currentStage || progress.status || '업무 처리 중';
+        try { localStorage.setItem('sw_v315_last_progress', JSON.stringify({ taskId, status, at: new Date().toISOString() })); } catch (_) {}
+        const progressBubble = document.querySelector('#msgs .b.ai:last-child');
+        if (progressBubble) progressBubble.textContent = '업무 처리 중 · ' + status;
+      });
+    } catch (error) {
+      try {
+        const history = JSON.parse(localStorage.getItem('swV315WorkflowTaskHistory') || '[]');
+        history.unshift({ taskId, task, reply: '', deliverables: [], workflow: {}, error: textOf(error && error.message || error), status: '처리 미완료 또는 재개 필요', savedAt: new Date().toISOString() });
+        localStorage.setItem('swV315WorkflowTaskHistory', JSON.stringify(history.slice(0, 30)));
+      } catch (_) {}
+      throw error;
+    }
     const sections = [textOf(data.reply) || '업무 처리 결과가 비어 있습니다.'];
     if (Array.isArray(data.deliverables) && data.deliverables.length) {
       sections.push('\n\n[전문 직원 결과물]');
