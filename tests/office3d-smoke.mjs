@@ -42,9 +42,16 @@ try {
   // Save both floor views as visual evidence and verify the floor controls update the active state.
   await page.locator('#floor2').click();
   if (await page.locator('#floor2').getAttribute('aria-pressed') !== 'true') throw new Error('2층 전환 상태가 반영되지 않았습니다');
+  const secondFloorAudit = await page.evaluate(() => window.__officeFloorAudit?.());
+  if (!secondFloorAudit || secondFloorAudit.activeFloor !== 2) throw new Error('2층 상태 감사 정보가 없습니다');
+  if (secondFloorAudit.floor2TeamCount !== 5 || secondFloorAudit.floor2DeskCount !== 30) throw new Error('2층 독립 팀 배치 또는 30개 작업석 구성이 누락되었습니다');
+  if (secondFloorAudit.floor2AgentCount !== 33) throw new Error(`2층 직원 복제 수가 일치하지 않습니다: ${secondFloorAudit.floor2AgentCount}`);
+  if (secondFloorAudit.floor2ObjectCount <= 0) throw new Error('2층 독립 공간 구조가 생성되지 않았습니다');
   await page.waitForTimeout(500);
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor2.png' });
   await page.locator('#floor1').click();
+  const firstFloorAudit = await page.evaluate(() => window.__officeFloorAudit?.());
+  if (!firstFloorAudit || firstFloorAudit.activeFloor !== 1) throw new Error('1층 복귀 상태가 반영되지 않았습니다');
   if (await page.locator('#floor1').getAttribute('aria-pressed') !== 'true') throw new Error('1층 복귀 상태가 반영되지 않았습니다');
   await page.waitForTimeout(500);
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor1.png' });
