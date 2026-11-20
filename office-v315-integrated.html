@@ -63,15 +63,37 @@
   tokenInput.value='';repInput.value='';setStatus('연결 인증값을 삭제했습니다.');renderHistory();
  });
  function readHistory(){try{const value=JSON.parse(localStorage.getItem('swV315WorkflowTaskHistory')||'[]');return Array.isArray(value)?value:[]}catch(_){return []}}
- function renderHistory(){
+ function writeHistory(rows){try{localStorage.setItem('swV315WorkflowTaskHistory',JSON.stringify(rows.slice(0,30)))}catch(_){}}
+ function paintHistory(rows){
   const host=document.getElementById('taskHistory');host.replaceChildren();
-  const rows=readHistory();
   if(!rows.length){host.textContent='저장된 업무 이력이 없습니다.';return}
   rows.slice(0,20).forEach(record=>{
    const button=document.createElement('button');button.type='button';button.style.cssText='text-align:left;padding:7px;border:1px solid #cdb98f;background:#fff9e9;color:#3a2c1c;cursor:pointer;font:12px/1.4 system-ui';
-   button.textContent=(record.task||'업무 내용 없음').slice(0,62)+' · '+new Date(record.savedAt||Date.now()).toLocaleString('ko-KR');
+   const state=record.serverStatus||record.status||'';
+   button.textContent=(record.task||'업무 내용 없음').slice(0,62)+' · '+state+' · '+new Date(record.savedAt||Date.now()).toLocaleString('ko-KR');
    button.addEventListener('click',()=>selectHistory(record));host.appendChild(button);
   });
+ }
+ async function renderHistory(){
+  const localRows=readHistory();
+  paintHistory(localRows);
+  if(!sessionStorage.getItem('swOfficeAccessToken'))return;
+  try{
+   const remote=await api({action:'get_recent_tasks',limit:30});
+   const byId=new Map(localRows.filter(row=>row&&row.taskId).map(row=>[row.taskId,row]));
+   (remote.tasks||[]).forEach(task=>{
+    const previous=byId.get(task.taskId)||{};
+    byId.set(task.taskId,{
+     ...previous,taskId:task.taskId,task:task.task||previous.task||'업무 내용 없음',
+     status:previous.status||task.status,serverStatus:task.status,
+     savedAt:task.createdAt||previous.savedAt||new Date().toISOString(),
+     serverUpdatedAt:task.updatedAt,error:previous.error||task.error||'',
+     workflow:previous.workflow||{},deliverables:previous.deliverables||[]
+    });
+   });
+   const merged=[...byId.values()].sort((a,b)=>Date.parse(b.serverUpdatedAt||b.savedAt||0)-Date.parse(a.serverUpdatedAt||a.savedAt||0));
+   writeHistory(merged);paintHistory(merged);
+  }catch(error){setStatus('서버 업무 목록 복원 실패 · 로컬 기록은 유지됩니다. '+error.message,'error')}
  }
  let selectedRecord=null;
  async function selectHistory(record){
@@ -87,14 +109,26 @@
     event.createdAt||'시각 미확인',event.eventType||'이력',event.stage||'',event.actor||'',
     event.detail?.outcome||event.detail?.summary||event.detail?.decisionLabel||''
    ].filter(Boolean).join(' · '));
+   const saved=audit.result||{};
+   record.reply=saved.reply||record.reply||'';
+   record.deliverables=Array.isArray(saved.deliverables)?saved.deliverables:(record.deliverables||[]);
+   record.workflow=saved.workflow||record.workflow||{};
+   record.serverStatus=audit.task?.status||record.serverStatus||'';
+   record.savedAt=audit.task?.createdAt||record.savedAt;
+   const rows=readHistory();const index=rows.findIndex(item=>item.taskId===record.taskId);
+   if(index>=0)rows[index]={...rows[index],...record};else rows.unshift(record);
+   writeHistory(rows);paintHistory(rows);
    const release=record.workflow?.reviewGate?.finalReleaseAllowed===true;
-   detail.textContent='업무 ID: '+record.taskId+'\n업무: '+(record.task||'')+'\n서버 상태: '+(audit.task?.status||'')+' / '+(audit.task?.currentStage||'')+
-    '\n최종 검수 통과: '+(release?'예':'아니오')+
-    '\n대표 결정: '+(decision.decisionLabel||'미결정')+
-    '\n\n[서버 감사 이력]\n'+(events.join('\n')||'기록 없음');
+   const deliverableText=(record.deliverables||[]).map((item,i)=>'\\n'+(i+1)+'. '+(item.title||item.name||'결과물')+' ['+(item.status||'상태 미확인')+']\\n'+(item.content||'내용 없음')).join('\\n');
+   detail.textContent='업무 ID: '+record.taskId+'\\n업무: '+(record.task||'')+'\\n서버 상태: '+(audit.task?.status||'')+' / '+(audit.task?.currentStage||'')+
+    '\\n최종 검수 통과: '+(release?'예':'아니오')+
+    '\\n대표 결정: '+(decision.decisionLabel||'미결정')+
+    '\\n\\n[본부장 최종 보고]\\n'+(record.reply||'저장된 최종 보고서가 없습니다.')+
+    (deliverableText?'\\n\\n[전문 직원 결과물]'+deliverableText:'')+
+    '\\n\\n[서버 감사 이력]\\n'+(events.join('\\n')||'기록 없음');
    document.getElementById('approveTask').disabled=!!decision.decision||!release;
    document.getElementById('rejectTask').disabled=!!decision.decision;
-   if(audit.truncated)detail.textContent+='\n\n최근 300건만 표시됩니다.';
+   if(audit.truncated)detail.textContent+='\\n\\n최근 300건만 표시됩니다.';
   }catch(error){detail.textContent='서버 이력 조회 실패: '+error.message;setStatus(error.message,'error')}
  }
  async function submitDecision(decision){
