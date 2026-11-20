@@ -41,13 +41,16 @@
 |---|---|
 | `OFFICE_ACCESS_TOKEN` | 일반 업무 요청 및 이력 조회 인증 |
 | `REPRESENTATIVE_ACCESS_TOKEN` | 대표 승인·반려 전용 인증. 일반 토큰과 다른 값 |
-| `OPENROUTER_API_KEY` | 우선 사용하는 기존 OpenRouter API 인증값 |\n| `GEMINI_API_KEY` | OpenRouter Secret이 없을 때 사용하는 Gemini API 인증값(선택) |
+| `OPENROUTER_API_KEY` | 우선 사용하는 기존 OpenRouter API 인증값 |
+| `GEMINI_API_KEY` | OpenRouter Secret이 없을 때 사용하는 Gemini API 인증값(선택) |
 | `DB` | 기존 D1 바인딩 |
 
 주의:
 - 이 브랜치의 Worker 코드는 `OPENROUTER_API_KEY`가 있으면 OpenRouter를 우선 사용하고, 없으면 `GEMINI_API_KEY`로 Gemini를 사용한다. 기존 OpenRouter Secret을 유지한 채 연동할 수 있으며, 두 키가 모두 있으면 OpenRouter가 우선된다.
 - 기존 D1 데이터베이스를 새로 만들거나 교체하지 않는다.
-- 운영 Worker가 이 코드의 `get_task_history`, `get_representative_decision`, `representative_decision` action을 지원하는지 확인한다.
+- 운영 Worker가 `get_recent_tasks`, `get_task_history`, `get_representative_decision`, `representative_decision` action을 지원하는지 확인한다.
+- `get_recent_tasks`는 D1에 저장된 최근 업무 목록(최대 50건)을 반환한다. `get_task_history`는 단계별 감사 이력과 저장된 최종 보고서·전문 직원 결과물을 함께 반환한다.
+- 브라우저 로컬 이력이 없더라도 서버 인증 후 최근 업무 목록을 복원한다. 목록에서 업무를 선택하면 서버 저장 결과로 로컬 기록을 보완한다.
 - 대표 전용 Secret이 설정되지 않으면 대표 승인·반려 API는 503을 반환한다.
 - 인증값은 사용자에게 직접 전달하거나 채팅에 붙여넣지 않는다. 실행 화면의 연결 메뉴에 직접 입력한다.
 
@@ -70,7 +73,9 @@
 ## 6. 테스트 및 한계
 
 - GitHub Actions의 Worker 계약 테스트는 모의 D1을 사용한다. 운영 D1의 실제 스키마나 운영 Secret을 검증하지 않는다.
-- 브리지 테스트는 실제 사무실 HTML의 직원 데이터 형식, 알렉스 지시 전달, 진행 상태 표시, 실패 이력 보존, 개인 대화 유지 여부를 검사한다.
+- 브리지 테스트는 실제 사무실 HTML의 직원 데이터 형식, 알렉스 지시 전달, 진행 상태 표시, 실패 이력 보존, 개인 대화 유지 여부와 통합 래퍼 JavaScript 구문을 검사한다.
+- Worker 테스트는 서버 최근 업무 목록 조회, D1 미연결 시 차단, 저장 보고서·결과물 복원 응답을 검사한다.
+- 자동 테스트는 모의 D1 기반이므로 실제 운영 데이터 복구·백업 복원 검증을 대신하지 않는다.
 - 운영 Worker URL은 `https://ai-office-api.creditor5120.workers.dev/`이다.
 - 운영 환경의 실제 업무 1건을 실행하기 전에는 실서비스 연동 완료로 판정하지 않는다.
 - 대표 전용 토큰은 별도 인증 수단일 뿐 개인별 계정 로그인이나 실명 신원 확인을 제공하지 않는다.
