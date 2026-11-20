@@ -176,14 +176,48 @@ export default {
     const saveAiCheckpoint = async (index, signature, value) => {
       await renewTaskLock();
       const now = new Date().toISOString();
+      const stageKey = `v51_ai_call_${index}`;
       const payload = JSON.stringify({ version: 2, index, signature, value });
-      const results = await env.DB.batch([
-        env.DB.prepare(
+
+      // 재개 요청에서 동일 단계의 체크포인트가 이미 있으면 무조건 무시하지 않고
+      // 기존 서명과 결과를 확인한다. 동일 결과는 멱등 성공, 다른 결과는 명시적 충돌이다.
+      const existing = await env.DB.prepare(
+        `SELECT checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key = ? ORDER BY created_at, rowid LIMIT 1`
+      ).bind(taskId, stageKey).first();
+
+      if (existing) {
+        let saved;
+        try { saved = JSON.parse(existing.checkpoint_json || "{}"); }
+        catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
+        if (saved.version !== 2 || saved.index !== index ||
+            saved.signature !== signature || saved.value !== value) {
+          throw new Error("SW_AI_CHECKPOINT_CONFLICT");
+        }
+      } else {
+        const inserted = await env.DB.prepare(
           `INSERT OR IGNORE INTO task_checkpoints
            (checkpoint_id, task_id, stage_key, stage_name, checkpoint_json, created_at)
            SELECT ?, ?, ?, ?, ?, ?
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
+        ).bind(crypto.randomUUID(), taskId, stageKey, currentStage, payload, now, taskId, lockToken).run();
+
+        // 동시 실행 또는 UNIQUE 제약 충돌로 삽입되지 않았다면 저장된 값을 재조회해
+        // 같은 결과의 멱등 재시도인지, 다른 결과와의 충돌인지 확정한다.
+        if ((inserted?.meta?.changes ?? 0) !== 1) {
+          const raced = await env.DB.prepare(
+            `SELECT checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key = ? ORDER BY created_at, rowid LIMIT 1`
+          ).bind(taskId, stageKey).first();
+          let saved;
+          try { saved = JSON.parse(raced?.checkpoint_json || "{}"); }
+          catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
+          if (!raced || saved.version !== 2 || saved.index !== index ||
+              saved.signature !== signature || saved.value !== value) {
+            throw new Error("SW_AI_CHECKPOINT_CONFLICT");
+          }
+        }
+      }
+
+      const results = await env.DB.batch([
         env.DB.prepare(
           `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.26', updated_at = ?
            WHERE task_id = ? AND lock_token = ?`
@@ -192,11 +226,10 @@ export default {
           `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
            SELECT ?, ?, 'AI_CALL_CHECKPOINT_SAVED', 'SW AI OFFICE Worker v51', ?, ?, ?
            WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2 }), now, taskId, lockToken)
+        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2, idempotentReuse: Boolean(existing) }), now, taskId, lockToken)
       ]);
       if ((results?.[0]?.meta?.changes ?? 0) !== 1 ||
-          (results?.[1]?.meta?.changes ?? 0) !== 1 ||
-          (results?.[2]?.meta?.changes ?? 0) !== 1) {
+          (results?.[1]?.meta?.changes ?? 0) !== 1) {
         throw new Error("SW_AI_LOCK_LOST");
       }
     };
