@@ -783,7 +783,12 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
   const signature = Array.from(new Uint8Array(signatureBytes), byte => byte.toString(16).padStart(2, "0")).join("");
 
   const cached = cachedAiCalls.get(callIndex);
-  if (cached && cached.signature === signature) {
+  if (cached) {
+    // 동일 호출 순번의 체크포인트가 있지만 입력 서명이 다르면 실행 경로가 달라진 것이다.
+    // 새 AI 호출을 보내기 전에 중단해 중복 과금·잘못된 결과 덮어쓰기를 방지한다.
+    if (cached.signature !== signature) {
+      throw new Error("SW_AI_CHECKPOINT_CONFLICT");
+    }
     return cached.value;
   }
 
