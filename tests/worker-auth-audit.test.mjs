@@ -31,6 +31,16 @@ class FakeD1 {
       async first() {
         if (sql.includes('FROM tasks')) return db.task && db.task.task_id === args[0] ? { ...db.task } : null;
         if (sql.includes("event_type = 'REPRESENTATIVE_DECISION'")) {
+          // 두 요청이 모두 기존 결정 없음(prior=null)을 확인한 뒤 INSERT 경쟁에 진입하도록 동기화한다.
+          if (db.forceConcurrentPriorReads) {
+            db.concurrentPriorReadCount = (db.concurrentPriorReadCount || 0) + 1;
+            if (db.concurrentPriorReadCount === 2) {
+              db.forceConcurrentPriorReads = false;
+              for (const release of db.concurrentPriorReadWaiters.splice(0)) release();
+            } else if (db.concurrentPriorReadCount === 1) {
+              await new Promise(resolve => db.concurrentPriorReadWaiters.push(resolve));
+            }
+          }
           const event = db.events.find(x => x.task_id === args[0]);
           return event ? { detail_json: event.detail_json, created_at: event.created_at } : null;
         }
@@ -286,6 +296,8 @@ test('rejects invalid representative decisions and unknown task IDs', async () =
 
 test('concurrent opposite representative decisions preserve exactly one immutable first decision', async () => {
   const db = new FakeD1({ releaseAllowed: true });
+  db.forceConcurrentPriorReads = true;
+  db.concurrentPriorReadWaiters = [];
   const [approve, reject] = await Promise.all([
     call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' }, { db }),
     call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'REJECT', reason: '동시 반려 요청' }, { db })
