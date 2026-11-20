@@ -73,7 +73,9 @@
       } catch (_) {}
       throw error;
     }
-    const sections = [textOf(data.reply) || '업무 처리 결과가 비어 있습니다.'];
+    const workflowStatus = textOf(data.workflow && data.workflow.status).toLowerCase();
+    const resultLabel = workflowStatus === 'completed' ? '업무 완료' : workflowStatus === 'partial' ? '부분 완료 · 추가 확인 필요' : '업무 미완료 · 대표 승인 불가';
+    const sections = ['[' + resultLabel + ']', textOf(data.reply) || '업무 처리 결과가 비어 있습니다.'];
     if (Array.isArray(data.deliverables) && data.deliverables.length) {
       sections.push('\n\n[전문 직원 결과물]');
       data.deliverables.forEach((item, index) => {
@@ -89,7 +91,7 @@
     }
     try {
       const history = JSON.parse(localStorage.getItem('swV315WorkflowTaskHistory') || '[]');
-      history.unshift({ taskId, task, reply: data.reply || '', deliverables: data.deliverables || [], workflow: data.workflow || {}, savedAt: new Date().toISOString() });
+      history.unshift({ taskId, task, reply: data.reply || '', deliverables: data.deliverables || [], workflow: data.workflow || {}, status: workflowStatus, savedAt: new Date().toISOString() });
       localStorage.setItem('swV315WorkflowTaskHistory', JSON.stringify(history.slice(0, 30)));
     } catch (_) {}
     return { text: sections.join('\n'), taskId, workflow: data.workflow || {}, deliverables: data.deliverables || [] };
