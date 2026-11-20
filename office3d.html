@@ -74,7 +74,7 @@ window.addEventListener('unhandledrejection',e=>{
 import directory from './employees.js';
 const mount=document.getElementById('scene'),scene=new THREE.Scene();
 scene.background=new THREE.Color(0xd9d2bd);scene.fog=new THREE.Fog(0xd9d2bd,72,130);
-const camera=new THREE.PerspectiveCamera(34,1,.1,180);camera.position.set(20,22,22);
+const camera=new THREE.PerspectiveCamera(34,1,.1,180);camera.position.set(27,29,29);
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(mount.clientWidth,mount.clientHeight);renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;mount.appendChild(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=8;controls.maxDistance=68;
 scene.add(new THREE.HemisphereLight(0xf2f7ff,0x81796d,2.15));const sun=new THREE.DirectionalLight(0xfff1dc,3.2);sun.position.set(-22,34,22);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;scene.add(sun);
@@ -457,7 +457,7 @@ function setOfficeFloor(level){
  floor2AvatarRoot.visible=activeFloor===2;
  const y=activeFloor===2?6.4:0;
  controls.target.set(0,y,0);
- camera.position.set(20,22+y,22);
+ camera.position.set(27,29+y,29);
  document.getElementById('floor1').setAttribute('aria-pressed',String(activeFloor===1));
  document.getElementById('floor2').setAttribute('aria-pressed',String(activeFloor===2));
  controls.update();
@@ -484,7 +484,7 @@ const detailToggle=document.getElementById('detailToggle');let detailMode=false;
 detailToggle.onclick=()=>{detailMode=!detailMode;document.getElementById('appMain').style.display=detailMode?'none':'grid';document.getElementById('staffStrip').style.display=detailMode?'none':'flex';document.getElementById('detailView').style.display=detailMode?'grid':'none';detailToggle.textContent=detailMode?'↙ 사무실로':'↗ 업무 상세';if(detailMode&&!selected){const alex=avatars.find(v=>v.userData.person.id==='COO');if(alex)selectAvatar(alex)}};
 document.getElementById('zoomIn').onclick=()=>{camera.position.multiplyScalar(.85);controls.update()};
 document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1.18);controls.update()};
-document.getElementById('resetView').onclick=()=>{controls.target.set(0,activeFloor===2?6.4:0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(20,22+(activeFloor===2?6.4:0),22));controls.update()};
+document.getElementById('resetView').onclick=()=>{controls.target.set(0,activeFloor===2?6.4:0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(27,29+(activeFloor===2?6.4:0),29));controls.update()};
 
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null,selectedTaskForDecision=null;
 renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
