@@ -185,9 +185,23 @@ for(let x=-27;x<27;x+=2){
   tile.rotation.x=-Math.PI/2;tile.position.set(x+1,-.095,z+1);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
  }
 }
-cube(56,.16,.18,M.wall,0,.12,-18.9);
-cube(.18,.16,38,M.wall,-27.9,.12,0);
-cube(.18,.16,38,M.wall,27.9,.12,0);
+// 외곽 벽과 전면 출입구를 만들고, 업무 구역과 공용 공간을 분리한다.
+cube(56,2.8,.18,M.wall,0,1.4,-18.9);
+cube(.18,2.8,38,M.wall,-27.9,1.4,0);
+cube(.18,2.8,38,M.wall,27.9,1.4,0);
+cube(18,2.5,.18,M.wall,-18,1.25,18.9);
+cube(18,2.5,.18,M.wall,18,1.25,18.9);
+let floor2PartitionCount=0;
+// 다섯 팀 사이에 벽체와 유리 구획을 두고 중앙 복도로 연결한다.
+for(const x of [-16.5,-5.5,5.5,16.5]){
+ cube(.18,2.25,3.2,M.wall,x,1.125,-16.2);
+ cube(.18,2.25,3.2,M.wall,x,1.125,-3.2);
+ cube(.12,1.25,8.2,M.glass,x,.625,-9.5);
+ floor2PartitionCount+=3;
+}
+cube(18,2.35,.18,M.wall,-18,1.175,-1.5);floor2PartitionCount++;
+cube(12,2.35,.18,M.wall,7,1.175,-1.5);floor2PartitionCount++;
+cube(.12,2.35,5.2,M.glass,0,1.175,1.1);floor2PartitionCount++;
 const floor2Teams=[
  {name:'경영관리팀',x:-22},
  {name:'법무팀',x:-11},
@@ -324,7 +338,7 @@ avatars.forEach((source,index)=>{
  });
 });
 scene.add(floor2AvatarRoot);
-window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2TileCount,floor2AgentCount:floor2AvatarRoot.children.length,activeFloor});
+window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2TileCount,floor2PartitionCount,floor2AgentCount:floor2AvatarRoot.children.length,activeFloor});
 let activeFloor=1;
 function setOfficeFloor(level){
  activeFloor=level===2?2:1;
