@@ -172,6 +172,19 @@ scene.add(floor1Structure);
 const floor2Structure=new THREE.Group();
 const floor2BuildStart=scene.children.length;
 cube(56,.55,38,M.floor,0,-.38,0);
+// 참조 화면처럼 업무·회의·라운지 구역을 서로 다른 톤의 타일 바닥으로 분리한다.
+const floor2TileMaterials=[
+ mat(0xdce3e4),mat(0xe7ebea),mat(0xd3dcde),
+ mat(0xe8d9d5),mat(0xf0e4d1),mat(0xe2d8c9)
+];
+let floor2TileCount=0;
+for(let x=-27;x<27;x+=2){
+ for(let z=-18;z<18;z+=2){
+  const material=z>3?(x<0?floor2TileMaterials[3]:floor2TileMaterials[4]):(z>-2?floor2TileMaterials[5]:floor2TileMaterials[(Math.floor((x+27)/2)+Math.floor((z+18)/2))%3]);
+  const tile=new THREE.Mesh(new THREE.PlaneGeometry(1.96,1.96),material);
+  tile.rotation.x=-Math.PI/2;tile.position.set(x+1,-.095,z+1);tile.receiveShadow=true;scene.add(tile);floor2TileCount++;
+ }
+}
 cube(56,.16,.18,M.wall,0,.12,-18.9);
 cube(.18,.16,38,M.wall,-27.9,.12,0);
 cube(.18,.16,38,M.wall,27.9,.12,0);
@@ -311,7 +324,7 @@ avatars.forEach((source,index)=>{
  });
 });
 scene.add(floor2AvatarRoot);
-window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2AgentCount:floor2AvatarRoot.children.length,activeFloor});
+window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2TileCount,floor2AgentCount:floor2AvatarRoot.children.length,activeFloor});
 let activeFloor=1;
 function setOfficeFloor(level){
  activeFloor=level===2?2:1;
