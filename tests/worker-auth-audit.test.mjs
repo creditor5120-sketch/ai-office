@@ -394,8 +394,8 @@ test('checkpoint replay distinguishes an identical saved result from a conflicti
 
 
 test('uses a five-minute execution lease longer than the bounded AI provider retry window', () => {
-  assert.match(source, /const TASK_LOCK_LEASE_MS = 5 \\* 60 \\* 1000/);
-  assert.equal((source.match(/Date\\.now\\(\\) \\+ TASK_LOCK_LEASE_MS/g) || []).length, 2);
+  assert.ok(source.includes('const TASK_LOCK_LEASE_MS = 5 * 60 * 1000'));
+  assert.equal(source.split('Date.now() + TASK_LOCK_LEASE_MS').length - 1, 2);
   const maximumProviderWaitMs = 3 * 60000 + 1200 + 2400;
   assert.ok(5 * 60 * 1000 > maximumProviderWaitMs);
 });
