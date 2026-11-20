@@ -352,4 +352,6 @@ test('checkpoint replay distinguishes an identical saved result from a conflicti
   assert.match(source, /SW_AI_CHECKPOINT_CONFLICT/);
   assert.match(source, /SW_AI_CHECKPOINT_CORRUPT/);
   assert.match(source, /idempotentReuse: reusedExisting/);
+  assert.match(source, /if \(cached\.signature !== signature\)\s*\{\s*throw new Error\("SW_AI_CHECKPOINT_CONFLICT"\);\s*\}/);
+  assert.ok(source.indexOf('if (cached.signature !== signature)') < source.indexOf('const value = await askAIBare(effectiveSystemPrompt'));
 });
