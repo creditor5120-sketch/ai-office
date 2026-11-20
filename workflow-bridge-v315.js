@@ -52,13 +52,17 @@
     const selected = typeof E === 'function' ? E(st.sel) : null;
     if (!selected) throw new Error('현재 선택된 직원을 확인할 수 없습니다.');
     const employeeId = textOf(selected.id);
+    const employeeRoster = toWorkerEmployees();
     const pendingKey = 'swV315PendingWorkflowTask';
     let pending = null;
     try { pending = JSON.parse(localStorage.getItem(pendingKey) || 'null'); } catch (_) {}
+    const pendingAgeMs = pending && Date.parse(pending.lastAttemptAt || '') ?
+      Date.now() - Date.parse(pending.lastAttemptAt) : Number.POSITIVE_INFINITY;
     // 이전 호출이 브라우저 종료·대기시간 초과 등으로 끝나지 않았다면
-    // 같은 직원에게 같은 지시를 다시 내릴 때 최초 taskId/idempotencyKey를 재사용한다.
-    const canResume = pending && pending.payload &&
+    // 24시간 이내 동일 지시·직원·조직 명단일 때만 최초 taskId/idempotencyKey를 재사용한다.
+    const canResume = pending && pending.payload && pendingAgeMs >= 0 && pendingAgeMs < 24 * 60 * 60 * 1000 &&
       pending.payload.task === task && pending.payload.employeeId === employeeId &&
+      JSON.stringify(pending.payload.employees) === JSON.stringify(employeeRoster) &&
       pending.payload.taskId && pending.payload.idempotencyKey;
     const taskId = canResume
       ? pending.payload.taskId
@@ -66,7 +70,7 @@
     const payload = canResume ? pending.payload : {
       task, taskId, idempotencyKey: taskId, employee: textOf(selected.name),
       employeeId, department: departmentOf(selected),
-      position: textOf(selected.badge), instruction: textOf(selected.duty), employees: toWorkerEmployees()
+      position: textOf(selected.badge), instruction: textOf(selected.duty), employees: employeeRoster
     };
     try {
       localStorage.setItem(pendingKey, JSON.stringify({
