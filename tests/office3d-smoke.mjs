@@ -23,14 +23,26 @@ await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
 const browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
 const pageErrors = [];
+const browserConsole = [];
+const failedRequests = [];
 page.on('pageerror', error => pageErrors.push(error.stack || error.message));
+page.on('console', message => { if (message.type() === 'error') browserConsole.push(message.text()); });
+page.on('requestfailed', request => failedRequests.push({url: request.url(), error: request.failure()?.errorText || 'unknown'}));
 
 try {
   await page.goto('http://127.0.0.1:4173/office3d.html', { waitUntil: 'commit', timeout: 15000 });
   await page.waitForFunction(() => {
     const panel = document.querySelector('#loading');
     return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
-  }, { timeout: 45000 });
+  }, { timeout: 15000 }).catch(async error => {
+    const diagnostic = await page.evaluate(() => ({
+      loading: document.querySelector('#loading')?.innerText || '(missing)',
+      moduleScripts: [...document.scripts].map(s => ({type:s.type,src:s.src})),
+      canvas: !!document.querySelector('#scene canvas'),
+      html: document.querySelector('#loading')?.outerHTML || ''
+    }));
+    throw new Error('3D startup timeout: ' + JSON.stringify({diagnostic,pageErrors,browserConsole,failedRequests}, null, 2) + '\\n' + error.message);
+  });
   const loadingText = await page.locator('#loading').innerText().catch(() => '');
   if (loadingText.includes('초기화 오류')) {
     throw new Error('3D initialization failed. Loading panel: ' + loadingText + '\\nBrowser errors: ' + pageErrors.join('\\n'));
