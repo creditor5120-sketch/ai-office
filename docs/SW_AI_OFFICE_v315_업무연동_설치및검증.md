@@ -60,9 +60,9 @@
 
 ## 5. 실행 및 검증 순서
 
-1. 운영 Worker 버전과 D1 바인딩·테이블·컬럼·인덱스를 읽기 전용으로 확인한다.
+1. 운영 Worker 버전과 D1 바인딩·테이블·컬럼·인덱스를 읽기 전용으로 확인한다. 읽기 전용 점검 SQL은 `docs/D1_READ_ONLY_PREFLIGHT.sql`을 사용한다.
 2. Worker 코드가 요구하는 Secret 이름과 현재 운영 Secret을 대조한다.
-3. 운영 DB 백업 및 복구 가능성을 확인한다.
+3. 운영 DB 백업 및 복구 가능성을 확인한다. 백업 파일 또는 시점 복구 지점을 확보한 뒤 운영 DB와 분리된 검증용 D1에 복원하고, `PRAGMA integrity_check`, 테이블별 행 수, 업무 상태별 건수, 업무별 이벤트·체크포인트 연결 상태를 대조한다. 운영 DB에 대한 복원·초기화 시험은 금지한다.
 4. 운영 반영 승인을 받은 후 Worker를 배포한다.
 5. GitHub Pages 배포 승인을 받은 후 다음 파일을 같은 경로에 게시한다.
    - `SW_AI_Office_v3_15.html`
@@ -74,7 +74,17 @@
 9. 최종 검수 통과 전 대표 승인 요청이 거부되는지 확인한다.
 10. 대표 전용 인증값으로 승인 또는 반려 기록이 한 번만 저장되는지 확인한다.
 
-## 6. 테스트 및 한계
+## 6. D1 스키마 사전 확인 기준
+
+읽기 전용 사전 점검에서 다음 컬럼이 실제 운영 D1에 존재하는지 확인한다. 아래 목록은 현재 Worker SQL이 참조하는 컬럼 기준이며, 운영 DB가 이 구조와 일치한다고 아직 확인된 것은 아니다.
+
+- `tasks`: `task_id`, `idempotency_key`, `task`, `status`, `current_stage`, `input_json`, `partial_result_json`, `error_message`, `attempt_count`, `created_at`, `updated_at`, `started_at`, `completed_at`, `control_request`, `lock_token`, `lease_expires_at`, `execution_version`, `checkpoint_stage`, `checkpoint_json`
+- `task_events`: `event_id`, `task_id`, `event_type`, `actor`, `stage`, `detail_json`, `created_at`
+- `task_checkpoints`: `checkpoint_id`, `task_id`, `stage_key`, `stage_name`, `checkpoint_json`, `created_at`
+
+추가로 `tasks.idempotency_key`와 `task_checkpoints(task_id, stage_key)`의 중복 방지 제약 및 관련 인덱스가 실제로 존재하는지 확인한다. 컬럼이나 제약이 누락된 경우 운영 스키마를 임의로 변경하지 말고, 기존 데이터 백업과 별도 마이그레이션 검토 후 승인된 변경 계획을 수립한다.
+
+## 7. 테스트 및 한계
 
 - GitHub Actions의 Worker 계약 테스트는 모의 D1을 사용한다. 운영 D1의 실제 스키마나 운영 Secret을 검증하지 않는다.
 - 브리지 테스트는 실제 사무실 HTML의 직원 데이터 형식, 알렉스 지시 전달, 진행 상태 표시, 실패 이력 보존, 개인 대화 유지 여부와 통합 래퍼 JavaScript 구문을 검사한다.
