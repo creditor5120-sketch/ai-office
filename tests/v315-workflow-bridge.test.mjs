@@ -104,6 +104,14 @@ test('integrated wrapper keeps accepted RECEIVED tasks in the polling flow', asy
   assert.match(wrapper, /setTimeout\(resolve,1500\)/);
 });
 
+test('integrated wrapper keeps quota-limited work pending and retries with the same task payload', async () => {
+  const wrapper = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
+  assert.match(wrapper, /if\(data\.status==='WAITING_FOR_API_QUOTA'\)/);
+  assert.match(wrapper, /AI 사용 한도 회복 대기 중 · 업무 기록 보존/);
+  assert.match(wrapper, /Math\.min\(300000,Math\.max\(30000,Number\(data\.quotaRetryAfterMs\)\|\|300000\)\)/);
+  assert.match(wrapper, /body:JSON\.stringify\(payload\)/);
+});
+
 test('integrated wrapper retries transient network failures with the same idempotent payload', async () => {
   const wrapper = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
   assert.match(wrapper, /let response;\s*try\s*\{[\s\S]*response=await fetch\(ENDPOINT,[\s\S]*body:JSON\.stringify\(payload\)/);
