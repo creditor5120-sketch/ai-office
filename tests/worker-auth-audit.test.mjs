@@ -392,6 +392,16 @@ test('resume rejects malformed or misindexed saved checkpoints before making ano
   assert.doesNotMatch(loadBlock, /catch \(_\) \{\s*\}/);
 });
 
+test('resume verifies contiguous AI checkpoints against the task-level checkpoint pointer', () => {
+  assert.match(source, /checkpoint_stage, checkpoint_json, execution_version FROM tasks WHERE idempotency_key/);
+  assert.match(source, /let expectedCheckpointIndex = 0/);
+  assert.match(source, /saved\\.index !== expectedCheckpointIndex/);
+  assert.match(source, /taskCheckpoint\\.lastAiCallIndex !== lastIndex/);
+  assert.match(source, /taskCheckpoint\\.resumeStrategy !== "signature_checked_replay"/);
+  assert.match(source, /cachedAiCalls\\.size === 0/);
+  assert.match(source, /throw new Error\\("SW_AI_CHECKPOINT_CORRUPT"\\)/);
+});
+
 test('checkpoint replay distinguishes an identical saved result from a conflicting result', () => {
   assert.match(source, /SELECT checkpoint_json FROM task_checkpoints WHERE task_id = \? AND stage_key = \?/);
   assert.match(source, /saved\.signature !== signature \|\| saved\.value !== value/);
