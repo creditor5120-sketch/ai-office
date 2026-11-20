@@ -290,9 +290,10 @@ for(const p of directory){
 // 2층 직원 캐릭터를 복제하고 층 전환 시 해당 층만 표시한다.
 const floor2AvatarRoot=new THREE.Group();
 floor2AvatarRoot.position.y=6.4;
-avatars.forEach(source=>{
+avatars.forEach((source,index)=>{
  const copy=new THREE.Sprite(source.material.clone());
- copy.position.copy(source.position);
+ const floor2Position=floor2DeskSlots[index]||[index===30?-14:index===31?-10:13,10];
+ copy.position.set(floor2Position[0],source.position.y,floor2Position[1]);
  copy.scale.copy(source.scale);
  copy.material.map=source.material.map;
  floor2AvatarRoot.add(copy);
