@@ -39,37 +39,15 @@ try {
   await mkdir('artifacts', { recursive: true });
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-stage.png' });
 
-  // Capture the public reference in the same browser environment for a direct visual comparison.
-  // This is evidence collection only; reference-site availability must not fail the local smoke test.
-  let referenceCapture = 'unavailable';
-  const referencePage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-  try {
-    const homeResponse = await referencePage.goto('https://team.ai.id/', { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await referencePage.waitForTimeout(4000);
-    await referencePage.screenshot({ path: 'artifacts/team-ai-id-homepage.png', fullPage: false, timeout: 12000 });
-    const homeText = (await referencePage.locator('body').innerText().catch(() => '')).slice(0, 2000);
-    console.log('TEAM_AI_ID_HOMEPAGE=' + JSON.stringify({ status: homeResponse?.status() ?? null, title: await referencePage.title(), bodyText: homeText }));
-    const referenceResponse = await referencePage.goto('https://team.ai.id/showcase/?showcase=1', { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await referencePage.waitForTimeout(4000);
-    await referencePage.screenshot({ path: 'artifacts/team-ai-id-floor2.png', fullPage: false, timeout: 12000 });
-    await referencePage.getByText('Lantai 1', { exact: true }).click();
-    await referencePage.waitForTimeout(1200);
-    await referencePage.screenshot({ path: 'artifacts/team-ai-id-floor1.png', fullPage: false, timeout: 12000 });
-    const referenceText = (await referencePage.locator('body').innerText().catch(() => '')).slice(0, 3000);
-    referenceCapture = JSON.stringify({ status: referenceResponse?.status() ?? null, title: await referencePage.title(), url: referencePage.url(), bodyText: referenceText, capturedFloors: ['Lantai 2', 'Lantai 1'] });
-  } catch (error) {
-    referenceCapture = 'unavailable: ' + (error?.message || String(error));
-  } finally {
-    await referencePage.close();
-  }
-  console.log('TEAM_AI_ID_REFERENCE_CAPTURE=' + referenceCapture);
-
-  // Verify that the new two-floor controls switch the rendered office without runtime errors.
+  // Save both floor views as visual evidence and verify the floor controls update the active state.
   await page.locator('#floor2').click();
   if (await page.locator('#floor2').getAttribute('aria-pressed') !== 'true') throw new Error('2층 전환 상태가 반영되지 않았습니다');
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(500);
+  await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor2.png' });
   await page.locator('#floor1').click();
   if (await page.locator('#floor1').getAttribute('aria-pressed') !== 'true') throw new Error('1층 복귀 상태가 반영되지 않았습니다');
+  await page.waitForTimeout(500);
+  await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor1.png' });
 
   const staffCount = await page.locator('#staffStrip .staffCard').count();
   if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
