@@ -122,7 +122,7 @@
     attempt++;
     const response=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
     const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){data={error:raw||'서버 응답을 해석할 수 없습니다.'}}lastData=data;
-    if(response.ok&&data.reply&&data.workflow){setStatus('업무 처리 완료 · '+payload.taskId,'ok');renderHistory();return data;}
+    if(response.ok&&data.reply&&data.workflow){const state=String(data.workflow.status||'').toLowerCase();setStatus((state==='completed'?'업무 완료':state==='partial'?'부분 완료 · 추가 확인 필요':'업무 미완료 · 검수 또는 실행 확인 필요')+' · '+payload.taskId,state==='completed'?'ok':'error');renderHistory();return data;}
     if(response.status===202&&data.status==='PROCESSING'){
      if(onProgress)onProgress(data);setStatus('처리 중 · '+(data.currentStage||'업무 수행 및 검수'));
      await new Promise(resolve=>setTimeout(resolve,Math.min(10000,Math.max(1200,Number(data.resumeDelayMs)||1200))));continue;
