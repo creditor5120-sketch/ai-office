@@ -58,6 +58,8 @@ export default {
       return json({ error: "API 인증에 실패했습니다." }, 401);
     }
 
+    // AI 공급자 호출은 최대 3회(각 60초) 재시도될 수 있으므로 실행 임대는 전체 대기시간보다 길게 둔다.
+    const TASK_LOCK_LEASE_MS = 5 * 60 * 1000;
     let currentStage = "업무 접수 및 D1 저장";
     let body = null;
     let task = "";
@@ -148,7 +150,7 @@ export default {
     const renewTaskLock = async () => {
       if (!lockToken) throw new Error("SW_AI_LOCK_LOST");
       const now = new Date().toISOString();
-      const expires = new Date(Date.now() + 180000).toISOString();
+      const expires = new Date(Date.now() + TASK_LOCK_LEASE_MS).toISOString();
       const result = await env.DB.prepare(
         `UPDATE tasks SET lease_expires_at = ?, updated_at = ?
          WHERE task_id = ? AND lock_token = ?`
@@ -563,14 +565,6 @@ export default {
       }
 
       if (insertResult.meta?.changes === 0) {
-        if (String(savedTask.control_request || "NONE").toUpperCase() === "CANCEL" &&
-            !(savedTask.status === "PROCESSING" && savedTask.lease_expires_at && savedTask.lease_expires_at > now)) {
-          await env.DB.prepare(
-            `UPDATE tasks SET status = 'CANCELLED', error_message = '사용자 취소 요청', updated_at = ?, completed_at = ? WHERE task_id = ?`
-          ).bind(now, now, taskId).run();
-          await writeTaskEvent("TASK_CANCELLED", "업무 취소", { source: "control_request" });
-          return json({ taskId, status: "CANCELLED", message: "취소 요청이 반영되었습니다." }, 200);
-        }
         if (savedTask.status === "COMPLETED" || savedTask.status === "PARTIAL_COMPLETED") {
           let prior = null;
           try { prior = JSON.parse(savedTask.partial_result_json || "null"); } catch (_) {}
@@ -579,28 +573,38 @@ export default {
         if (savedTask.status === "CANCELLED") {
           return json({ error: "취소된 업무는 재개할 수 없습니다.", taskId, status: savedTask.status }, 409);
         }
+        if (String(savedTask.control_request || "NONE").toUpperCase() === "CANCEL") {
+          const cancelled = await env.DB.prepare(
+            `UPDATE tasks SET status = 'CANCELLED', lock_token = NULL, lease_expires_at = NULL,
+             error_message = '사용자 취소 요청', updated_at = ?, completed_at = ?
+             WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
+          ).bind(now, now, taskId, now).run();
+          if ((cancelled.meta?.changes ?? 0) === 1) {
+            await writeTaskEvent("TASK_CANCELLED", "업무 취소", { source: "control_request" });
+            return json({ taskId, status: "CANCELLED", message: "취소 요청이 반영되었습니다." }, 200);
+          }
+          return json({ error: "현재 실행이 유효한 잠금을 보유하고 있어 취소 대기 중입니다.", taskId, status: savedTask.status }, 409);
+        }
         // RECEIVED는 최초 접수 직후 실행 프로세스가 끊긴 경우 남을 수 있다.
-        // 동일 요청 지문을 확인한 재시도이므로 아래 조건부 실행 잠금 경쟁에 맡겨 안전하게 재개한다.
-        if (savedTask.status === "PROCESSING" && savedTask.lease_expires_at && savedTask.lease_expires_at > now) {
+        // 실행 상태·시도 횟수·잠금 토큰은 아래 단일 조건부 UPDATE에서 한 번에 확정한다.
+        if (savedTask.status === "PROCESSING" && savedTask.lock_token &&
+            savedTask.lease_expires_at && savedTask.lease_expires_at > now) {
           return json({ error: "동일한 업무가 이미 처리 중이야.", taskId, status: savedTask.status, currentStage: savedTask.current_stage }, 409);
         }
-        await env.DB.prepare(
-          `UPDATE tasks SET status = 'PROCESSING', control_request = CASE WHEN status IN ('PAUSED', 'WAITING_FOR_API_QUOTA') AND control_request = 'PAUSE' THEN 'NONE' ELSE control_request END,
-           error_message = NULL, attempt_count = attempt_count + 1, updated_at = ?, started_at = COALESCE(started_at, ?) WHERE task_id = ?`
-        ).bind(now, now, taskId).run();
-      } else {
-        await env.DB.prepare(
-          `UPDATE tasks SET status = 'PROCESSING', attempt_count = attempt_count + 1, updated_at = ?, started_at = ? WHERE task_id = ?`
-        ).bind(now, now, taskId).run();
       }
       dbReady = true;
       lockToken = crypto.randomUUID();
       const leaseNow = new Date().toISOString();
-      const leaseUntil = new Date(Date.now() + 180000).toISOString();
+      const leaseUntil = new Date(Date.now() + TASK_LOCK_LEASE_MS).toISOString();
+      // 상태 전환과 잠금 획득을 하나의 원자적 UPDATE로 처리한다.
+      // 동시 재개 요청 중 한 건만 attempt_count를 올리고 실행 소유권을 획득한다.
       const lockResult = await env.DB.prepare(
-        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.26', updated_at = ?
+        `UPDATE tasks SET status = 'PROCESSING',
+         control_request = CASE WHEN status IN ('PAUSED', 'WAITING_FOR_API_QUOTA') AND control_request = 'PAUSE' THEN 'NONE' ELSE control_request END,
+         error_message = NULL, attempt_count = attempt_count + 1, started_at = COALESCE(started_at, ?),
+         lock_token = ?, lease_expires_at = ?, execution_version = 'v51.26', updated_at = ?
          WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
-      ).bind(lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
+      ).bind(now, lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
       if ((lockResult.meta?.changes ?? 0) !== 1) {
         lockToken = null;
         return json({ error: "다른 실행이 업무를 처리 중이거나 실행 잠금이 유효합니다.", taskId, status: "PROCESSING" }, 409);
