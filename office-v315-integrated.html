@@ -119,6 +119,7 @@
    if(index>=0)rows[index]={...rows[index],...record};else rows.unshift(record);
    writeHistory(rows);paintHistory(rows);
    const release=record.workflow?.reviewGate?.finalReleaseAllowed===true;
+   const resultFinalized=['COMPLETED','PARTIAL_COMPLETED'].includes(String(audit.task?.status||''));
    const deliverableText=(record.deliverables||[]).map((item,i)=>'\\n'+(i+1)+'. '+(item.title||item.name||'결과물')+' ['+(item.status||'상태 미확인')+']\\n'+(item.content||'내용 없음')).join('\\n');
    detail.textContent='업무 ID: '+record.taskId+'\\n업무: '+(record.task||'')+'\\n서버 상태: '+(audit.task?.status||'')+' / '+(audit.task?.currentStage||'')+
     '\\n최종 검수 통과: '+(release?'예':'아니오')+
@@ -126,8 +127,8 @@
     '\\n\\n[본부장 최종 보고]\\n'+(record.reply||'저장된 최종 보고서가 없습니다.')+
     (deliverableText?'\\n\\n[전문 직원 결과물]'+deliverableText:'')+
     '\\n\\n[서버 감사 이력]\\n'+(events.join('\\n')||'기록 없음');
-   document.getElementById('approveTask').disabled=!!decision.decision||!release;
-   document.getElementById('rejectTask').disabled=!!decision.decision;
+   document.getElementById('approveTask').disabled=!!decision.decision||!release||!resultFinalized;
+   document.getElementById('rejectTask').disabled=!!decision.decision||!resultFinalized;
    if(audit.truncated)detail.textContent+='\\n\\n최근 300건만 표시됩니다.';
   }catch(error){detail.textContent='서버 이력 조회 실패: '+error.message;setStatus(error.message,'error')}
  }
