@@ -48,6 +48,7 @@ try {
   if (secondFloorAudit.floor2TileCount < 480) throw new Error('2층 구역별 타일 바닥이 생성되지 않았습니다');
   if (secondFloorAudit.floor2PartitionCount < 14) throw new Error('2층 외곽 벽과 중앙 파티션 구성이 누락되었습니다');
   if (secondFloorAudit.floor2AgentCount !== 33) throw new Error(`2층 직원 복제 수가 일치하지 않습니다: ${secondFloorAudit.floor2AgentCount}`);
+  if (secondFloorAudit.floor2CharacterMeshCount < 250) throw new Error('2층 직원의 입체 캐릭터 모델이 누락되었습니다');
   if (secondFloorAudit.floor2ObjectCount <= 0) throw new Error('2층 독립 공간 구조가 생성되지 않았습니다');
   await page.waitForTimeout(500);
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-floor2.png' });
