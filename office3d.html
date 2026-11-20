@@ -264,6 +264,18 @@ avatars.forEach(source=>{
  copy.scale.copy(source.scale);
  copy.material.map=source.material.map;
  floor2AvatarRoot.add(copy);
+ // 이름표와 선택 표시도 순환 참조 없이 별도 Sprite/Mesh로 복제한다.
+ source.children.forEach(child=>{
+  if(child.isSprite){
+   const childCopy=new THREE.Sprite(child.material.clone());
+   childCopy.position.copy(child.position);childCopy.scale.copy(child.scale);
+   floor2AvatarRoot.children[floor2AvatarRoot.children.length-1].add(childCopy);
+  }else if(child.isMesh){
+   const childCopy=new THREE.Mesh(child.geometry,child.material.clone());
+   childCopy.position.copy(child.position);childCopy.rotation.copy(child.rotation);childCopy.scale.copy(child.scale);
+   floor2AvatarRoot.children[floor2AvatarRoot.children.length-1].add(childCopy);
+  }
+ });
 });
 scene.add(floor2AvatarRoot);
 let activeFloor=1;
@@ -634,12 +646,16 @@ document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='
 
 let is2D=new URLSearchParams(location.search).get('view')==='2d';
 
+function setOfficeWallsVisible(visible){
+ wallMeshes.forEach(w=>w.visible=visible);
+ floor2Structure.traverse(o=>{if(o.isMesh&&(o.material===M.wall||o.material===M.glass))o.visible=visible});
+}
 function applyTeamLabelMode(){scene.traverse(o=>{if(o.isMesh&&o.geometry?.type==='PlaneGeometry'&&o.rotation.y===Math.PI/2)o.visible=!is2D})}
 applyTeamLabelMode();
 
 const viewButton=document.getElementById('view2d');
 if(is2D){
-  wallMeshes.forEach(w=>w.visible=false);applyTeamLabelMode();
+  setOfficeWallsVisible(false);applyTeamLabelMode();
   camera.position.set(0,76,0.01);
   controls.minPolarAngle=0.001;
   controls.maxPolarAngle=0.001;
@@ -650,7 +666,7 @@ const perspectivePosition=new THREE.Vector3(43,39,45);
 viewButton.onclick=()=>{
   is2D=!is2D;
   if(is2D){
-    wallMeshes.forEach(w=>w.visible=false);
+    setOfficeWallsVisible(false);
     perspectivePosition.copy(camera.position);
     camera.position.set(0,76,0.01);
     controls.minPolarAngle=0.001;
@@ -659,7 +675,7 @@ viewButton.onclick=()=>{
     viewButton.textContent='3D 보기';
     document.querySelector('.hint').textContent='2D 평면 보기 · 휠: 확대/축소 · 직원 클릭: 업무 지시';
   }else{
-    wallMeshes.forEach(w=>w.visible=true);applyTeamLabelMode();
+    setOfficeWallsVisible(true);applyTeamLabelMode();
     camera.position.copy(perspectivePosition);
     controls.minPolarAngle=0;
     controls.maxPolarAngle=Math.PI*.49;
