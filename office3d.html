@@ -48,7 +48,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 </head>
 <body>
 <div id="loading">SW AI OFFICE 공간을 준비하고 있습니다...</div>
-<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./index.html" style="text-decoration:none">2D 사무실</a><button id="floor1" aria-pressed="true">1층</button><button id="floor2" aria-pressed="false">2층</button><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
+<header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./index.html" style="text-decoration:none">2D 사무실</a><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
 <div id="appMain">
  <section id="officeStage"><div id="scene"></div><div id="officeStatus">● 전체 구성원 <b id="activeCount">-</b>명</div><div id="officeTools"><button id="zoomOut">－ 축소</button><button id="zoomIn">＋ 확대</button><button id="resetView">전체 보기</button><span class="interactionHint">드래그: 회전 · 휠: 확대/축소</span></div></section>
  <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
@@ -306,7 +306,9 @@ cube(.12,1.35,.08,M.wood2,26.25,.95,8.4);
 cube(.06,.08,.08,M.metal,26.3,1.0,8.05);
 const floor2Objects=scene.children.slice(floor2BuildStart);
 for(const object of floor2Objects){scene.remove(object);floor2Structure.add(object)}
-floor2Structure.position.y=6.4;
+// 단층 사무실: 층 전환 없이 하나의 공간만 표시한다.
+floor1Structure.visible=false;
+floor2Structure.position.y=0;
 floor2Structure.scale.set(.8,1,.8);
 scene.add(floor2Structure);
 // 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
@@ -422,48 +424,18 @@ for(const p of directory){
   const seatOffset=p.department==='기술·IT'?1.05:1.02;
   makeAvatar(displayPerson,avatars.length,x,z+seatOffset)
 }
-// 2층 직원 캐릭터를 복제하고 층 전환 시 해당 층만 표시한다.
-const floor2AvatarRoot=new THREE.Group();
-floor2AvatarRoot.position.y=6.4;
-floor2AvatarRoot.scale.set(.8,1,.8);
-avatars.forEach((source,index)=>{
- const copy=new THREE.Sprite(source.material.clone());
- const floor2Position=index===0?[-18,15]:index===1?[18,15]:(floor2DeskSlots[index-2]||[0,9]);
- copy.position.set(floor2Position[0],source.position.y,floor2Position[1]);
- copy.scale.copy(source.scale).multiplyScalar(1.1);
- copy.material.map=source.material.map;
- floor2AvatarRoot.add(copy);
- // 이름표와 선택 표시도 순환 참조 없이 별도 Sprite/Mesh로 복제한다.
- source.children.forEach(child=>{
-  if(child.isSprite){
-   const childCopy=new THREE.Sprite(child.material.clone());
-   childCopy.position.copy(child.position);childCopy.scale.copy(child.scale);
-   floor2AvatarRoot.children[floor2AvatarRoot.children.length-1].add(childCopy);
-  }else if(child.isMesh){
-   const childCopy=new THREE.Mesh(child.geometry,child.material.clone());
-   childCopy.position.copy(child.position);childCopy.rotation.copy(child.rotation);childCopy.scale.copy(child.scale);
-   floor2AvatarRoot.children[floor2AvatarRoot.children.length-1].add(childCopy);
-  }
- });
+// 단층 사무실에 실제 직원 아바타를 직접 배치한다. 복제 캐릭터와 층 전환은 사용하지 않는다.
+avatarRoot.scale.set(.8,1,.8);
+avatars.forEach((avatar,index)=>{
+ let x,z;
+ if(index===0){x=18;z=-10;} // 대표이사 피터
+ else if(index===1){x=-18;z=15;} // 본부장 알렉스
+ else {[x,z]=floor2DeskSlots[index-2]||[0,0];}
+ avatar.position.set(x*.8,.82,z*.8);
+ avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
+ avatar.userData.targetX=x*.8;avatar.userData.targetZ=z*.8;
 });
-scene.add(floor2AvatarRoot);
-window.__officeFloorAudit=()=>({floor1ObjectCount:floor1Structure.children.length,floor2ObjectCount:floor2Structure.children.length,floor2TeamCount:floor2Teams.length,floor2DeskCount:floor2DeskSlots.length,floor2TileCount,floor2PartitionCount,floor2AgentCount:floor2AvatarRoot.children.length,floor2CharacterMeshCount:floor2AvatarRoot.children.reduce((count,avatar)=>count+avatar.children.filter(child=>child.isMesh).length,0),activeFloor});
-let activeFloor=1;
-function setOfficeFloor(level){
- activeFloor=level===2?2:1;
- floor1Structure.visible=activeFloor===1;
- floor2Structure.visible=activeFloor===2;
- avatarRoot.visible=activeFloor===1;
- floor2AvatarRoot.visible=activeFloor===2;
- const y=activeFloor===2?6.4:0;
- controls.target.set(0,y,0);
- camera.position.set(27,29+y,29);
- document.getElementById('floor1').setAttribute('aria-pressed',String(activeFloor===1));
- document.getElementById('floor2').setAttribute('aria-pressed',String(activeFloor===2));
- controls.update();
-}
-document.getElementById('floor1').onclick=()=>setOfficeFloor(1);
-document.getElementById('floor2').onclick=()=>setOfficeFloor(2);
+window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:floor2Teams.length,deskCount:floor2DeskSlots.length,avatarCount:avatars.length,visibleOffice:floor2Structure.visible});
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
 function makeStaffCard(p,detail=false){
@@ -484,7 +456,7 @@ const detailToggle=document.getElementById('detailToggle');let detailMode=false;
 detailToggle.onclick=()=>{detailMode=!detailMode;document.getElementById('appMain').style.display=detailMode?'none':'grid';document.getElementById('staffStrip').style.display=detailMode?'none':'flex';document.getElementById('detailView').style.display=detailMode?'grid':'none';detailToggle.textContent=detailMode?'↙ 사무실로':'↗ 업무 상세';if(detailMode&&!selected){const alex=avatars.find(v=>v.userData.person.id==='COO');if(alex)selectAvatar(alex)}};
 document.getElementById('zoomIn').onclick=()=>{camera.position.multiplyScalar(.85);controls.update()};
 document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1.18);controls.update()};
-document.getElementById('resetView').onclick=()=>{controls.target.set(0,activeFloor===2?6.4:0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(27,29+(activeFloor===2?6.4:0),29));controls.update()};
+document.getElementById('resetView').onclick=()=>{controls.target.set(0,0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(27,29,29));controls.update()};
 
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null,selectedTaskForDecision=null;
 renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
