@@ -100,6 +100,13 @@ test('integrated wrapper keeps accepted RECEIVED tasks in the polling flow', asy
   assert.match(wrapper, /setTimeout\(resolve,1500\)/);
 });
 
+test('integrated wrapper retries transient network failures with the same idempotent payload', async () => {
+  const wrapper = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
+  assert.match(wrapper, /let response;\s*try\s*\{[\s\S]*response=await fetch\(ENDPOINT,[\s\S]*body:JSON\.stringify\(payload\)/);
+  assert.match(wrapper, /networkFailures\+\+;[\s\S]*networkFailures>8/);
+  assert.match(wrapper, /서버 연결 재시도 중/);
+});
+
 
 test('partial workflow results are explicitly labeled and stored as partial', async () => {
   const { sandbox, storage } = makeContext({ workflowStatus: 'partial' });
