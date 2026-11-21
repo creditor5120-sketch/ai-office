@@ -273,7 +273,17 @@ test('latest uploaded office HTML is the live visual shell while the approved or
 });
 
 
-test('canonical latest-office adapter routes only Alex instructions to the Worker', () => {\n  assert.match(latestBridgeSource, /document\.addEventListener\('click', onSendClick, true\)/);\n  assert.match(latestBridgeSource, /document\.addEventListener\('keydown', onInputKeydown, true\)/);\n  assert.match(latestBridgeSource, /st\.sel === 'alex'/);\n  assert.match(latestBridgeSource, /window\.parent\.SWWorkflowBridge\.execute/);\n  assert.match(latestBridgeSource, /person\.id === 'ceo1' \? 'COO'/);\n  assert.match(latestBridgeSource, /resume_required/);\n  assert.doesNotMatch(latestBridgeSource, /window\.callConfiguredLLM\s*=/);\n});\n\ntest('workflow engine control is injected beside the original office settings button', () => {
+test('canonical latest-office adapter routes only Alex instructions to the Worker', () => {
+  assert.match(latestBridgeSource, /document\.addEventListener\('click', onSendClick, true\)/);
+  assert.match(latestBridgeSource, /document\.addEventListener\('keydown', onInputKeydown, true\)/);
+  assert.match(latestBridgeSource, /st\.sel === 'alex'/);
+  assert.match(latestBridgeSource, /window\.parent\.SWWorkflowBridge\.execute/);
+  assert.match(latestBridgeSource, /person\.id === 'ceo1' \? 'COO'/);
+  assert.match(latestBridgeSource, /resume_required/);
+  assert.doesNotMatch(latestBridgeSource, /window\.callConfiguredLLM\s*=/);
+});
+
+test('workflow engine control is injected beside the original office settings button', () => {
   assert.match(wrapperSource, /const header=doc\.querySelector\('header'\)/);
   assert.match(wrapperSource, /const settingsButton=doc\.getElementById\('aiCfgBtn'\)/);
   assert.match(wrapperSource, /settingsButton\.insertAdjacentElement\('afterend',button\)/);
