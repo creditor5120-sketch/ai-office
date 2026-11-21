@@ -1,11 +1,20 @@
-// SW AI OFFICE Worker v51.26 - Gemini free-tier API + completion audit integrity
+// SW AI OFFICE Worker v51.26 - OpenRouter/Gemini dual provider + completion audit integrity
 export default {
 
   async fetch(request, env) {
 
+    const requestOrigin = String(request.headers.get("Origin") || "");
+    const allowedOrigins = new Set([
+      "https://creditor5120-sketch.github.io",
+      "https://work-v315-office-workflow-br.sw-ai-office-preview.pages.dev"
+    ]);
     const corsHeaders = {
 
-      "Access-Control-Allow-Origin": "https://creditor5120-sketch.github.io",
+      "Access-Control-Allow-Origin": allowedOrigins.has(requestOrigin)
+        ? requestOrigin
+        : "https://creditor5120-sketch.github.io",
+
+      "Vary": "Origin",
 
       "Access-Control-Allow-Methods": "POST, OPTIONS",
 
@@ -58,6 +67,9 @@ export default {
       return json({ error: "API 인증에 실패했습니다." }, 401);
     }
 
+    // AI 응답이 출력 한도에 걸리면 이어쓰기 호출이 한 번 더 발생할 수 있다.
+    // 각 호출의 최대 재시도 대기(3×60초 + 1.2초 + 2.4초)를 두 번 합산하고 여유를 둔다.
+    const TASK_LOCK_LEASE_MS = 8 * 60 * 1000;
     let currentStage = "업무 접수 및 D1 저장";
     let body = null;
     let task = "";
@@ -73,18 +85,31 @@ export default {
     const MAX_NEW_AI_CALLS_PER_REQUEST = 1;
     const cachedAiCalls = new Map();
 
-    // Gemini API/Cloudflare 런타임별 Abort 오류 문구를 공통 시간 초과로 판별한다.
+    // AI API/Cloudflare 런타임별 Abort 오류 문구를 공통 시간 초과로 판별한다.
     // 내부 단계의 catch에서 오류가 포장되더라도 재개 판정이 원인을 놓치지 않게 한다.
     const isTimeoutFailure = value =>
-      /GEMINI_API_TIMEOUT|timeout|timed\s*out|aborted due to timeout|operation was aborted/i
+      /AI_PROVIDER_TIMEOUT|timeout|timed\s*out|aborted due to timeout|operation was aborted/i
         .test(String(value?.message || value || ""));
 
     const writeTaskEvent = async (eventType, stage, detail = {}) => {
       if (!env.DB || !taskId) return;
-      await env.DB.prepare(
-        `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, JSON.stringify(detail), new Date().toISOString()).run();
+      const eventId = crypto.randomUUID();
+      const eventAt = new Date().toISOString();
+      const eventDetail = JSON.stringify(detail);
+      if (lockToken) {
+        // 잠금이 만료되거나 다른 실행으로 소유권이 넘어간 뒤에는 이전 실행의 감사 이벤트도 기록하지 않는다.
+        await env.DB.prepare(
+          `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+           SELECT ?, ?, ?, ?, ?, ?, ?
+           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)`
+        ).bind(eventId, taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, eventDetail,
+          eventAt, taskId, lockToken, eventAt).run();
+      } else {
+        await env.DB.prepare(
+          `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`
+        ).bind(eventId, taskId, eventType, "SW AI OFFICE Worker v51.26", stage || null, eventDetail, eventAt).run();
+      }
     };
 
     let lastRecordedStage = null;
@@ -108,15 +133,16 @@ export default {
 
     const updateTask = async (values) => {
       if (!env.DB || !taskId || !lockToken) throw new Error("SW_AI_LOCK_LOST");
+      const updateAt = new Date().toISOString();
       const result = await env.DB.prepare(
         `UPDATE tasks SET status = ?, current_stage = ?, partial_result_json = COALESCE(?, partial_result_json),
          error_message = ?, attempt_count = COALESCE(?, attempt_count), updated_at = ?,
          started_at = COALESCE(started_at, ?), completed_at = ? WHERE task_id = ? AND lock_token = ?
-         AND (? = 0 OR control_request NOT IN ('PAUSE', 'CANCEL'))`
+         AND lease_expires_at > ? AND (? = 0 OR control_request NOT IN ('PAUSE', 'CANCEL'))`
       ).bind(
         values.status, values.stage || currentStage, values.resultJson ?? null,
-        values.error ?? null, values.attemptCount ?? null, new Date().toISOString(),
-        values.startedAt ?? null, values.completedAt ?? null, taskId, lockToken,
+        values.error ?? null, values.attemptCount ?? null, updateAt,
+        values.startedAt ?? null, values.completedAt ?? null, taskId, lockToken, updateAt,
         values.requireNoControl ? 1 : 0
       ).run();
       if ((result.meta?.changes ?? 0) !== 1) {
@@ -136,23 +162,25 @@ export default {
     const releaseTaskLock = async () => {
       if (!env.DB || !taskId || !lockToken) return;
       const releasedToken = lockToken;
+      // 해제 이력은 잠금이 아직 유효할 때 먼저 기록한다. 잠금 해제 후 기록하면
+      // 다음 실행의 시작 이벤트보다 늦게 이전 실행의 해제 이벤트가 들어갈 수 있다.
+      try { await writeTaskEvent("TASK_LOCK_RELEASED", "업무 실행 잠금 해제", {}); }
+      catch (eventError) { console.error("잠금 해제 이력 기록 실패:", eventError.message); }
       await env.DB.prepare(
         `UPDATE tasks SET lock_token = NULL, lease_expires_at = NULL, updated_at = ?
          WHERE task_id = ? AND lock_token = ?`
       ).bind(new Date().toISOString(), taskId, releasedToken).run();
       lockToken = null;
-      try { await writeTaskEvent("TASK_LOCK_RELEASED", "업무 실행 잠금 해제", {}); }
-      catch (eventError) { console.error("잠금 해제 이력 기록 실패:", eventError.message); }
     };
 
     const renewTaskLock = async () => {
       if (!lockToken) throw new Error("SW_AI_LOCK_LOST");
       const now = new Date().toISOString();
-      const expires = new Date(Date.now() + 180000).toISOString();
+      const expires = new Date(Date.now() + TASK_LOCK_LEASE_MS).toISOString();
       const result = await env.DB.prepare(
         `UPDATE tasks SET lease_expires_at = ?, updated_at = ?
-         WHERE task_id = ? AND lock_token = ?`
-      ).bind(expires, now, taskId, lockToken).run();
+         WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?`
+      ).bind(expires, now, taskId, lockToken, now).run();
       if ((result.meta?.changes ?? 0) !== 1) throw new Error("SW_AI_LOCK_LOST");
     };
 
@@ -167,7 +195,7 @@ export default {
       if (aiCallFailureEncountered) {
         // 시간 초과는 일반 단계 실패로 바꾸지 않고 상위 재개 처리까지 원인 코드를 보존한다.
         const failurePrefix = isTimeoutFailure(aiCallFailureMessage)
-          ? "GEMINI_API_TIMEOUT: "
+          ? "AI_PROVIDER_TIMEOUT: "
           : "SW_AI_STEP_FAILED: ";
         throw new Error(failurePrefix + aiCallFailureMessage);
       }
@@ -176,27 +204,63 @@ export default {
     const saveAiCheckpoint = async (index, signature, value) => {
       await renewTaskLock();
       const now = new Date().toISOString();
+      const stageKey = `v51_ai_call_${index}`;
       const payload = JSON.stringify({ version: 2, index, signature, value });
-      const results = await env.DB.batch([
-        env.DB.prepare(
+
+      // 재개 요청에서 동일 단계의 체크포인트가 이미 있으면 무조건 무시하지 않고
+      // 기존 서명과 결과를 확인한다. 동일 결과는 멱등 성공, 다른 결과는 명시적 충돌이다.
+      const existing = await env.DB.prepare(
+        `SELECT checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key = ? ORDER BY created_at, rowid LIMIT 1`
+      ).bind(taskId, stageKey).first();
+
+      let reusedExisting = Boolean(existing);
+      if (existing) {
+        let saved;
+        try { saved = JSON.parse(existing.checkpoint_json || "{}"); }
+        catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
+        if (saved.version !== 2 || saved.index !== index ||
+            saved.signature !== signature || saved.value !== value) {
+          throw new Error("SW_AI_CHECKPOINT_CONFLICT");
+        }
+      } else {
+        const inserted = await env.DB.prepare(
           `INSERT OR IGNORE INTO task_checkpoints
            (checkpoint_id, task_id, stage_key, stage_name, checkpoint_json, created_at)
            SELECT ?, ?, ?, ?, ?, ?
-           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, `v51_ai_call_${index}`, currentStage, payload, now, taskId, lockToken),
+           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)`
+        ).bind(crypto.randomUUID(), taskId, stageKey, currentStage, payload, now, taskId, lockToken, now).run();
+
+        // 동시 실행 또는 UNIQUE 제약 충돌로 삽입되지 않았다면 저장된 값을 재조회해
+        // 같은 결과의 멱등 재시도인지, 다른 결과와의 충돌인지 확정한다.
+        if ((inserted?.meta?.changes ?? 0) !== 1) {
+          const raced = await env.DB.prepare(
+            `SELECT checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key = ? ORDER BY created_at, rowid LIMIT 1`
+          ).bind(taskId, stageKey).first();
+          if (!raced) throw new Error("SW_AI_LOCK_LOST");
+          let saved;
+          try { saved = JSON.parse(raced.checkpoint_json || "{}"); }
+          catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
+          if (saved.version !== 2 || saved.index !== index ||
+              saved.signature !== signature || saved.value !== value) {
+            throw new Error("SW_AI_CHECKPOINT_CONFLICT");
+          }
+          reusedExisting = true;
+        }
+      }
+
+      const results = await env.DB.batch([
         env.DB.prepare(
           `UPDATE tasks SET checkpoint_stage = ?, checkpoint_json = ?, execution_version = 'v51.26', updated_at = ?
-           WHERE task_id = ? AND lock_token = ?`
-        ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken),
+           WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?`
+        ).bind(currentStage, JSON.stringify({ version: 2, lastAiCallIndex: index, resumeStrategy: "signature_checked_replay" }), now, taskId, lockToken, now),
         env.DB.prepare(
           `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
            SELECT ?, ?, 'AI_CALL_CHECKPOINT_SAVED', 'SW AI OFFICE Worker v51', ?, ?, ?
-           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ?)`
-        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2 }), now, taskId, lockToken)
+           WHERE EXISTS (SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?)`
+        ).bind(crypto.randomUUID(), taskId, currentStage, JSON.stringify({ callIndex: index, checkpointVersion: 2, idempotentReuse: reusedExisting }), now, taskId, lockToken, now)
       ]);
       if ((results?.[0]?.meta?.changes ?? 0) !== 1 ||
-          (results?.[1]?.meta?.changes ?? 0) !== 1 ||
-          (results?.[2]?.meta?.changes ?? 0) !== 1) {
+          (results?.[1]?.meta?.changes ?? 0) !== 1) {
         throw new Error("SW_AI_LOCK_LOST");
       }
     };
@@ -207,7 +271,82 @@ export default {
     };
 
     try {
-      body = await request.json();
+      // 인증된 요청이라도 JSON 파싱 전에 본문 크기를 제한해 메모리 고갈을 방지한다.
+      const MAX_REQUEST_BODY_BYTES = 1_500_000;
+      const declaredLength = Number(request.headers.get("Content-Length"));
+      if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+        return json({ error: "요청 본문이 허용 크기(1,500,000바이트)를 초과했습니다." }, 413);
+      }
+      try {
+        if (!request.body) throw new Error("EMPTY_REQUEST_BODY");
+        const reader = request.body.getReader();
+        const chunks = [];
+        let totalBytes = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalBytes += value.byteLength;
+          if (totalBytes > MAX_REQUEST_BODY_BYTES) {
+            try { await reader.cancel(); } catch (_) {}
+            return json({ error: "요청 본문이 허용 크기(1,500,000바이트)를 초과했습니다." }, 413);
+          }
+          chunks.push(value);
+        }
+        const bytes = new Uint8Array(totalBytes);
+        let offset = 0;
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset);
+          offset += chunk.byteLength;
+        }
+        body = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (_) {
+        return json({ error: "올바른 JSON 형식의 요청 본문이 필요합니다." }, 400);
+      }
+
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return json({ error: "요청 본문은 JSON 객체여야 합니다." }, 400);
+      }
+
+      // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없거나 잘못된 action이 업무 실행으로 흘러가지 않게 차단한다.
+      if (Object.prototype.hasOwnProperty.call(body, "action") &&
+          !["get_representative_decision", "get_task_history", "get_recent_tasks", "representative_decision"].includes(body.action)) {
+        return json({ error: "지원하지 않는 API action입니다." }, 400);
+      }
+
+      // 조회·대표 결정 API의 업무 ID도 실행 요청과 동일한 형식·길이 제한을 적용한다.
+      if (["get_representative_decision", "get_task_history", "representative_decision"].includes(body.action)) {
+        if (typeof body.taskId !== "string") {
+          return json({ error: "taskId는 문자열이어야 합니다." }, 400);
+        }
+        body.taskId = body.taskId.trim();
+        if (!body.taskId || body.taskId.length > 128) {
+          return json({ error: "taskId는 비어 있을 수 없으며 128자를 초과할 수 없습니다." }, 400);
+        }
+      }
+
+      // 브라우저 로컬 기록이 없어도 서버에 저장된 최근 업무 목록을 복원한다.
+      if (body.action === "get_recent_tasks") {
+        if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 최근 업무를 조회할 수 없습니다." }, 503);
+        const requestedLimit = Number(body.limit);
+        const limit = Number.isFinite(requestedLimit) ? Math.min(50, Math.max(1, Math.floor(requestedLimit))) : 20;
+        const rows = await env.DB.prepare(
+          `SELECT task_id, task, status, current_stage, created_at, updated_at, completed_at, error_message
+           FROM tasks ORDER BY created_at DESC LIMIT ?`
+        ).bind(limit).all();
+        return json({
+          count: (rows.results || []).length,
+          tasks: (rows.results || []).map(row => ({
+            taskId: row.task_id,
+            task: row.task,
+            status: row.status,
+            currentStage: row.current_stage,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            completedAt: row.completed_at,
+            error: row.error_message || ""
+          }))
+        }, 200);
+      }
 
       // 다른 기기·브라우저에서도 서버에 저장된 대표 결정 이력을 조회한다.
       if (body.action === "get_representative_decision") {
@@ -235,7 +374,8 @@ export default {
         taskId = String(body.taskId || "").trim();
         if (!taskId) return json({ error: "업무 ID가 없습니다." }, 400);
         const taskRow = await env.DB.prepare(
-          `SELECT task_id, status, current_stage, created_at, updated_at, completed_at
+          `SELECT task_id, status, current_stage, created_at, updated_at, completed_at,
+                  partial_result_json, error_message
            FROM tasks WHERE task_id = ?`
         ).bind(taskId).first();
         if (!taskRow) return json({ error: "해당 업무를 찾을 수 없습니다.", taskId }, 404);
@@ -260,6 +400,8 @@ export default {
         }).reverse();
         const truncated = events.length > 300;
         const visibleEvents = events.slice(-300);
+        let savedResult = null;
+        try { savedResult = JSON.parse(taskRow.partial_result_json || "null"); } catch (_) {}
         return json({
           task: {
             taskId: taskRow.task_id,
@@ -267,8 +409,10 @@ export default {
             currentStage: taskRow.current_stage,
             createdAt: taskRow.created_at,
             updatedAt: taskRow.updated_at,
-            completedAt: taskRow.completed_at
+            completedAt: taskRow.completed_at,
+            error: taskRow.error_message || ""
           },
+          result: savedResult,
           eventCount: visibleEvents.length,
           events: visibleEvents,
           truncated
@@ -294,10 +438,18 @@ export default {
           return json({ error: "대표 승인 전용 인증에 실패했습니다." }, 401);
         }
         if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 승인 이력을 기록할 수 없습니다." }, 503);
-        taskId = String(body.taskId || "").trim();
-        const decision = String(body.decision || "").trim().toUpperCase();
-        const reason = String(body.reason || "").trim().slice(0, 4000);
-        if (!taskId) return json({ error: "업무 ID가 없습니다." }, 400);
+        taskId = body.taskId;
+        if (typeof body.decision !== "string") {
+          return json({ error: "대표 결정은 문자열이어야 합니다." }, 400);
+        }
+        if (body.reason != null && typeof body.reason !== "string") {
+          return json({ error: "반려 사유는 문자열이어야 합니다." }, 400);
+        }
+        const decision = body.decision.trim().toUpperCase();
+        const reason = String(body.reason || "").trim();
+        if (reason.length > 4000) {
+          return json({ error: "반려 사유는 4,000자를 초과할 수 없습니다." }, 400);
+        }
         if (!["APPROVE", "REJECT"].includes(decision)) {
           return json({ error: "승인 또는 반려 중 하나를 선택해야 합니다." }, 400);
         }
@@ -319,10 +471,12 @@ export default {
           return json({ error: "저장된 최종 업무 보고서가 없어 결정을 기록할 수 없습니다.", taskId }, 409);
         }
         const releaseAllowed = result.workflow?.reviewGate?.finalReleaseAllowed === true;
-        if (decision === "APPROVE" && !releaseAllowed) {
+        // PARTIAL_COMPLETED는 검수 플래그가 잘못 설정되었더라도 대표 승인 대상이 될 수 없다.
+        if (decision === "APPROVE" && (saved.status !== "COMPLETED" || !releaseAllowed)) {
           return json({
-            error: "전문 직원의 최종 검수가 모두 승인되지 않아 대표 승인을 진행할 수 없습니다.",
+            error: "업무가 완전 완료 상태이고 전문 직원의 최종 검수가 모두 승인된 경우에만 대표 승인을 진행할 수 있습니다.",
             taskId,
+            taskStatus: saved.status,
             resultStatus: result.workflow?.resultStatus || result.workflow?.status || "미확인"
           }, 409);
         }
@@ -390,21 +544,37 @@ export default {
         }, 200);
       }
 
-      task = String(body.task || "").trim();
-      const employees = Array.isArray(body.employees)
-        ? body.employees.filter(employee => employee && typeof employee === "object")
-        : [];
-      if (!task) return json({ error: "업무 지시 내용이 비어 있습니다." }, 400);
-      if (employees.length === 0) return json({ error: "직원 명단을 전달받지 못했습니다." }, 400);
-      if (employees.length > 50) return json({ error: "직원 명단이 허용 범위를 초과했습니다." }, 400);
-      if (!employees.some(e => String(e.id || "").trim() === "COO")) {
-        return json({ error: "COO 데이터 없음", employeeCount: employees.length, employeeIds: employees.map(e => e.id) }, 400);
+      if (typeof body.task !== "string") {
+        return json({ error: "업무 지시는 문자열이어야 합니다." }, 400);
       }
-      if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무를 안전하게 접수할 수 없습니다." }, 503);
+      task = body.task.trim();
+      if (!task) return json({ error: "업무 지시 내용이 비어 있습니다." }, 400);
+      if (task.length > 100000) {
+        return json({ error: "업무 지시가 허용 길이(100,000자)를 초과했습니다." }, 413);
+      }
 
+      if (!Array.isArray(body.employees) || body.employees.length === 0) {
+        return json({ error: "직원 명단을 전달받지 못했습니다." }, 400);
+      }
+      if (body.employees.length > 50) {
+        return json({ error: "직원 명단이 허용 범위를 초과했습니다." }, 400);
+      }
+      if (body.employees.some(employee => !employee || typeof employee !== "object" || Array.isArray(employee))) {
+        return json({ error: "직원 명단에 올바르지 않은 항목이 포함되어 있습니다." }, 400);
+      }
+      const employees = body.employees;
+      if (body.taskId != null && typeof body.taskId !== "string") {
+        return json({ error: "taskId는 문자열이어야 합니다." }, 400);
+      }
+      if (body.idempotencyKey != null && typeof body.idempotencyKey !== "string") {
+        return json({ error: "idempotencyKey는 문자열이어야 합니다." }, 400);
+      }
       taskId = String(body.taskId || crypto.randomUUID()).trim();
       idempotencyKey = String(body.idempotencyKey || taskId).trim();
       if (!taskId || !idempotencyKey) return json({ error: "taskId 또는 idempotencyKey가 비어 있습니다." }, 400);
+      if (taskId.length > 128 || idempotencyKey.length > 128) {
+        return json({ error: "taskId와 idempotencyKey는 각각 128자를 초과할 수 없습니다." }, 400);
+      }
 
       const normalizedEmployees = employees.map(employee => ({
         id: String(employee.id ?? ""),
@@ -413,7 +583,20 @@ export default {
         position: String(employee.position ?? ""),
         instruction: String(employee.instruction ?? "")
       }));
+      const employeeFieldLimits = { id: 128, name: 200, department: 200, position: 200, instruction: 10000 };
+      for (const employee of normalizedEmployees) {
+        if (!employee.id.trim()) return json({ error: "직원 ID가 비어 있습니다." }, 400);
+        for (const [field, limit] of Object.entries(employeeFieldLimits)) {
+          if (employee[field].length > limit) {
+            return json({ error: "직원 명단의 " + field + " 항목이 허용 길이(" + limit + "자)를 초과했습니다." }, 400);
+          }
+        }
+      }
+      if (!normalizedEmployees.some(e => e.id.trim() === "COO")) {
+        return json({ error: "COO 데이터 없음", employeeCount: normalizedEmployees.length, employeeIds: normalizedEmployees.map(e => e.id) }, 400);
+      }
       const requestFingerprint = JSON.stringify({ task, employees: normalizedEmployees });
+      if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무를 안전하게 접수할 수 없습니다." }, 503);
 
       const now = new Date().toISOString();
       const executionNow = new Date();
@@ -423,8 +606,16 @@ export default {
       let executionDateTime = new Intl.DateTimeFormat("ko-KR", {
         timeZone: "Asia/Seoul", dateStyle: "full", timeStyle: "short"
       }).format(executionNow);
+      // 외부에서 임의로 추가한 필드를 D1 입력 스냅샷에 저장하지 않고,
+      // 실행에 필요한 검증된 필드만 보존한다.
       const inputPayload = {
-        ...body,
+        task, taskId, idempotencyKey,
+        employee: String(body.employee ?? "").slice(0, 200),
+        employeeId: String(body.employeeId ?? "").slice(0, 128),
+        department: String(body.department ?? "").slice(0, 200),
+        position: String(body.position ?? "").slice(0, 200),
+        instruction: String(body.instruction ?? "").slice(0, 10000),
+        employees: normalizedEmployees,
         _swExecutionContext: { executionDate, executionDateTime },
         _swRequestFingerprint: requestFingerprint
       };
@@ -435,7 +626,7 @@ export default {
       ).bind(taskId, idempotencyKey, task, JSON.stringify(inputPayload), now, now).run();
 
       const savedTask = await env.DB.prepare(
-        `SELECT task_id, task, status, current_stage, input_json, partial_result_json, attempt_count, control_request, lock_token, lease_expires_at FROM tasks WHERE idempotency_key = ?`
+        `SELECT task_id, task, status, current_stage, input_json, partial_result_json, attempt_count, control_request, lock_token, lease_expires_at, checkpoint_stage, checkpoint_json, execution_version FROM tasks WHERE idempotency_key = ?`
       ).bind(idempotencyKey).first();
 
       if (!savedTask) throw new Error("D1 업무 접수 기록을 확인할 수 없습니다.");
@@ -484,14 +675,6 @@ export default {
       }
 
       if (insertResult.meta?.changes === 0) {
-        if (String(savedTask.control_request || "NONE").toUpperCase() === "CANCEL" &&
-            !(savedTask.status === "PROCESSING" && savedTask.lease_expires_at && savedTask.lease_expires_at > now)) {
-          await env.DB.prepare(
-            `UPDATE tasks SET status = 'CANCELLED', error_message = '사용자 취소 요청', updated_at = ?, completed_at = ? WHERE task_id = ?`
-          ).bind(now, now, taskId).run();
-          await writeTaskEvent("TASK_CANCELLED", "업무 취소", { source: "control_request" });
-          return json({ taskId, status: "CANCELLED", message: "취소 요청이 반영되었습니다." }, 200);
-        }
         if (savedTask.status === "COMPLETED" || savedTask.status === "PARTIAL_COMPLETED") {
           let prior = null;
           try { prior = JSON.parse(savedTask.partial_result_json || "null"); } catch (_) {}
@@ -500,46 +683,83 @@ export default {
         if (savedTask.status === "CANCELLED") {
           return json({ error: "취소된 업무는 재개할 수 없습니다.", taskId, status: savedTask.status }, 409);
         }
-        if (savedTask.status === "RECEIVED") {
-          return json({ error: "동일한 업무가 이미 접수되어 처리 대기 중입니다.", taskId, status: savedTask.status }, 409);
+        if (String(savedTask.control_request || "NONE").toUpperCase() === "CANCEL") {
+          const cancelled = await env.DB.prepare(
+            `UPDATE tasks SET status = 'CANCELLED', lock_token = NULL, lease_expires_at = NULL,
+             error_message = '사용자 취소 요청', updated_at = ?, completed_at = ?
+             WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
+          ).bind(now, now, taskId, now).run();
+          if ((cancelled.meta?.changes ?? 0) === 1) {
+            await writeTaskEvent("TASK_CANCELLED", "업무 취소", { source: "control_request" });
+            return json({ taskId, status: "CANCELLED", message: "취소 요청이 반영되었습니다." }, 200);
+          }
+          return json({ error: "현재 실행이 유효한 잠금을 보유하고 있어 취소 대기 중입니다.", taskId, status: savedTask.status }, 409);
         }
-        if (savedTask.status === "PROCESSING" && savedTask.lease_expires_at && savedTask.lease_expires_at > now) {
+        // RECEIVED는 최초 접수 직후 실행 프로세스가 끊긴 경우 남을 수 있다.
+        // 실행 상태·시도 횟수·잠금 토큰은 아래 단일 조건부 UPDATE에서 한 번에 확정한다.
+        if (savedTask.status === "PROCESSING" && savedTask.lock_token &&
+            savedTask.lease_expires_at && savedTask.lease_expires_at > now) {
           return json({ error: "동일한 업무가 이미 처리 중이야.", taskId, status: savedTask.status, currentStage: savedTask.current_stage }, 409);
         }
-        await env.DB.prepare(
-          `UPDATE tasks SET status = 'PROCESSING', control_request = CASE WHEN status IN ('PAUSED', 'WAITING_FOR_API_QUOTA') AND control_request = 'PAUSE' THEN 'NONE' ELSE control_request END,
-           error_message = NULL, attempt_count = attempt_count + 1, updated_at = ?, started_at = COALESCE(started_at, ?) WHERE task_id = ?`
-        ).bind(now, now, taskId).run();
-      } else {
-        await env.DB.prepare(
-          `UPDATE tasks SET status = 'PROCESSING', attempt_count = attempt_count + 1, updated_at = ?, started_at = ? WHERE task_id = ?`
-        ).bind(now, now, taskId).run();
       }
       dbReady = true;
       lockToken = crypto.randomUUID();
       const leaseNow = new Date().toISOString();
-      const leaseUntil = new Date(Date.now() + 180000).toISOString();
+      const leaseUntil = new Date(Date.now() + TASK_LOCK_LEASE_MS).toISOString();
+      // 상태 전환과 잠금 획득을 하나의 원자적 UPDATE로 처리한다.
+      // 동시 재개 요청 중 한 건만 attempt_count를 올리고 실행 소유권을 획득한다.
       const lockResult = await env.DB.prepare(
-        `UPDATE tasks SET lock_token = ?, lease_expires_at = ?, execution_version = 'v51.26', updated_at = ?
+        `UPDATE tasks SET status = 'PROCESSING',
+         control_request = CASE WHEN status IN ('PAUSED', 'WAITING_FOR_API_QUOTA') AND control_request = 'PAUSE' THEN 'NONE' ELSE control_request END,
+         error_message = NULL, attempt_count = attempt_count + 1, started_at = COALESCE(started_at, ?),
+         lock_token = ?, lease_expires_at = ?, execution_version = 'v51.26', updated_at = ?
          WHERE task_id = ? AND (lock_token IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`
-      ).bind(lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
+      ).bind(now, lockToken, leaseUntil, leaseNow, taskId, leaseNow).run();
       if ((lockResult.meta?.changes ?? 0) !== 1) {
         lockToken = null;
         return json({ error: "다른 실행이 업무를 처리 중이거나 실행 잠금이 유효합니다.", taskId, status: "PROCESSING" }, 409);
       }
 
       const savedCheckpoints = await env.DB.prepare(
-        `SELECT stage_key, checkpoint_json FROM task_checkpoints WHERE task_id = ? AND stage_key LIKE 'v51_ai_call_%' ORDER BY created_at, rowid`
+        `SELECT stage_key, checkpoint_json FROM task_checkpoints WHERE task_id = ? AND substr(stage_key, 1, 12) = 'v51_ai_call_' ORDER BY created_at, rowid`
       ).bind(taskId).all();
+      let expectedCheckpointIndex = 0;
       for (const row of (savedCheckpoints.results || [])) {
-        try {
-          const match = String(row.stage_key).match(/^v51_ai_call_(\d+)$/);
-          const saved = JSON.parse(row.checkpoint_json || "{}");
-          if (match && saved.version === 2 && Number.isInteger(saved.index) &&
-              typeof saved.signature === "string" && typeof saved.value === "string") {
-            cachedAiCalls.set(Number(match[1]), { signature: saved.signature, value: saved.value });
-          }
-        } catch (_) {}
+        const match = String(row.stage_key || "").match(/^v51_ai_call_(\d+)$/);
+        let saved;
+        try { saved = JSON.parse(row.checkpoint_json || "{}"); }
+        catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
+        if (!match || saved.version !== 2 || !Number.isInteger(saved.index) ||
+            Number(match[1]) !== saved.index || saved.index !== expectedCheckpointIndex ||
+            typeof saved.signature !== "string" || typeof saved.value !== "string") {
+          throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+        }
+        cachedAiCalls.set(saved.index, { signature: saved.signature, value: saved.value });
+        expectedCheckpointIndex++;
+      }
+
+      // task 레코드의 요약 포인터와 개별 체크포인트가 다르면 누락·부분 복구된 상태다.
+      // 저장된 일부 결과를 정상 결과로 오인하지 않도록 새 AI 호출 전에 재개를 차단한다.
+      let taskCheckpoint = null;
+      try {
+        taskCheckpoint = savedTask.checkpoint_json
+          ? JSON.parse(savedTask.checkpoint_json)
+          : null;
+      } catch (_) {
+        throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+      }
+      if (cachedAiCalls.size === 0) {
+        if (taskCheckpoint !== null || savedTask.checkpoint_stage) {
+          throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+        }
+      } else {
+        const lastIndex = cachedAiCalls.size - 1;
+        if (!taskCheckpoint || taskCheckpoint.version !== 2 ||
+            taskCheckpoint.lastAiCallIndex !== lastIndex ||
+            taskCheckpoint.resumeStrategy !== "signature_checked_replay" ||
+            !savedTask.checkpoint_stage) {
+          throw new Error("SW_AI_CHECKPOINT_CORRUPT");
+        }
       }
 
       await writeTaskEvent("TASK_LOCK_ACQUIRED", "업무 실행 잠금", { executionVersion: "v51.26", leaseExpiresAt: leaseUntil });
@@ -548,7 +768,14 @@ export default {
         cachedAiCallCount: cachedAiCalls.size, executionVersion: "v51.26"
       });
 
-      if (!env.GEMINI_API_KEY) throw new Error("Gemini API 키가 설정되지 않았습니다. Cloudflare Secret GEMINI_API_KEY를 확인하세요.");
+      // 기존 OpenRouter Secret을 우선 사용하고, 없으면 Gemini Secret으로 실행한다.
+      // 두 Secret 중 하나만 있어도 기존 배포 설정을 바꾸지 않고 업무 엔진을 사용할 수 있다.
+      const aiProvider = env.OPENROUTER_API_KEY ? "openrouter" : env.GEMINI_API_KEY ? "gemini" : "";
+      const aiProviderLabel = aiProvider === "openrouter" ? "OpenRouter" : "Google Gemini";
+      const aiModel = aiProvider === "openrouter"
+        ? "nvidia/nemotron-3-ultra-550b-a55b:free"
+        : "gemini-3.8-flash";
+      if (!aiProvider) throw new Error("AI API 키가 설정되지 않았습니다. Cloudflare Secret OPENROUTER_API_KEY 또는 GEMINI_API_KEY를 확인하세요.");
 
       await setCurrentStage("요청 처리");
 
@@ -592,35 +819,51 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
   let response;
   let rawBody = "";
 
-  // Gemini API 무료 등급을 사용한다. 429는 일일/분당 한도일 수 있으므로 즉시 상위 대기 처리한다.
+  // OpenRouter를 우선 사용한다. OpenRouter Secret이 없을 때 Gemini로 대체한다.
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
-      response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY
-        },
-        signal: AbortSignal.timeout(60000),
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
+      if (aiProvider === "openrouter") {
+        response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + env.OPENROUTER_API_KEY
           },
-          contents: [{
-            role: "user",
-            parts: [{ text: userPrompt }]
-          }],
-          generationConfig: {
+          signal: AbortSignal.timeout(60000),
+          body: JSON.stringify({
+            model: aiModel,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt }
+            ],
             temperature: 0.3,
-            maxOutputTokens: jsonMode ? 2048 : currentStage === "본부장 실행계획 수립" ? 3072 : 8192,
-            ...(jsonMode ? { responseMimeType: "application/json" } : {})
-          }
-        })
-      });
+            max_tokens: jsonMode ? 2048 : currentStage === "본부장 실행계획 수립" ? 3072 : 8192,
+            ...(jsonMode ? { response_format: { type: "json_object" } } : {})
+          })
+        });
+      } else {
+        response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + aiModel + ":generateContent", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": env.GEMINI_API_KEY
+          },
+          signal: AbortSignal.timeout(60000),
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: jsonMode ? 2048 : currentStage === "본부장 실행계획 수립" ? 3072 : 8192,
+              ...(jsonMode ? { responseMimeType: "application/json" } : {})
+            }
+          })
+        });
+      }
     } catch (error) {
       const errorName = String(error?.name || "");
       const errorMessage = String(error?.message || error || "");
-      const isTimeout = /timeout|timed\\s*out|aborted due to timeout|operation was aborted/i.test(
+      const isTimeout = /timeout|timed\s*out|aborted due to timeout|operation was aborted/i.test(
         errorName + " " + errorMessage
       );
       if (isTimeout) {
@@ -628,26 +871,23 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
           await new Promise(resolve => setTimeout(resolve, 1500));
           continue;
         }
-        throw new Error("GEMINI_API_TIMEOUT: Gemini API 응답 시간 초과(회당 60초, 1회 재시도 포함). " + errorMessage);
+        throw new Error("AI_PROVIDER_TIMEOUT: " + aiProviderLabel + " 응답 시간 초과(회당 60초, 1회 재시도 포함). " + errorMessage);
       }
       if (attempt === 2) {
-        throw new Error("Gemini API 네트워크 호출 실패: " + errorMessage);
+        throw new Error(aiProviderLabel + " 네트워크 호출 실패: " + errorMessage);
       }
       await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
       continue;
     }
 
     if (response.ok) break;
-
-    // 429는 무료 사용량 제한일 수 있어 불필요한 즉시 재호출을 하지 않는다.
     if (response.status === 429) break;
     const retryable = [500, 502, 503, 504, 524].includes(response.status);
     if (!retryable || attempt === 2) break;
     await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
   }
 
-  if (!response) throw new Error("Gemini API 응답을 받지 못했습니다.");
-
+  if (!response) throw new Error(aiProviderLabel + " API 응답을 받지 못했습니다.");
   rawBody = await response.text();
   if (!response.ok) {
     let errorData = null;
@@ -661,21 +901,37 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
   try {
     result = JSON.parse(rawBody);
   } catch (error) {
-    throw new Error("Gemini API 성공 응답 JSON 해석 실패: " + error.message + " / " + rawBody.slice(0, 300));
+    throw new Error(aiProviderLabel + " 성공 응답 JSON 해석 실패: " + error.message + " / " + rawBody.slice(0, 300));
   }
 
-  const candidate = result.candidates?.[0];
-  const text = (candidate?.content?.parts || [])
-    .map(part => typeof part.text === "string" ? part.text : "")
-    .join("");
+  let text = "";
+  let finishReason = "";
+  if (aiProvider === "openrouter") {
+    const choice = result.choices?.[0];
+    const content = choice?.message?.content;
+    text = typeof content === "string"
+      ? content
+      : Array.isArray(content)
+        ? content.map(part => typeof part === "string" ? part : part.text || "").join("")
+        : "";
+    finishReason = choice?.finish_reason || "";
+  } else {
+    const candidate = result.candidates?.[0];
+    text = (candidate?.content?.parts || [])
+      .map(part => typeof part.text === "string" ? part.text : "")
+      .join("");
+    finishReason = candidate?.finishReason || "";
+  }
 
   if (!text) {
-    const reason = candidate?.finishReason || result.promptFeedback?.blockReason || result.error?.message || "응답 내용 없음";
-    throw new Error("Gemini AI 답변을 받지 못했습니다: " + reason);
+    const reason = aiProvider === "openrouter"
+      ? result.choices?.[0]?.finish_reason || result.error?.message || "응답 내용 없음"
+      : result.candidates?.[0]?.finishReason || result.promptFeedback?.blockReason || result.error?.message || "응답 내용 없음";
+    throw new Error(aiProviderLabel + " AI 답변을 받지 못했습니다: " + reason);
   }
 
-  // 답변이 길이 제한으로 끝난 경우 한 차례 이어서 작성한다.
-  if (!jsonMode && candidate?.finishReason === "MAX_TOKENS" && continuationDepth < 1) {
+  const reachedOutputLimit = aiProvider === "openrouter" ? finishReason === "length" : finishReason === "MAX_TOKENS";
+  if (!jsonMode && reachedOutputLimit && continuationDepth < 1) {
     const continuation = await askAIBare(
       systemPrompt,
       "앞선 답변의 마지막 문장 다음부터 이어서 작성하라. 이미 작성한 내용을 반복하거나 요약하지 말고 문서의 나머지 부분을 완결하라.\n\n" +
@@ -685,7 +941,6 @@ async function askAIBare(systemPrompt, userPrompt, jsonMode = false, continuatio
     );
     return text + "\n\n" + continuation;
   }
-
   return text;
 }
 async function askAI(systemPrompt, userPrompt, jsonMode = false) {
@@ -699,7 +954,12 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
   const signature = Array.from(new Uint8Array(signatureBytes), byte => byte.toString(16).padStart(2, "0")).join("");
 
   const cached = cachedAiCalls.get(callIndex);
-  if (cached && cached.signature === signature) {
+  if (cached) {
+    // 동일 호출 순번의 체크포인트가 있지만 입력 서명이 다르면 실행 경로가 달라진 것이다.
+    // 새 AI 호출을 보내기 전에 중단해 중복 과금·잘못된 결과 덮어쓰기를 방지한다.
+    if (cached.signature !== signature) {
+      throw new Error("SW_AI_CHECKPOINT_CONFLICT");
+    }
     return cached.value;
   }
 
@@ -720,21 +980,23 @@ async function askAI(systemPrompt, userPrompt, jsonMode = false) {
         callIndex,
         elapsedMs: Date.now() - aiCallStartedAt,
         outputLength: String(value || "").length,
-        model: "gemini-3.8-flash"
+        model: aiModel
       });
     } catch (eventError) { console.error("AI 호출 완료 이력 기록 실패:", eventError.message); }
     return value;
   } catch (error) {
-    try {
-      await writeTaskEvent("AI_CALL_FAILED", currentStage, {
-        callIndex,
-        elapsedMs: Date.now() - aiCallStartedAt,
-        error: String(error?.message || error),
-        timeout: /GEMINI_API_TIMEOUT/i.test(String(error?.message || error))
-      });
-    } catch (eventError) { console.error("AI 호출 실패 이력 기록 실패:", eventError.message); }
+    if (error.message !== "SW_AI_YIELD") {
+      try {
+        await writeTaskEvent("AI_CALL_FAILED", currentStage, {
+          callIndex,
+          elapsedMs: Date.now() - aiCallStartedAt,
+          error: String(error?.message || error),
+          timeout: /AI_PROVIDER_TIMEOUT/i.test(String(error?.message || error))
+        });
+      } catch (eventError) { console.error("AI 호출 실패 이력 기록 실패:", eventError.message); }
+    }
     if (error.message === "SW_AI_YIELD") {
-      // 정상적인 분할 실행 신호이므로 AI 호출 실패로 기록하지 않는다.
+      // 정상적인 분할 실행 신호는 실패 이력으로 남기지 않는다.
       throw error;
     }
     if (/(?:HTTP\s+)?(?:402|429)\b|RESOURCE_EXHAUSTED|insufficient[_\s-]?quota|quota|rate.?limit|payment required|credit balance|no credits/i.test(error.message || "")) {
@@ -1651,10 +1913,10 @@ ${String(specialist.result || "")}`,
       return !normalizedChecks.some(check => {
         const issueMatched = check.issue === expected ||
           (expected.length >= 18 && (check.issue.includes(expected) || expected.includes(check.issue)));
-        // 증거는 설명(detail)이 아니라 별도 evidenceQuote 필드로 검증한다.
+        // 지적사항 문구만 반복한 검수 응답은 증거가 아니다. 본문에 실제 존재하는 인용문까지 확인해야 대조 완료로 인정한다.
         const quote = normalizeIssueText(check.evidenceQuote);
         const evidenceQuotedInBody = quote.length >= 12 && normalizedDeliverable.includes(quote);
-        return issueMatched;
+        return issueMatched && evidenceQuotedInBody;
       });
     });
     for (const missingIssue of missingFirstReviewIssues) {
@@ -2346,7 +2608,7 @@ let finalReport;
 const finalReportFallback = true;
 
 // 본부장 최종 보고는 이미 확정된 업무 데이터로 코드가 작성한다.
-// 별도의 Gemini API 호출을 제거해 마지막 보고 단계에서 전체 요청이 524로 실패하는 일을 방지한다.
+// 별도의 AI API 호출을 제거해 마지막 보고 단계에서 전체 요청이 524로 실패하는 일을 방지한다.
 const reportLines = [
   "# SW AI OFFICE 본부장 업무 처리 보고",
   "",
@@ -2408,7 +2670,7 @@ const reportLines = [
   "",
   "- 본 보고서는 코드에 기록된 결과물과 검수 응답을 바탕으로 자동 구성했습니다.",
   "- Worker에는 공식 법령 원문을 조회하는 기능이 연결되어 있지 않습니다. 법률·조문·현행성은 공식 원문 대조 전까지 검증 완료로 보지 않습니다.",
-  "- 팀장 2차 검수는 동일 Gemini API 모델을 별도 검수 단계와 지시문으로 호출한 절차이며, 사람 또는 별도 AI 모델에 의한 외부 독립감사를 의미하지 않습니다.",
+  "- 팀장 2차 검수는 동일 AI API 모델을 별도 검수 단계와 지시문으로 호출한 절차이며, 사람 또는 별도 AI 모델에 의한 외부 독립감사를 의미하지 않습니다.",
   "- 법률·수치·외부 사실의 독립적인 검증이 이루어지지 않은 사항은 별도 확인이 필요합니다.",
   "- 조건부 승인 또는 부분 완료 상태의 결과물은 대표이사의 최종 승인 및 미해결 사항 해소 전까지 최종 배포본으로 취급하지 않습니다.",
   "- 본 보고서는 본부장 AI의 별도 생성문이 아닌, 확정된 처리 데이터에 따른 자동 보고서입니다."
@@ -2448,7 +2710,7 @@ const successPayload = {
       rule: "모든 전문 직원 결과물이 completed 상태이고 팀장 2차 검수 judgment가 승인인 경우에만 최종 완료로 판정합니다.",
       integrityGate: "1차 지적사항 고유 ID, 2차 판정, 실제 본문 인용 증거, 미해결 목록의 상호 모순을 코드로 대조합니다. 반영/미해결 충돌 또는 본문 상태 모순은 반려 처리합니다.",
       legalSourceVerification: "공식 법령 원문 조회 기능이 연결되지 않아 법령 원문 대조는 별도 확인이 필요합니다.",
-      reviewIndependence: "동일 Gemini API 모델을 별도 검수 단계로 호출한 절차이며 사람 또는 별도 AI 모델의 독립감사는 아닙니다."
+      reviewIndependence: "동일 AI API 모델을 별도 검수 단계로 호출한 절차이며 사람 또는 별도 AI 모델의 독립감사는 아닙니다."
     },
     completenessChecks: specialistResults.map(item => ({
       id: item.id,
@@ -2493,10 +2755,10 @@ const completionStatements = [
   env.DB.prepare(
     `UPDATE tasks SET status = ?, current_stage = ?, partial_result_json = COALESCE(?, partial_result_json),
      error_message = ?, updated_at = ?, started_at = COALESCE(started_at, ?), completed_at = ?
-     WHERE task_id = ? AND lock_token = ? AND control_request NOT IN ('PAUSE', 'CANCEL')`
+     WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND control_request NOT IN ('PAUSE', 'CANCEL')`
   ).bind(
     finalTaskStatus, "본부장 최종 검토 및 보고", JSON.stringify(successPayload),
-    null, completionAt, completionAt, completionAt, taskId, lockToken
+    null, completionAt, completionAt, completionAt, taskId, lockToken, completionAt
   )
 ];
 if (lastRecordedStage) {
@@ -2505,12 +2767,12 @@ if (lastRecordedStage) {
       `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
        SELECT ?, ?, 'WORKFLOW_STAGE_COMPLETED', ?, ?, ?, ?
        WHERE EXISTS (
-         SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
+         SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND completed_at = ?
        )`
     ).bind(
       crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.26", lastRecordedStage,
       JSON.stringify({ outcome: "최종 보고서와 업무 결과 저장 완료" }),
-      completionAt, taskId, lockToken, finalTaskStatus, completionAt
+      completionAt, taskId, lockToken, completionAt, finalTaskStatus, completionAt
     )
   );
 }
@@ -2519,13 +2781,13 @@ completionStatements.push(
     `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
      SELECT ?, ?, 'TASK_COMPLETED', ?, ?, ?, ?
      WHERE EXISTS (
-       SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND completed_at = ?
+       SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND completed_at = ?
      )`
   ).bind(
     crypto.randomUUID(), taskId, "SW AI OFFICE Worker v51.26",
     "본부장 최종 검토 및 보고",
     JSON.stringify({ status: successPayload.workflow.status, auditVersion: "v51.26" }),
-    completionAt, taskId, lockToken, finalTaskStatus, completionAt
+    completionAt, taskId, lockToken, completionAt, finalTaskStatus, completionAt
   )
 );
 const completionResults = await env.DB.batch(completionStatements);
@@ -2560,7 +2822,7 @@ return json(successPayload);
         `SELECT COUNT(*) AS total FROM task_events
          WHERE task_id = ? AND event_type = 'AI_TIMEOUT_RESUME' AND stage = ?`
       ).bind(taskId, currentStage).first();
-      // Gemini 응답 시간 초과는 일시 장애로 보고 동일 단계 체크포인트 재개를 최대 5회 허용한다.
+      // AI 제공자 응답 시간 초과는 일시 장애로 보고 동일 단계 체크포인트 재개를 최대 5회 허용한다.
       priorTimeoutCount = Number(priorTimeout?.total || 0);
       timeoutResumable = priorTimeoutCount < 5;
     } catch (timeoutCheckError) {
@@ -2605,8 +2867,8 @@ return json(successPayload);
       const failureStatements = [
         env.DB.prepare(
           `UPDATE tasks SET status = ?, current_stage = ?, error_message = ?, updated_at = ?, completed_at = NULL
-           WHERE task_id = ? AND lock_token = ?`
-        ).bind(nextStatus, currentStage, resumable ? null : error.message, failureAt, taskId, lockToken)
+           WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ?`
+        ).bind(nextStatus, currentStage, resumable ? null : error.message, failureAt, taskId, lockToken, failureAt)
       ];
       const appendFailureEvent = (eventType, detail) => {
         failureStatements.push(
@@ -2614,12 +2876,12 @@ return json(successPayload);
             `INSERT INTO task_events (event_id, task_id, event_type, actor, stage, detail_json, created_at)
              SELECT ?, ?, ?, ?, ?, ?, ?
              WHERE EXISTS (
-               SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND status = ? AND updated_at = ?
+               SELECT 1 FROM tasks WHERE task_id = ? AND lock_token = ? AND lease_expires_at > ? AND status = ? AND updated_at = ?
              )`
           ).bind(
             crypto.randomUUID(), taskId, eventType, "SW AI OFFICE Worker v51.26",
             currentStage, JSON.stringify(detail), failureAt,
-            taskId, lockToken, nextStatus, failureAt
+            taskId, lockToken, failureAt, nextStatus, failureAt
           )
         );
       };
@@ -2638,8 +2900,8 @@ return json(successPayload);
           status: "PROCESSING",
           retryCount: priorModelUnavailableCount + 1,
           maxRetriesForStage: 5,
-          provider: "Google Gemini",
-          model: "gemini-3.8-flash",
+          provider: aiProviderLabel,
+          model: aiModel,
           cachedAiCallCount: cachedAiCalls.size,
           nextAiCallIndex: aiCallCursor,
           error: error.message
@@ -2665,7 +2927,7 @@ return json(successPayload);
       try { await releaseTaskLock(); } catch (lockError) { console.error("실행 잠금 해제 실패:", lockError.message); }
     } else if (lockToken) {
       // 실패 상태·감사 이력 저장이 확인되지 않으면 잠금을 해제하지 않는다.
-      // 기존 3분 lease가 만료된 뒤 동일 업무 요청이 안전하게 재개를 시도한다.
+      // 8분 lease가 만료된 뒤 동일 업무 요청이 안전하게 재개를 시도한다.
       console.error("실패 상태 및 감사 이력 미확정: 실행 잠금을 lease 만료까지 유지합니다.");
     }
   }
@@ -2687,9 +2949,9 @@ return json(successPayload);
       : timeoutResumable
         ? "AI 응답 시간 초과가 발생했습니다. 저장된 체크포인트를 유지했으며 동일 단계 재개 횟수 한도 내에서 다시 처리할 수 있습니다."
       : modelUnavailableResumable
-        ? "Gemini 서버가 일시적으로 과부하 상태입니다. 업무와 체크포인트를 보존했으며 잠시 후 같은 업무를 이어서 처리할 수 있습니다."
+        ? "AI 제공자 서버가 일시적으로 과부하 상태입니다. 업무와 체크포인트를 보존했으며 잠시 후 같은 업무를 이어서 처리할 수 있습니다."
       : nextStatus === "WAITING_FOR_API_QUOTA"
-      ? "Gemini API 할당량 또는 호출 제한으로 대기 중입니다. 같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다."
+      ? "AI API 할당량 또는 호출 제한으로 대기 중입니다. 같은 taskId와 idempotencyKey로 다시 요청하면 저장된 AI 결과를 재사용해 이어서 처리합니다."
       : nextStatus === "PAUSED"
         ? "업무가 안전한 AI 호출 경계에서 일시정지되었습니다."
         : nextStatus === "CANCELLED"
