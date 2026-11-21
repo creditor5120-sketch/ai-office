@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SW AI OFFICE · 업무처리 연결</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;background:#171717}
+#office{position:absolute;inset:0;width:100%;height:100%;border:0;background:#efe7d4}
+#bridgeToggle{position:fixed;z-index:1001;right:14px;top:12px;border:1px solid #d4b78b;background:#5b3a22;color:#fff;padding:9px 13px;border-radius:7px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px #0003}
+#bridgePanel{position:fixed;z-index:1002;right:14px;top:58px;width:min(390px,calc(100vw - 28px));max-height:calc(100vh - 74px);overflow:auto;padding:16px;background:#fbf4e3;color:#3a2c1c;border:2px solid #cdb98f;box-shadow:0 8px 28px #0004;display:none}
+#bridgePanel.open{display:block}#bridgePanel h2{font-size:16px;margin:0 0 8px}#bridgePanel p{font-size:12px;line-height:1.5;margin:6px 0 12px}#bridgePanel label{display:block;font-size:12px;font-weight:700;margin:9px 0 4px}#accessToken{width:100%;padding:10px;border:1px solid #bda77f;background:#fffdf7;color:#332719;font:inherit}#bridgeActions{display:flex;align-items:center;gap:8px;margin-top:12px}#bridgeActions button{padding:8px 11px;border:1px solid #8a5b3a;background:#8a5b3a;color:#fff;font-weight:700;cursor:pointer}#bridgeStatus{font-size:12px;line-height:1.4;margin-top:10px;color:#5b503e}#bridgeStatus[data-state=ok]{color:#24723a}#bridgeStatus[data-state=error]{color:#a33322}
+</style>
+</head>
+<body>
+<iframe id="office" title="SW AI OFFICE" src="SW_AI_Office_v3_15.html"></iframe>
+<button id="bridgeToggle" type="button">업무 엔진 연결</button>
+<section id="bridgePanel" aria-label="업무 엔진 연결 설정">
+  <h2>SW AI OFFICE 업무 엔진</h2>
+  <p>Cloudflare Worker 인증 토큰을 입력하면 알렉스에게 전달한 업무 지시가 전문 직원 배정·수행·검수·대표 보고 흐름으로 처리됩니다. 토큰은 현재 브라우저 탭의 세션에만 보관됩니다.</p>
+  <label for="accessToken">서버 접속 인증값</label>
+  <input id="accessToken" type="password" autocomplete="off" placeholder="OFFICE_ACCESS_TOKEN">
+  <label for="representativeToken">대표 승인 전용 인증값</label>
+  <input id="representativeToken" type="password" autocomplete="off" placeholder="REPRESENTATIVE_ACCESS_TOKEN">
+  <label for="decisionReason">반려 사유</label>
+  <textarea id="decisionReason" rows="2" style="width:100%;padding:9px;border:1px solid #bda77f;background:#fffdf7;color:#332719;font:inherit;resize:vertical" placeholder="반려 시 보완이 필요한 사항을 입력"></textarea>
+  <div id="bridgeActions"><button id="saveToken" type="button">연결</button><button id="clearToken" type="button">연결 해제</button><button id="refreshHistory" type="button">업무 이력 새로고침</button></div>
+  <div id="bridgeStatus" role="status">사무실 파일을 불러오는 중입니다.</div>
+  <h2 style="margin-top:16px">최근 업무 이력</h2>
+  <div id="taskHistory" style="display:grid;gap:5px"></div>
+  <pre id="taskDetail" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto;background:#f4ead5;padding:9px;font:12px/1.5 system-ui"></pre>
+  <div id="decisionActions" style="display:flex;gap:7px">
+    <button id="approveTask" type="button" disabled>대표 승인</button>
+    <button id="rejectTask" type="button" disabled>대표 반려</button>
+  </div>
+  <p style="font-size:11px;color:#74664f">승인·반려는 D1에 변경 불가능한 의사결정 이력으로 기록됩니다. 실제 외부 시스템 실행은 하지 않습니다.</p>
+</section>
+<script>
+(()=>{
+ const frame=document.getElementById('office'),panel=document.getElementById('bridgePanel'),status=document.getElementById('bridgeStatus'),tokenInput=document.getElementById('accessToken'),repInput=document.getElementById('representativeToken');
+ const ENDPOINT='https://ai-office-api.creditor5120.workers.dev/';
+ const setStatus=(message,state='')=>{status.textContent=message;status.dataset.state=state};
+ const api=async(body,extra={})=>{
+  const token=sessionStorage.getItem('swOfficeAccessToken');
+  if(!token)throw new Error('일반 서버 접속 인증값을 먼저 입력해 주세요.');
+  const response=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...extra},body:JSON.stringify(body)});
+  const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){data={error:raw||'서버 응답을 해석할 수 없습니다.'}};
+  if(!response.ok)throw new Error(data.error||'서버 요청 실패 · HTTP '+response.status);
+  return data;
+ };
+ document.getElementById('bridgeToggle').addEventListener('click',()=>panel.classList.toggle('open'));
+ tokenInput.value=sessionStorage.getItem('swOfficeAccessToken')||'';
+ repInput.value=sessionStorage.getItem('swOfficeRepresentativeToken')||'';
+ document.getElementById('saveToken').addEventListener('click',()=>{
+  const token=tokenInput.value.trim(),rep=repInput.value.trim();
+  if(!token){setStatus('일반 서버 인증값을 입력해 주세요.','error');return}
+  sessionStorage.setItem('swOfficeAccessToken',token);
+  if(rep)sessionStorage.setItem('swOfficeRepresentativeToken',rep);else sessionStorage.removeItem('swOfficeRepresentativeToken');
+  setStatus('서버 연결 인증값을 이 탭의 세션에 저장했습니다.','ok');renderHistory();
+ });
+ document.getElementById('clearToken').addEventListener('click',()=>{
+  sessionStorage.removeItem('swOfficeAccessToken');sessionStorage.removeItem('swOfficeRepresentativeToken');
+  tokenInput.value='';repInput.value='';setStatus('연결 인증값을 삭제했습니다.');renderHistory();
+ });
+ function readHistory(){try{const value=JSON.parse(localStorage.getItem('swV315WorkflowTaskHistory')||'[]');return Array.isArray(value)?value:[]}catch(_){return []}}
+ function renderHistory(){
+  const host=document.getElementById('taskHistory');host.replaceChildren();
+  const rows=readHistory();
+  if(!rows.length){host.textContent='저장된 업무 이력이 없습니다.';return}
+  rows.slice(0,20).forEach(record=>{
+   const button=document.createElement('button');button.type='button';button.style.cssText='text-align:left;padding:7px;border:1px solid #cdb98f;background:#fff9e9;color:#3a2c1c;cursor:pointer;font:12px/1.4 system-ui';
+   button.textContent=(record.task||'업무 내용 없음').slice(0,62)+' · '+new Date(record.savedAt||Date.now()).toLocaleString('ko-KR');
+   button.addEventListener('click',()=>selectHistory(record));host.appendChild(button);
+  });
+ }
+ let selectedRecord=null;
+ async function selectHistory(record){
+  selectedRecord=record;const detail=document.getElementById('taskDetail');
+  document.getElementById('approveTask').disabled=true;document.getElementById('rejectTask').disabled=true;
+  detail.textContent='서버 원본 업무 이력과 대표 결정 기록을 조회하고 있습니다…';
+  try{
+   const [audit,decision]=await Promise.all([
+    api({action:'get_task_history',taskId:record.taskId}),
+    api({action:'get_representative_decision',taskId:record.taskId})
+   ]);
+   const events=(audit.events||[]).map(event=>[
+    event.createdAt||'시각 미확인',event.eventType||'이력',event.stage||'',event.actor||'',
+    event.detail?.outcome||event.detail?.summary||event.detail?.decisionLabel||''
+   ].filter(Boolean).join(' · '));
+   const release=record.workflow?.reviewGate?.finalReleaseAllowed===true;
+   detail.textContent='업무 ID: '+record.taskId+'\n업무: '+(record.task||'')+'\n서버 상태: '+(audit.task?.status||'')+' / '+(audit.task?.currentStage||'')+
+    '\n최종 검수 통과: '+(release?'예':'아니오')+
+    '\n대표 결정: '+(decision.decisionLabel||'미결정')+
+    '\n\n[서버 감사 이력]\n'+(events.join('\n')||'기록 없음');
+   document.getElementById('approveTask').disabled=!!decision.decision||!release;
+   document.getElementById('rejectTask').disabled=!!decision.decision;
+   if(audit.truncated)detail.textContent+='\n\n최근 300건만 표시됩니다.';
+  }catch(error){detail.textContent='서버 이력 조회 실패: '+error.message;setStatus(error.message,'error')}
+ }
+ async function submitDecision(decision){
+  if(!selectedRecord){setStatus('먼저 업무 이력을 선택해 주세요.','error');return}
+  const rep=sessionStorage.getItem('swOfficeRepresentativeToken');
+  if(!rep){setStatus('대표 승인 전용 인증값을 입력해 주세요.','error');return}
+  const reason=document.getElementById('decisionReason').value.trim();
+  if(decision==='REJECT'&&!reason){setStatus('반려 사유를 입력해 주세요.','error');return}
+  const label=decision==='APPROVE'?'대표 승인':'대표 반려';
+  if(!window.confirm(selectedRecord.task+' 업무를 '+label+'으로 확정할까요? 기록 후 변경할 수 없습니다.'))return;
+  try{
+   const data=await api({action:'representative_decision',taskId:selectedRecord.taskId,decision,reason},{'X-Representative-Authorization':'Bearer '+rep});
+   setStatus(data.message||label+' 기록 완료','ok');await selectHistory(selectedRecord);
+  }catch(error){setStatus(error.message,'error')}
+ }
+ document.getElementById('approveTask').addEventListener('click',()=>submitDecision('APPROVE'));
+ document.getElementById('rejectTask').addEventListener('click',()=>submitDecision('REJECT'));
+ document.getElementById('refreshHistory').addEventListener('click',renderHistory);
+ window.SWWorkflowBridge={
+  async execute(payload,onProgress){
+   const token=sessionStorage.getItem('swOfficeAccessToken');
+   if(!token)throw new Error('상단의 업무 엔진 연결 메뉴에서 서버 접속 인증값을 먼저 입력해 주세요.');
+   const deadline=Date.now()+30*60*1000;let attempt=0,lastData=null;
+   while(Date.now()<deadline&&attempt<1200){
+    attempt++;
+    const response=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+    const raw=await response.text();let data;try{data=JSON.parse(raw)}catch(_){data={error:raw||'서버 응답을 해석할 수 없습니다.'}}lastData=data;
+    if(response.ok&&data.reply&&data.workflow){setStatus('업무 처리 완료 · '+payload.taskId,'ok');renderHistory();return data;}
+    if(response.status===202&&data.status==='PROCESSING'){
+     if(onProgress)onProgress(data);setStatus('처리 중 · '+(data.currentStage||'업무 수행 및 검수'));
+     await new Promise(resolve=>setTimeout(resolve,Math.min(10000,Math.max(1200,Number(data.resumeDelayMs)||1200))));continue;
+    }
+    if(response.status===409&&data.status==='PROCESSING'){
+     if(onProgress)onProgress(data);setStatus('동일 업무의 기존 실행을 확인하는 중');await new Promise(resolve=>setTimeout(resolve,2500));continue;
+    }
+    if(data.status==='WAITING_FOR_API_QUOTA'){
+     if(onProgress)onProgress(data);setStatus('AI 사용 한도 회복 대기 중 · 업무 기록 보존');
+     await new Promise(resolve=>setTimeout(resolve,Math.min(300000,Math.max(30000,Number(data.quotaRetryAfterMs)||300000))));continue;
+    }
+    throw new Error(data.error||'업무 처리에 실패했습니다. HTTP '+response.status);
+   }
+   throw new Error((lastData&&lastData.error)||('업무 처리 대기 시간이 초과되었습니다. 업무 ID: '+payload.taskId));
+  }
+ };
+ function injectBridge(){
+  try{
+   const doc=frame.contentDocument;
+   if(!doc||!doc.head)throw new Error('사무실 파일에 접근할 수 없습니다. 같은 웹사이트 주소에서 열어야 합니다.');
+   if(doc.getElementById('sw-workflow-bridge-v315'))return;
+   const script=doc.createElement('script');script.id='sw-workflow-bridge-v315';script.src='workflow-bridge-v315.js';
+   script.onload=()=>setStatus('사무실 연결 완료. 알렉스를 선택해 업무를 지시하세요.','ok');
+   script.onerror=()=>setStatus('업무 연동 파일을 불러오지 못했습니다. workflow-bridge-v315.js의 배포 경로를 확인해 주세요.','error');
+   doc.head.appendChild(script);
+  }catch(error){setStatus(error.message,'error')}
+ }
+ frame.addEventListener('load',injectBridge);if(frame.contentDocument&&frame.contentDocument.readyState==='complete')injectBridge();
+ renderHistory();
+})();
+</script>
+</body>
+</html>

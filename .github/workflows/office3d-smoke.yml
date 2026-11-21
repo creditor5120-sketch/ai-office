@@ -1,0 +1,46 @@
+name: SW AI OFFICE 3D browser smoke test
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'office3d.html'
+      - 'employees.js'
+      - 'tests/office3d-smoke.mjs'
+      - '.github/workflows/office3d-smoke.yml'
+      - 'tests/worker-auth-audit.test.mjs'
+      - 'SW_AI_Office_v3_15.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'tests/v315-workflow-bridge.test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Run 3D office browser checks
+        run: node tests/office3d-smoke.mjs
+      - name: Run Worker auth and approval audit contract tests
+        run: node --test tests/worker-auth-audit.test.mjs
+      - name: Run v3.15 workflow bridge tests
+        run: node --test tests/v315-workflow-bridge.test.mjs
+      - name: Upload 3D office visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sw-ai-office-3d-visual-evidence
+          path: artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 7
