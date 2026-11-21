@@ -81,11 +81,11 @@ class FakeD1 {
 
 const ACCESS = 'test-general-access-secret';
 const REPRESENTATIVE = 'test-representative-secret';
-async function call(body, { access = ACCESS, representative = REPRESENTATIVE, db = new FakeD1() } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+async function call(body, { access = ACCESS, representative = REPRESENTATIVE, db = new FakeD1(), rawBody = null, extraHeaders = {} } = {}) {
+  const headers = { 'Content-Type': 'application/json', ...extraHeaders };
   if (access !== null) headers.Authorization = 'Bearer ' + access;
   if (representative !== null) headers['X-Representative-Authorization'] = 'Bearer ' + representative;
-  const request = new Request('https://worker.test/', { method: 'POST', headers, body: JSON.stringify(body) });
+  const request = new Request('https://worker.test/', { method: 'POST', headers, body: rawBody === null ? JSON.stringify(body) : rawBody });
   const env = { OFFICE_ACCESS_TOKEN: ACCESS, REPRESENTATIVE_ACCESS_TOKEN: REPRESENTATIVE, DB: db };
   const response = await worker.fetch(request, env);
   return { status: response.status, body: await response.json(), db };
@@ -563,6 +563,19 @@ test('requires a verifiable body quotation before treating a review issue as rec
   assert.match(block, /return issueMatched && evidenceQuotedInBody;/);
 });
 
+
+test('rejects oversized request bodies before attempting JSON parsing', async () => {
+  const tooLarge = await call(null, { rawBody: ' '.repeat(1_500_001), db: null });
+  assert.equal(tooLarge.status, 413);
+  assert.match(tooLarge.body.error, /1,500,000바이트/);
+
+  const declaredTooLarge = await call(null, {
+    rawBody: '{}',
+    extraHeaders: { 'Content-Length': '1500001' },
+    db: null
+  });
+  assert.equal(declaredTooLarge.status, 413);
+});
 
 test('rejects malformed and oversized workflow request payloads before touching D1', async () => {
   const validEmployees = [{ id: 'COO', name: '피터', department: '대표이사실', position: '대표이사', instruction: '' }];
