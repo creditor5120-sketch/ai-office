@@ -271,9 +271,38 @@ export default {
     };
 
     try {
+      // 인증된 요청이라도 JSON 파싱 전에 본문 크기를 제한해 메모리 고갈을 방지한다.
+      const MAX_REQUEST_BODY_BYTES = 1_500_000;
+      const declaredLength = Number(request.headers.get("Content-Length"));
+      if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+        return json({ error: "요청 본문이 허용 크기(1,500,000바이트)를 초과했습니다." }, 413);
+      }
       try {
-        body = await request.json();
-      } catch (_) {
+        if (!request.body) throw new Error("EMPTY_REQUEST_BODY");
+        const reader = request.body.getReader();
+        const chunks = [];
+        let totalBytes = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalBytes += value.byteLength;
+          if (totalBytes > MAX_REQUEST_BODY_BYTES) {
+            try { await reader.cancel(); } catch (_) {}
+            return json({ error: "요청 본문이 허용 크기(1,500,000바이트)를 초과했습니다." }, 413);
+          }
+          chunks.push(value);
+        }
+        const bytes = new Uint8Array(totalBytes);
+        let offset = 0;
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset);
+          offset += chunk.byteLength;
+        }
+        body = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (error) {
+        if (String(error?.message || "").includes("REQUEST_BODY_TOO_LARGE")) {
+          return json({ error: "요청 본문이 허용 크기(1,500,000바이트)를 초과했습니다." }, 413);
+        }
         return json({ error: "올바른 JSON 형식의 요청 본문이 필요합니다." }, 400);
       }
 
