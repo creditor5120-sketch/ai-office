@@ -316,6 +316,17 @@ export default {
         return json({ error: "지원하지 않는 API action입니다." }, 400);
       }
 
+      // 조회·대표 결정 API의 업무 ID도 실행 요청과 동일한 형식·길이 제한을 적용한다.
+      if (["get_representative_decision", "get_task_history", "representative_decision"].includes(body.action)) {
+        if (typeof body.taskId !== "string") {
+          return json({ error: "taskId는 문자열이어야 합니다." }, 400);
+        }
+        body.taskId = body.taskId.trim();
+        if (!body.taskId || body.taskId.length > 128) {
+          return json({ error: "taskId는 비어 있을 수 없으며 128자를 초과할 수 없습니다." }, 400);
+        }
+      }
+
       // 브라우저 로컬 기록이 없어도 서버에 저장된 최근 업무 목록을 복원한다.
       if (body.action === "get_recent_tasks") {
         if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 최근 업무를 조회할 수 없습니다." }, 503);
@@ -430,10 +441,18 @@ export default {
           return json({ error: "대표 승인 전용 인증에 실패했습니다." }, 401);
         }
         if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 승인 이력을 기록할 수 없습니다." }, 503);
-        taskId = String(body.taskId || "").trim();
-        const decision = String(body.decision || "").trim().toUpperCase();
-        const reason = String(body.reason || "").trim().slice(0, 4000);
-        if (!taskId) return json({ error: "업무 ID가 없습니다." }, 400);
+        taskId = body.taskId;
+        if (typeof body.decision !== "string") {
+          return json({ error: "대표 결정은 문자열이어야 합니다." }, 400);
+        }
+        if (body.reason != null && typeof body.reason !== "string") {
+          return json({ error: "반려 사유는 문자열이어야 합니다." }, 400);
+        }
+        const decision = body.decision.trim().toUpperCase();
+        const reason = String(body.reason || "").trim();
+        if (reason.length > 4000) {
+          return json({ error: "반려 사유는 4,000자를 초과할 수 없습니다." }, 400);
+        }
         if (!["APPROVE", "REJECT"].includes(decision)) {
           return json({ error: "승인 또는 반려 중 하나를 선택해야 합니다." }, 400);
         }
