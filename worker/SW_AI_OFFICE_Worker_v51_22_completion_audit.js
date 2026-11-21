@@ -299,10 +299,7 @@ export default {
           offset += chunk.byteLength;
         }
         body = JSON.parse(new TextDecoder().decode(bytes));
-      } catch (error) {
-        if (String(error?.message || "").includes("REQUEST_BODY_TOO_LARGE")) {
-          return json({ error: "요청 본문이 허용 크기(1,500,000바이트)를 초과했습니다." }, 413);
-        }
+      } catch (_) {
         return json({ error: "올바른 JSON 형식의 요청 본문이 필요합니다." }, 400);
       }
 
@@ -2930,7 +2927,7 @@ return json(successPayload);
       try { await releaseTaskLock(); } catch (lockError) { console.error("실행 잠금 해제 실패:", lockError.message); }
     } else if (lockToken) {
       // 실패 상태·감사 이력 저장이 확인되지 않으면 잠금을 해제하지 않는다.
-      // 5분 lease가 만료된 뒤 동일 업무 요청이 안전하게 재개를 시도한다.
+      // 8분 lease가 만료된 뒤 동일 업무 요청이 안전하게 재개를 시도한다.
       console.error("실패 상태 및 감사 이력 미확정: 실행 잠금을 lease 만료까지 유지합니다.");
     }
   }
