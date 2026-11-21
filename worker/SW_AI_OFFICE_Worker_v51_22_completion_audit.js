@@ -499,21 +499,42 @@ export default {
         }, 200);
       }
 
-      task = String(body.task || "").trim();
-      const employees = Array.isArray(body.employees)
-        ? body.employees.filter(employee => employee && typeof employee === "object")
-        : [];
+      if (typeof body.task !== "string") {
+        return json({ error: "업무 지시는 문자열이어야 합니다." }, 400);
+      }
+      task = body.task.trim();
       if (!task) return json({ error: "업무 지시 내용이 비어 있습니다." }, 400);
-      if (employees.length === 0) return json({ error: "직원 명단을 전달받지 못했습니다." }, 400);
-      if (employees.length > 50) return json({ error: "직원 명단이 허용 범위를 초과했습니다." }, 400);
+      if (task.length > 100000) {
+        return json({ error: "업무 지시가 허용 길이(100,000자)를 초과했습니다." }, 413);
+      }
+
+      if (!Array.isArray(body.employees) || body.employees.length === 0) {
+        return json({ error: "직원 명단을 전달받지 못했습니다." }, 400);
+      }
+      if (body.employees.length > 50) {
+        return json({ error: "직원 명단이 허용 범위를 초과했습니다." }, 400);
+      }
+      if (body.employees.some(employee => !employee || typeof employee !== "object" || Array.isArray(employee))) {
+        return json({ error: "직원 명단에 올바르지 않은 항목이 포함되어 있습니다." }, 400);
+      }
+      const employees = body.employees;
       if (!employees.some(e => String(e.id || "").trim() === "COO")) {
         return json({ error: "COO 데이터 없음", employeeCount: employees.length, employeeIds: employees.map(e => e.id) }, 400);
       }
       if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무를 안전하게 접수할 수 없습니다." }, 503);
 
+      if (body.taskId != null && typeof body.taskId !== "string") {
+        return json({ error: "taskId는 문자열이어야 합니다." }, 400);
+      }
+      if (body.idempotencyKey != null && typeof body.idempotencyKey !== "string") {
+        return json({ error: "idempotencyKey는 문자열이어야 합니다." }, 400);
+      }
       taskId = String(body.taskId || crypto.randomUUID()).trim();
       idempotencyKey = String(body.idempotencyKey || taskId).trim();
       if (!taskId || !idempotencyKey) return json({ error: "taskId 또는 idempotencyKey가 비어 있습니다." }, 400);
+      if (taskId.length > 128 || idempotencyKey.length > 128) {
+        return json({ error: "taskId와 idempotencyKey는 각각 128자를 초과할 수 없습니다." }, 400);
+      }
 
       const normalizedEmployees = employees.map(employee => ({
         id: String(employee.id ?? ""),
@@ -522,6 +543,15 @@ export default {
         position: String(employee.position ?? ""),
         instruction: String(employee.instruction ?? "")
       }));
+      const employeeFieldLimits = { id: 128, name: 200, department: 200, position: 200, instruction: 10000 };
+      for (const employee of normalizedEmployees) {
+        if (!employee.id.trim()) return json({ error: "직원 ID가 비어 있습니다." }, 400);
+        for (const [field, limit] of Object.entries(employeeFieldLimits)) {
+          if (employee[field].length > limit) {
+            return json({ error: "직원 명단의 " + field + " 항목이 허용 길이(" + limit + "자)를 초과했습니다." }, 400);
+          }
+        }
+      }
       const requestFingerprint = JSON.stringify({ task, employees: normalizedEmployees });
 
       const now = new Date().toISOString();
@@ -532,8 +562,16 @@ export default {
       let executionDateTime = new Intl.DateTimeFormat("ko-KR", {
         timeZone: "Asia/Seoul", dateStyle: "full", timeStyle: "short"
       }).format(executionNow);
+      // 외부에서 임의로 추가한 필드를 D1 입력 스냅샷에 저장하지 않고,
+      // 실행에 필요한 검증된 필드만 보존한다.
       const inputPayload = {
-        ...body,
+        task, taskId, idempotencyKey,
+        employee: String(body.employee ?? "").slice(0, 200),
+        employeeId: String(body.employeeId ?? "").slice(0, 128),
+        department: String(body.department ?? "").slice(0, 200),
+        position: String(body.position ?? "").slice(0, 200),
+        instruction: String(body.instruction ?? "").slice(0, 10000),
+        employees: normalizedEmployees,
         _swExecutionContext: { executionDate, executionDateTime },
         _swRequestFingerprint: requestFingerprint
       };
