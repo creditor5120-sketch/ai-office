@@ -29,7 +29,8 @@ PR: [#5 SW AI OFFICE v3.15 업무처리 기능 분리 연동](https://github.com
 - 데스크톱 및 iPad 폭 화면 캡처 아티팩트 업로드 통과.
 - Worker 업무 요청 입력 검증 강화: 지시문·직원 수·직원 필드·업무 ID·멱등성 키 길이를 제한하고, D1 접수 전에 형식 오류를 거부하며 실행에 필요한 필드만 입력 스냅샷에 저장. 관련 회귀 테스트 추가.
 - 추가 방어: 인증 후 JSON 파싱 전에 요청 본문 스트림의 실제 크기를 최대 1,500,000바이트로 제한하고 Content-Length도 선검사. 본문 크기 초과 회귀 테스트 추가.
-- 최신 HTML·브리지·D1 사전 점검·Worker CORS allowlist·Chromium 데스크톱/iPad 검증 실행: [GitHub Actions #44840586026](https://github.com/creditor5120-sketch/ai-office/actions/runs/44840586026) — 전체 성공.
+- 조회·대표 결정 API 입력 검증 보강: 업무 ID를 문자열·128자 이내로 제한하고, 대표 결정 및 반려 사유의 자료형을 검사하며 반려 사유는 4,000자 이내로 제한. 관련 회귀 테스트 통과.
+- 최신 HTML·브리지·D1 사전 점검·Worker CORS allowlist·Chromium 데스크톱/iPad 검증 실행: [GitHub Actions #44850603793](https://github.com/creditor5120-sketch/ai-office/actions/runs/44850603793) — 전체 성공.
 
 ## 3. 아직 완료로 판정하지 않은 항목
 
