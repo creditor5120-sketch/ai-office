@@ -577,6 +577,34 @@ test('rejects oversized request bodies before attempting JSON parsing', async ()
   assert.equal(declaredTooLarge.status, 413);
 });
 
+test('validates task identifiers and representative decision field types across all audit endpoints', async () => {
+  for (const action of ['get_representative_decision', 'get_task_history', 'representative_decision']) {
+    const objectId = await call({ action, taskId: { id: 'test-task-001' }, decision: 'APPROVE' });
+    assert.equal(objectId.status, 400, action + ' must reject non-string task IDs');
+
+    const oversizedId = await call({ action, taskId: 'x'.repeat(129), decision: 'APPROVE' });
+    assert.equal(oversizedId.status, 400, action + ' must reject task IDs over 128 characters');
+
+    const blankId = await call({ action, taskId: '   ', decision: 'APPROVE' });
+    assert.equal(blankId.status, 400, action + ' must reject blank task IDs');
+  }
+
+  const objectDecision = await call({
+    action: 'representative_decision', taskId: 'test-task-001', decision: { approve: true }
+  });
+  assert.equal(objectDecision.status, 400);
+
+  const objectReason = await call({
+    action: 'representative_decision', taskId: 'test-task-001', decision: 'REJECT', reason: { text: 'reason' }
+  });
+  assert.equal(objectReason.status, 400);
+
+  const oversizedReason = await call({
+    action: 'representative_decision', taskId: 'test-task-001', decision: 'REJECT', reason: '사유'.repeat(2001)
+  });
+  assert.equal(oversizedReason.status, 400);
+});
+
 test('rejects malformed and oversized workflow request payloads before touching D1', async () => {
   const validEmployees = [{ id: 'COO', name: '피터', department: '대표이사실', position: '대표이사', instruction: '' }];
   const nonStringTask = await call({ task: { text: '업무' }, employees: validEmployees }, { db: null });
