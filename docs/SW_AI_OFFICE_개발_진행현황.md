@@ -27,6 +27,11 @@ PR: [#5 SW AI OFFICE v3.15 업무처리 기능 분리 연동](https://github.com
 - D1 사전 점검 SQL이 읽기 전용인지, 필수 테이블·컬럼·UNIQUE 제약을 검사하는 자동 테스트 추가.
 - Worker CORS에 GitHub Pages 운영 도메인과 승인된 Cloudflare Pages 미리보기 도메인만 허용하는 명시적 allowlist 및 미허용 Origin 차단 테스트 추가.
 - 데스크톱 및 iPad 폭 화면 캡처 아티팩트 업로드 통과.
+- 기존 업무 브리지의 구조적 충돌을 확인함: 최신 HTML의 `runDirective()`는 알렉스의 계획 JSON·전문 직원 실행·팀장 검수·최종 보고를 위해 여러 차례 `callConfiguredLLM`을 호출하므로, 이 함수를 Worker 최종 보고로 대체하면 계획 단계의 JSON 계약이 깨질 수 있음.
+- 이를 해결하기 위해 최신 HTML의 원본 코드를 수정하지 않고 `workflow-bridge-latest.js`를 추가. 전송 버튼 클릭 및 Enter 키 이벤트 중 알렉스가 선택된 경우에만 Worker로 최초 지시를 전달하고, 다른 직원의 개인 대화는 기존 AI 연결을 그대로 사용하도록 변경.
+- 새 어댑터는 최신 HTML의 `EMP` 직원 명단을 Worker 입력 형식으로 변환하고 대표이사 피터를 `COO`로 전달. 업무 ID·멱등성 키 저장, 동일 지시 재개, 진행 단계 표시, 실제 오류 노출을 처리.
+- 실행 래퍼 `office-v315-integrated.html`은 계속 `SW_AI_Office_Latest.html`을 iframe으로 불러오며, 주입하는 어댑터만 `workflow-bridge-latest.js`로 변경. 승인 원본 `SW_AI_Office_v3_15.html`의 Blob SHA 검증은 유지.
+- 최신 브리지 런타임 테스트 3개 추가: 알렉스 지시의 Worker 전달·COO/6개 팀장 명단 확인, 서버 오류 시 미완료 표시 및 재개 데이터 보존, 다른 직원 대화 비가로채기. [GitHub Actions #44858251878](https://github.com/creditor5120-sketch/ai-office/actions/runs/44858251878) — 24개 브리지 테스트, Worker 계약 테스트, D1 사전 점검, Chromium 통합 화면 검증 전체 성공.
 - Worker 업무 요청 입력 검증 강화: 지시문·직원 수·직원 필드·업무 ID·멱등성 키 길이를 제한하고, D1 접수 전에 형식 오류를 거부하며 실행에 필요한 필드만 입력 스냅샷에 저장. 관련 회귀 테스트 추가.
 - 추가 방어: 인증 후 JSON 파싱 전에 요청 본문 스트림의 실제 크기를 최대 1,500,000바이트로 제한하고 Content-Length도 선검사. 본문 크기 초과 회귀 테스트 추가.
 - 조회·대표 결정 API 입력 검증 보강: 업무 ID를 문자열·128자 이내로 제한하고, 대표 결정 및 반려 사유의 자료형을 검사하며 반려 사유는 4,000자 이내로 제한. 관련 회귀 테스트 통과.
