@@ -653,3 +653,16 @@ test('blocks representative approval for PARTIAL_COMPLETED even if the review fl
   assert.equal(result.db.events.length, 0);
   assert.equal(result.body.taskStatus, 'PARTIAL_COMPLETED');
 });
+
+
+test('checkpoint stage-key parser accepts numeric indices from persisted checkpoint keys', () => {
+  const loadStart = source.indexOf('for (const row of (savedCheckpoints.results || []))');
+  const loadEnd = source.indexOf('let saved;', loadStart);
+  const loadBlock = source.slice(loadStart, loadEnd);
+  const matchCall = loadBlock.match(/\.match\((\/[^/]+\/)\)/);
+  assert.ok(matchCall, 'resume loader must use an explicit checkpoint key parser');
+  const pattern = vm.runInNewContext(matchCall[1]);
+  assert.deepEqual(Array.from(pattern.exec('v51_ai_call_0') || []), ['v51_ai_call_0', '0']);
+  assert.deepEqual(Array.from(pattern.exec('v51_ai_call_27') || []), ['v51_ai_call_27', '27']);
+  assert.equal(pattern.test('v51_ai_call_not-a-number'), false);
+});
