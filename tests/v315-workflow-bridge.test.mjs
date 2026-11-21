@@ -302,3 +302,105 @@ test('renders server and task content without unsafe HTML injection sinks', () =
   assert.match(wrapperSource, /textContent/);
   assert.match(source, /textContent/);
 });
+
+
+function makeLatestOfficeContext({ selectedId = 'alex', fail = false } = {}) {
+  const calls = [], handlers = {}, storage = new Map();
+  const input = { value: '계약서 검토 및 수정안 작성' };
+  const messages = { scrollTop: 0, scrollHeight: 100 };
+  const employees = [
+    { id: 'alex', name: '알렉스', badge: '본부장', room: 'hq', duty: '전사 업무 분석 및 배정' },
+    { id: 'ceo1', name: '피터', badge: '대표이사', room: 'ceo', duty: '최종 의사결정' },
+    { id: 'denis', name: '데니스', badge: '경영관리팀장', room: 'shared', duty: '경영관리 검수' },
+    { id: 'aiden', name: '에이든', badge: '총무팀장', room: 'shared', duty: '총무 검수' },
+    { id: 'eric', name: '에릭', badge: '전략기획팀장', room: 'shared', duty: '전략기획 검수' },
+    { id: 'rex', name: '렉스', badge: '법무팀장', room: 'legal', duty: '법무 검수' },
+    { id: 'ryan', name: '라이언', badge: 'IR팀장', room: 'ir', duty: 'IR 검수' },
+    { id: 'teo', name: '테오', badge: 'IT·기술팀장', room: 'it', duty: '기술 검수' }
+  ];
+  const st = { sel: selectedId, robotChat: false, wfRun: false, file: null, hist: {}, phase: {}, busy: {} };
+  const sandbox = {
+    EMP: employees, st, E: id => employees.find(person => person.id === id),
+    inp: input, msgs: messages, T: () => '09:30',
+    setPhase: (id, label) => { if (label) { st.phase[id] = label; st.busy[id] = true; } else { delete st.phase[id]; st.busy[id] = false; } },
+    drawCards: () => {}, drawChat: () => {},
+    crypto: { randomUUID: () => 'test-task-001' },
+    CustomEvent: function CustomEvent(name) { this.type = name; },
+    dispatchEvent: () => true,
+    localStorage: {
+      getItem: key => storage.has(key) ? storage.get(key) : null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: key => storage.delete(key)
+    },
+    document: {
+      addEventListener: (name, fn) => { handlers[name] = fn; },
+      getElementById: id => id === 'inp' ? input : id === 'hint' ? { textContent: '' } : null
+    },
+    parent: {
+      SWWorkflowBridge: {
+        execute: async (payload, onProgress) => {
+          calls.push(payload);
+          if (onProgress) onProgress({ currentStage: '전문 직원 수행' });
+          if (fail) throw new Error('서버 인증값이 설정되지 않았습니다.');
+          return {
+            reply: '본부장 최종 보고',
+            deliverables: [{ title: '법무 검토서', department: '법무팀', status: '완료', teamLeader: '렉스', content: '검토 결과' }],
+            workflow: { status: 'completed', reviewGate: { finalReleaseAllowed: true } }
+          };
+        }
+      }
+    }
+  };
+  sandbox.window = sandbox;
+  vm.runInNewContext(latestBridgeSource, sandbox, { filename: 'workflow-bridge-latest.js' });
+  return { calls, handlers, storage, input, st };
+}
+
+test('latest office Alex send reaches the Worker with COO and the complete team roster', async () => {
+  const { calls, handlers, storage, input, st } = makeLatestOfficeContext();
+  let prevented = false;
+  handlers.click({
+    target: { closest: selector => selector === '#send' ? {} : null },
+    preventDefault() { prevented = true; }, stopPropagation() {}, stopImmediatePropagation() {}
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(prevented, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].task, '계약서 검토 및 수정안 작성');
+  assert.equal(calls[0].employeeId, 'alex');
+  assert.equal(calls[0].employees.find(person => person.id === 'COO').name, '피터');
+  for (const team of ['경영관리팀', '총무팀', '전략기획팀', '법무팀', 'IR팀', '기술·IT팀']) {
+    assert.ok(calls[0].employees.some(person => person.department === team && person.position.includes('팀장')), team);
+  }
+  assert.equal(input.value, '');
+  assert.equal(st.wfRun, false);
+  assert.match(st.hist.alex.at(-1).content, /본부장 최종 보고/);
+  assert.match(st.hist.alex.at(-1).content, /법무 검토서/);
+  assert.equal(storage.has('swV315PendingWorkflowTask'), false);
+});
+
+test('latest office shows Worker errors and preserves the pending task for same-ID recovery', async () => {
+  const { handlers, storage, st } = makeLatestOfficeContext({ fail: true });
+  handlers.click({
+    target: { closest: selector => selector === '#send' ? {} : null },
+    preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(st.wfRun, false);
+  assert.match(st.hist.alex.at(-1).content, /실제 업무처리 실패/);
+  assert.match(st.hist.alex.at(-1).content, /서버 인증값이 설정되지 않았습니다/);
+  const pending = JSON.parse(storage.get('swV315PendingWorkflowTask'));
+  assert.equal(pending.state, 'resume_required');
+  assert.equal(pending.payload.taskId, 'test-task-001');
+});
+
+test('latest office does not intercept direct conversations with other employees', () => {
+  const { handlers, calls } = makeLatestOfficeContext({ selectedId: 'rex' });
+  let prevented = false;
+  handlers.click({
+    target: { closest: selector => selector === '#send' ? {} : null },
+    preventDefault() { prevented = true; }, stopPropagation() {}, stopImmediatePropagation() {}
+  });
+  assert.equal(prevented, false);
+  assert.equal(calls.length, 0);
+});
