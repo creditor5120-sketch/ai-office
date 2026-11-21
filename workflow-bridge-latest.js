@@ -95,9 +95,22 @@
       ? '\n\n[첨부 파일: ' + textOf(file.name || '파일') + ']\n' +
         (textOf(file.text) || '파일 본문 텍스트가 추출되지 않았습니다. 파일명만 확인할 수 있습니다.')
       : '')).trim();
-    const employees = employeeRoster();
-    const pending = pendingPayload(task, selected, employees);
     const history = st.hist.alex = st.hist.alex || [];
+    let pending = null;
+    try {
+      const employees = employeeRoster();
+      pending = pendingPayload(task, selected, employees);
+    } catch (error) {
+      history.push({
+        role: 'assistant',
+        content: '실제 업무처리 실패 · 완료된 업무가 아닙니다.\\n' + textOf(error && error.message || error),
+        show: '⚠ 실제 업무처리 실패 · ' + textOf(error && error.message || error),
+        t: typeof T === 'function' ? T() : '',
+        wf: true
+      });
+      if (typeof drawChat === 'function') drawChat();
+      return;
+    }
     history.push({
       role: 'user',
       content: task,
