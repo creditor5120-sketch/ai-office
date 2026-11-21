@@ -32,6 +32,7 @@ PR: [#5 SW AI OFFICE v3.15 업무처리 기능 분리 연동](https://github.com
 - 새 어댑터는 최신 HTML의 `EMP` 직원 명단을 Worker 입력 형식으로 변환하고 대표이사 피터를 `COO`로 전달. 업무 ID·멱등성 키 저장, 동일 지시 재개, 진행 단계 표시, 실제 오류 노출을 처리.
 - 실행 래퍼 `office-v315-integrated.html`은 계속 `SW_AI_Office_Latest.html`을 iframe으로 불러오며, 주입하는 어댑터만 `workflow-bridge-latest.js`로 변경. 승인 원본 `SW_AI_Office_v3_15.html`의 Blob SHA 검증은 유지.
 - 최신 브리지 런타임 테스트 3개 추가: 알렉스 지시의 Worker 전달·COO/6개 팀장 명단 확인, 서버 오류 시 미완료 표시 및 재개 데이터 보존, 다른 직원 대화 비가로채기. [GitHub Actions #44858251878](https://github.com/creditor5120-sketch/ai-office/actions/runs/44858251878) — 24개 브리지 테스트, Worker 계약 테스트, D1 사전 점검, Chromium 통합 화면 검증 전체 성공.
+- 직원 명단 사전검증에서 오류가 발생해도 알렉스 대화창에 실제 실패 사유가 표시되도록 보강. 최종 코드 커밋 `35a1a50`의 [GitHub Actions #44858441937](https://github.com/creditor5120-sketch/ai-office/actions/runs/44858441937) — 전체 성공.
 - Worker 업무 요청 입력 검증 강화: 지시문·직원 수·직원 필드·업무 ID·멱등성 키 길이를 제한하고, D1 접수 전에 형식 오류를 거부하며 실행에 필요한 필드만 입력 스냅샷에 저장. 관련 회귀 테스트 추가.
 - 추가 방어: 인증 후 JSON 파싱 전에 요청 본문 스트림의 실제 크기를 최대 1,500,000바이트로 제한하고 Content-Length도 선검사. 본문 크기 초과 회귀 테스트 추가.
 - 조회·대표 결정 API 입력 검증 보강: 업무 ID를 문자열·128자 이내로 제한하고, 대표 결정 및 반려 사유의 자료형을 검사하며 반려 사유는 4,000자 이내로 제한. 관련 회귀 테스트 통과.
