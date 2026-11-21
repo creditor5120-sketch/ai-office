@@ -564,6 +564,45 @@ test('requires a verifiable body quotation before treating a review issue as rec
 });
 
 
+test('rejects malformed and oversized workflow request payloads before touching D1', async () => {
+  const validEmployees = [{ id: 'COO', name: '피터', department: '대표이사실', position: '대표이사', instruction: '' }];
+  const nonStringTask = await call({ task: { text: '업무' }, employees: validEmployees }, { db: null });
+  assert.equal(nonStringTask.status, 400);
+  assert.match(nonStringTask.body.error, /문자열/);
+
+  const oversizedTask = await call({ task: '가'.repeat(100001), employees: validEmployees }, { db: null });
+  assert.equal(oversizedTask.status, 413);
+
+  const malformedEmployee = await call({ task: '테스트 업무', employees: [null, validEmployees[0]] }, { db: null });
+  assert.equal(malformedEmployee.status, 400);
+  assert.match(malformedEmployee.body.error, /직원 명단/);
+});
+
+test('bounds task identifiers and employee fields before persisting a workflow request', async () => {
+  const validEmployees = [{ id: 'COO', name: '피터', department: '대표이사실', position: '대표이사', instruction: '' }];
+  const oversizedTaskId = await call({ task: '테스트 업무', taskId: 't'.repeat(129), employees: validEmployees }, { db: null });
+  assert.equal(oversizedTaskId.status, 400);
+  assert.match(oversizedTaskId.body.error, /128자/);
+
+  const nonStringIdempotencyKey = await call({ task: '테스트 업무', idempotencyKey: { key: 'x' }, employees: validEmployees }, { db: null });
+  assert.equal(nonStringIdempotencyKey.status, 400);
+  assert.match(nonStringIdempotencyKey.body.error, /idempotencyKey/);
+
+  const oversizedInstruction = await call({
+    task: '테스트 업무',
+    employees: [{ ...validEmployees[0], instruction: '지'.repeat(10001) }]
+  }, { db: null });
+  assert.equal(oversizedInstruction.status, 400);
+  assert.match(oversizedInstruction.body.error, /instruction/);
+
+  const missingEmployeeId = await call({
+    task: '테스트 업무',
+    employees: [{ ...validEmployees[0], id: '' }]
+  }, { db: null });
+  assert.equal(missingEmployeeId.status, 400);
+  assert.match(missingEmployeeId.body.error, /직원 ID/);
+});
+
 test('blocks representative approval for PARTIAL_COMPLETED even if the review flag is true', async () => {
   const result = await call(
     { action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' },
