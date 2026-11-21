@@ -518,9 +518,6 @@ export default {
         return json({ error: "직원 명단에 올바르지 않은 항목이 포함되어 있습니다." }, 400);
       }
       const employees = body.employees;
-      if (!employees.some(e => String(e.id || "").trim() === "COO")) {
-        return json({ error: "COO 데이터 없음", employeeCount: employees.length, employeeIds: employees.map(e => e.id) }, 400);
-      }
       if (body.taskId != null && typeof body.taskId !== "string") {
         return json({ error: "taskId는 문자열이어야 합니다." }, 400);
       }
@@ -549,6 +546,9 @@ export default {
             return json({ error: "직원 명단의 " + field + " 항목이 허용 길이(" + limit + "자)를 초과했습니다." }, 400);
           }
         }
+      }
+      if (!normalizedEmployees.some(e => e.id.trim() === "COO")) {
+        return json({ error: "COO 데이터 없음", employeeCount: normalizedEmployees.length, employeeIds: normalizedEmployees.map(e => e.id) }, 400);
       }
       const requestFingerprint = JSON.stringify({ task, employees: normalizedEmployees });
       if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무를 안전하게 접수할 수 없습니다." }, 503);
