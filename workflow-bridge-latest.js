@@ -122,7 +122,7 @@
     const hint = document.getElementById('hint');
     if (hint) hint.textContent = '';
     st.wfRun = true;
-    if (typeof setPhase === 'function') setPhase('alex', '업무 접수 및 배정 중');
+    if (typeof setPhase === 'function') setPhase('alex', '업무 검토 중');
     if (typeof drawChat === 'function') drawChat();
 
     try {
