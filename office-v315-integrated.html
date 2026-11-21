@@ -219,7 +219,7 @@
     button.addEventListener('click',()=>{const opened=panel.classList.toggle('open');button.setAttribute('aria-label',opened?'업무 엔진 닫기':'업무 엔진 열기');button.setAttribute('aria-expanded',String(opened));if(opened)renderHistory()});
     settingsButton.insertAdjacentElement('afterend',button);
    }
-   const script=doc.createElement('script');script.id='sw-workflow-bridge-v315';script.src='workflow-bridge-v315.js';
+   const script=doc.createElement('script');script.id='sw-workflow-bridge-v315';script.src='workflow-bridge-latest.js';
    script.onload=()=>{setStatus('사무실 연결 완료. 알렉스를 선택해 업무를 지시하세요.','ok');renderPendingRecovery()}
    script.onerror=()=>setStatus('업무 연동 파일을 불러오지 못했습니다. workflow-bridge-v315.js의 배포 경로를 확인해 주세요.','error');
    doc.head.appendChild(script);
