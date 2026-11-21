@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../workflow-bridge-v315.js', import.meta.url), 'utf8');
+const latestBridgeSource = await readFile(new URL('../workflow-bridge-latest.js', import.meta.url), 'utf8');
 const wrapperSource = await readFile(new URL('../office-v315-integrated.html', import.meta.url), 'utf8');
 
 const latestOfficeSource = await readFile(new URL('../SW_AI_Office_Latest.html', import.meta.url), 'utf8');
@@ -265,14 +266,14 @@ test('latest uploaded office HTML is the live visual shell while the approved or
   assert.ok(office.includes('["ceo1","피터","대표이사"'));
   assert.ok(office.includes('["rex","렉스","법무팀장"'));
   assert.ok(wrapperSource.includes('src="SW_AI_Office_Latest.html"'));
-  assert.ok(wrapperSource.includes("script.src='workflow-bridge-v315.js'"));
+  assert.ok(wrapperSource.includes("script.src='workflow-bridge-latest.js'"));
   assert.ok(source.includes('window.callConfiguredLLM = async function (inputMsgs)'));
   assert.ok(source.includes("selected && selected.id === 'alex'"));
   assert.ok(source.includes('originalCallConfiguredLLM(inputMsgs)'));
 });
 
 
-test('workflow engine control is injected beside the original office settings button', () => {
+test('canonical latest-office adapter routes only Alex instructions to the Worker', () => {\n  assert.match(latestBridgeSource, /document\.addEventListener\('click', onSendClick, true\)/);\n  assert.match(latestBridgeSource, /document\.addEventListener\('keydown', onInputKeydown, true\)/);\n  assert.match(latestBridgeSource, /st\.sel === 'alex'/);\n  assert.match(latestBridgeSource, /window\.parent\.SWWorkflowBridge\.execute/);\n  assert.match(latestBridgeSource, /person\.id === 'ceo1' \? 'COO'/);\n  assert.match(latestBridgeSource, /resume_required/);\n  assert.doesNotMatch(latestBridgeSource, /window\.callConfiguredLLM\s*=/);\n});\n\ntest('workflow engine control is injected beside the original office settings button', () => {
   assert.match(wrapperSource, /const header=doc\.querySelector\('header'\)/);
   assert.match(wrapperSource, /const settingsButton=doc\.getElementById\('aiCfgBtn'\)/);
   assert.match(wrapperSource, /settingsButton\.insertAdjacentElement\('afterend',button\)/);
