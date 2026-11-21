@@ -521,8 +521,6 @@ export default {
       if (!employees.some(e => String(e.id || "").trim() === "COO")) {
         return json({ error: "COO 데이터 없음", employeeCount: employees.length, employeeIds: employees.map(e => e.id) }, 400);
       }
-      if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무를 안전하게 접수할 수 없습니다." }, 503);
-
       if (body.taskId != null && typeof body.taskId !== "string") {
         return json({ error: "taskId는 문자열이어야 합니다." }, 400);
       }
@@ -553,6 +551,7 @@ export default {
         }
       }
       const requestFingerprint = JSON.stringify({ task, employees: normalizedEmployees });
+      if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 업무를 안전하게 접수할 수 없습니다." }, 503);
 
       const now = new Date().toISOString();
       const executionNow = new Date();
