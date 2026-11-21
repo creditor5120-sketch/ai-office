@@ -725,7 +725,7 @@ export default {
       ).bind(taskId).all();
       let expectedCheckpointIndex = 0;
       for (const row of (savedCheckpoints.results || [])) {
-        const match = String(row.stage_key || "").match(/^v51_ai_call_(\\d+)$/);
+        const match = String(row.stage_key || "").match(/^v51_ai_call_(\d+)$/);
         let saved;
         try { saved = JSON.parse(row.checkpoint_json || "{}"); }
         catch (_) { throw new Error("SW_AI_CHECKPOINT_CORRUPT"); }
