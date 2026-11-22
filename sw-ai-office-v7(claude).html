@@ -1698,17 +1698,32 @@ async function seatAt(id,x,z,ry){
   if(ok&&c.tok===tok){c.g.position.set(x,-.29,z);c.g.rotation.y=ry;c.mode="sit";c.restKind=null;drawLabel(c);}
 }
 async function reviewItem(it){
-  const rid=LEAD_OF[it.id]||"alex",rv=E(rid);
+  const rid=LEAD_OF[it.id]||"alex",rv=E(rid),worker=E(it.id);
   setPhase(rid,"검수 중");
   if(rid!=="alex")await toMeet(rid);
   try{
-    const v=parseJSON(await callAs(rv,"[단테 대표님 원 지시]\n"+it.full+"\n\n[담당자 "+E(it.id).name+"의 결과물]\n"+it.draft+"\n\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목.\n설명 없이 JSON만 출력하세요: {\"verdict\":\"승인\" 또는 \"보완\",\"comment\":\"보완이면 구체적 수정 사항, 승인이면 한 줄 의견\"}",{json:true}));
-    it.review=String(v.comment||"");
-    if(v.verdict==="보완"){
-      it.status="재작업";setPhase(it.id,"재작업");
-      it.draft=await callAs(E(it.id),"[원 작업 지시]\n"+it.task+"\n\n[이전 결과물]\n"+it.draft+"\n\n[검수 의견]\n"+it.review+"\n\n검수 의견을 반영해 결과물을 다시 작성하세요.");
-      it.status="보완 완료";
-    }else it.status="승인";
+    let approved=false;
+    for(let round=1;round<=3;round++){
+      const v=parseJSON(await callAs(rv,"[단테 대표님 원 지시]\\n"+it.full+"\\n\\n[담당자 "+worker.name+"의 작업 지시]\\n"+it.task+"\\n\\n[검수 회차] "+round+"/3\\n[담당자 결과물]\\n"+it.draft+"\\n\\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목, 실무 활용 가능성. 승인 요건을 충족하지 못하면 반드시 보완으로 판정하세요.\\n설명 없이 JSON만 출력하세요: {\\"verdict\\":\\"승인\\" 또는 \\"보완\\",\\"comment\\":\\"보완이면 구체적 수정 사항, 승인이면 승인 근거를 한 줄로 작성\\"}",{json:true}));
+      const verdict=String(v.verdict||"").trim();
+      it.review=String(v.comment||"");
+      if(verdict==="승인"){
+        it.status="승인";
+        approved=true;
+        break;
+      }
+      if(verdict!=="보완")throw new Error("팀장 검수 판정이 유효하지 않습니다: "+(verdict||"빈 판정"));
+      if(round===3){
+        it.status="보완 필요(재검수 한도 초과)";
+        break;
+      }
+      it.status="재작업";
+      setPhase(it.id,"재작업");
+      it.draft=await callAs(worker,"[원 작업 지시]\\n"+it.task+"\\n\\n[이전 결과물]\\n"+it.draft+"\\n\\n[팀장 검수 의견 / "+round+"차]\\n"+it.review+"\\n\\n검수 의견을 빠짐없이 반영해 결과물을 다시 작성하세요. 반영하지 못한 사항은 이유를 명시하세요.");
+      it.status="재검수 대기";
+      setPhase(rid,"검수 중");
+    }
+    if(!approved&&it.status!=="보완 필요(재검수 한도 초과)")it.status="검수 확인 필요";
   }catch(err){it.status="검수 확인 필요";it.review=err.message;}
   finally{
     if(rid!=="alex"){const cc=cOf(rid);if(cc){cc.tok++;goDesk(cc,cc.tok);}}
