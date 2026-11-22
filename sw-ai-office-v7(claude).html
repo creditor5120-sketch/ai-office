@@ -1859,6 +1859,11 @@ async function runDirective(text,f){
     const body=teams.map(t=>"■ "+E(t.lead).name+"("+E(t.lead).badge+") 팀 보고\n[검수 내역] "+t.items.map(it=>E(it.id).name+": "+it.status+(it.review?" — "+it.review:"")).join(" / ")+"\n"+t.report).join("\n\n");
     let report;
     try{report=await callAs(a,"[단테 대표님 원 지시]\n"+full+(minutes?"\n\n[협업 회의록]\n"+minutes:"")+"\n\n[팀별 보고와 검수 내역]\n"+body+"\n\n위 내용으로 단테 대표님께 올릴 최종 보고서를 작성하세요. 순서: 1) 핵심 결론 2) 팀별 결과 요약 3) 검수 과정과 보완 내역 4) 확인되지 않았거나 추가 확인이 필요한 사항 5) 외부 실행 여부: 이번 업무에서 외부 발송·공시·계약 실행은 하지 않았으며, 필요하면 단테 대표님 승인 후 진행합니다. 협업 회의록이 있으면 그 결정 사항을 반영하세요. 결과물에 없는 수치는 추가하지 마세요.");}catch(err){report="(알렉스 최종 보고서 작성 실패: "+err.message+")\n\n아래는 팀별 보고 원문입니다.\n\n"+body;}
+    const approvedItems=items.filter(it=>it.status==="승인"&&String(it.draft||"").trim());
+    const incompleteItems=items.filter(it=>it.status!=="승인");
+    const overall=incompleteItems.length?"부분 완료":"검수 완료";
+    st.deliverables={title:(full.split("\n")[0]||"업무 결과물").slice(0,36),created:new Date().toLocaleString("ko-KR"),overall:overall,items:items.map(it=>({name:E(it.id).name,task:it.task,status:it.status,review:it.review||"",draft:it.draft||""})),report:report};
+    report+="\n\n[시스템 완료 판정] "+overall+" — 배정 "+items.length+"건 중 승인 "+approvedItems.length+"건, 미완료 "+incompleteItems.length+"건. "+(incompleteItems.length?"실패·미검수·보완 건이 있어 전체 업무의 최종 완료로 볼 수 없습니다.":"모든 배정 결과물이 팀장 검수를 통과했습니다.");
     h.push({role:"assistant",content:report,show:"📋 단테 대표님 보고\n\n"+report,t:T()});
   }catch(err){
     wfLog("⚠ 업무 진행 중 문제가 발생했습니다: "+(err&&err.message?err.message:String(err))+"\n내용을 확인한 뒤 다시 지시해 주세요.");
