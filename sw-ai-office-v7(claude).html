@@ -576,6 +576,7 @@ let renderer,scene,camera,fpvCam,V,rc,ring,root,sampleFn=null,gl3=null,robotBubb
 const fpv={yaw:Math.PI,pitch:-0.05,keys:{},joy:{x:0,y:0}};
 const activeCam=()=>st.mode==='fpv'&&fpvCam?fpvCam:camera;
 const chars=[],signs=[],flabels=[],cam={az:.785,el:.62,s:37,tx:49,tz:23.5};
+let danceActive=false,danceSession=0;
 const cOf=id=>chars.find(c=>c.e.id===id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const FONT="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif";
@@ -1091,6 +1092,14 @@ function pose(c,t){
   }else if(c.mode==="walk"){
     const s=Math.sin(t*9)*.72;
     P.ll.rotation.x=s;P.rl.rotation.x=-s;P.la.rotation.x=-s*.85;P.ra.rotation.x=s*.85;
+  }else if(c.mode==="dance"){
+    const beat=t*8+c.ph,step=Math.sin(beat);
+    P.ll.rotation.x=step*.55;P.rl.rotation.x=-step*.55;
+    P.la.rotation.x=-1.55+Math.sin(beat+1.2)*.65;
+    P.ra.rotation.x=-1.55+Math.sin(beat-1.2)*.65;
+    P.la.rotation.z=Math.sin(beat)*.42;P.ra.rotation.z=-Math.sin(beat)*.42;
+    c.g.position.y=Math.abs(Math.sin(beat*2))*.2;
+    c.g.rotation.z=Math.sin(beat)*.1;
   }else{
     P.ll.rotation.x=P.rl.rotation.x=0;
     if(c.restKind==="music"){
@@ -1159,12 +1168,53 @@ function tick(dt,t){
 }
 
 function walk(c,pts){return new Promise(r=>{c.path=pts.slice();c.done=r;c.mode="walk";drawLabel(c);});}
+function danceChat(role,text){
+  const h=st.hist.alex=st.hist.alex||[];
+  h.push({role,content:text,show:text,t:T()});
+  if(st.sel==="alex"&&!st.robotChat){drawChat();if(msgs)msgs.scrollTop=msgs.scrollHeight;}
+}
+async function startDanceTime(command){
+  danceChat("user",command);
+  if(st.wfRun){danceChat("assistant","현재 업무가 진행 중이라 댄스타임을 시작하지 않았습니다. 업무 보고가 끝난 뒤 다시 지시해 주세요.");return;}
+  if(danceActive){danceChat("assistant","이미 댄스타임이 진행 중입니다. 종료하려면 '댄스타임 종료'라고 입력해 주세요.");return;}
+  danceActive=true;
+  const session=++danceSession;
+  const dancers=chars.filter(c=>c.e.id!=="ceo1");
+  danceChat("assistant","알겠습니다. 전 직원에게 복도 집합을 지시했습니다. 모두 모이면 함께 춤을 춥니다.");
+  const spacing=dancers.length>1?90/(dancers.length-1):0;
+  await Promise.all(dancers.map(async(c,i)=>{
+    const tok=++c.tok;
+    const pending=c.done;c.done=null;c.path=null;if(pending)pending();
+    c.away=true;c.restKind=null;
+    const from=[c.g.position.x,c.g.position.z],x=4+i*spacing,z=22.5;
+    await walk(c,routePts(roomAt(from[0],from[1]).id,"hall",from,[x,z]));
+    if(session!==danceSession||c.tok!==tok)return;
+    c.g.position.set(x,0,z);c.g.rotation.y=Math.PI;c.g.rotation.z=0;
+    c.mode="dance";c.away=false;drawLabel(c);
+  }));
+  if(session===danceSession)danceChat("assistant","전 직원이 복도에 모였습니다. 댄스타임 시작! 언제든 '댄스타임 종료'라고 입력하면 자리로 돌아갑니다.");
+}
+async function stopDanceTime(command){
+  danceChat("user",command);
+  if(!danceActive){danceChat("assistant","현재 진행 중인 댄스타임이 없습니다.");return;}
+  const session=++danceSession;
+  const dancers=chars.filter(c=>c.e.id!=="ceo1");
+  danceChat("assistant","댄스타임을 마칩니다. 전 직원이 각자 자리로 복귀합니다.");
+  await Promise.all(dancers.map(async c=>{
+    const tok=++c.tok;
+    const pending=c.done;c.done=null;c.path=null;if(pending)pending();
+    c.away=true;c.restKind=null;c.g.rotation.z=0;c.g.position.y=0;
+    await goDesk(c,tok);
+  }));
+  if(session===danceSession){danceActive=false;danceChat("assistant","전 직원의 자리 복귀가 완료됐습니다.");}
+}
 async function goDesk(c,tok){
   const curRm=roomAt(c.g.position.x,c.g.position.z).id;
   await walk(c,routePts(curRm,c.e.room,[c.g.position.x,c.g.position.z],[c.e.hx,c.e.hz]));
-  if(c.tok===tok){c.g.position.set(c.e.hx,-.29,c.e.hz);c.g.rotation.y=c.e.hr;c.mode="sit";c.away=false;c.restKind=null;drawLabel(c);}
+  if(c.tok===tok){c.g.position.set(c.e.hx,-.29,c.e.hz);c.g.rotation.y=c.e.hr;c.g.rotation.z=0;c.mode="sit";c.away=false;c.restKind=null;drawLabel(c);}
 }
 async function wander(c){
+  if(danceActive)return;
   const tok=++c.tok;c.away=true;
   const sp=SPOTS[Math.floor(Math.random()*SPOTS.length)];
   c.restKind=sp[2];
@@ -1359,7 +1409,7 @@ function init3d(){
     researchRunning=false;
   }
   setInterval(()=>{
-    if(st.view!=="office"||document.hidden||st.wfRun)return;
+    if(st.view!=="office"||document.hidden||st.wfRun||danceActive)return;
     chars.forEach(c=>{
       if(c.e.id==="ceo1"||c.mode!=="sit"||c.away||st.busy[c.e.id])return;
       if(Math.random()<0.015){wander(c);return;}
@@ -1367,7 +1417,7 @@ function init3d(){
     });
   },3200);
   setInterval(()=>{
-    if(st.view!=="office"||document.hidden||st.wfRun||researchRunning||aiCfg.provider==="local")return;
+    if(st.view!=="office"||document.hidden||st.wfRun||danceActive||researchRunning||aiCfg.provider==="local")return;
     const pool=chars.filter(c=>c.e.id!=="ceo1"&&c.mode==="sit"&&!c.away&&!st.busy[c.e.id]);
     if(!pool.length)return;
     const pick=pool[Math.floor(Math.random()*pool.length)];
@@ -1931,9 +1981,13 @@ async function send(){
   }
   const e=E(st.sel),text=inp.value.trim();
   if(!text||e.id==="ceo1")return;
-  if(e.id==="alex"&&st.wfOn){
-    if(st.wfRun){$("#hint").textContent="업무가 진행 중입니다. 보고가 끝난 뒤 다시 지시해 주세요.";return;}
-    return srvCfg.on?runDirectiveServer(text,st.file):runDirective(text,st.file);
+  if(e.id==="alex"){
+    if(/댄스타임\s*(?:종료|끝)|댄스\s*(?:종료|끝)|업무\s*복귀/.test(text)){inp.value="";return stopDanceTime(text);}
+    if(/댄스타임|댄스\s*타임/.test(text)){inp.value="";return startDanceTime(text);}
+    if(st.wfOn){
+      if(st.wfRun){$("#hint").textContent="업무가 진행 중입니다. 보고가 끝난 뒤 다시 지시해 주세요.";return;}
+      return srvCfg.on?runDirectiveServer(text,st.file):runDirective(text,st.file);
+    }
   }
   if(st.busy[e.id])return;
   const h=st.hist[e.id]=st.hist[e.id]||[],f=st.file;st.file=null;$("#hint").textContent="";
