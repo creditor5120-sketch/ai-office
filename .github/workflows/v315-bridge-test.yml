@@ -9,6 +9,7 @@ on:
       - 'SW_AI_Office_v3_15.html'
       - 'sw-ai-office-v7(claude).html'
       - 'tests/v7-dance-time.test.mjs'
+      - 'tests/v7-dance-time-browser-smoke.mjs'
       - 'SW_AI_Office_Latest.html'
       - 'office-v315-integrated.html'
       - 'workflow-bridge-v315.js'
@@ -50,6 +51,8 @@ jobs:
         run: node tests/v315-office-browser-smoke.mjs
       - name: Run v7 dance-time syntax and behavior checks
         run: node --test tests/v7-dance-time.test.mjs
+      - name: Test v7 dance-time movement and return in Chromium
+        run: node tests/v7-dance-time-browser-smoke.mjs
       - name: Upload desktop and iPad browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
