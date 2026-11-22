@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - 'SW_AI_Office_v3_15.html'
+      - 'sw-ai-office-v7(claude).html'
+      - 'tests/v7-dance-time.test.mjs'
       - 'SW_AI_Office_Latest.html'
       - 'office-v315-integrated.html'
       - 'workflow-bridge-v315.js'
@@ -46,6 +48,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Render latest office and verify workflow panel
         run: node tests/v315-office-browser-smoke.mjs
+      - name: Run v7 dance-time syntax and behavior checks
+        run: node --test tests/v7-dance-time.test.mjs
       - name: Upload desktop and iPad browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
