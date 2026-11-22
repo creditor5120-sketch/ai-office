@@ -1733,6 +1733,7 @@ async function reviewItem(it){
       const verdict=String(v.verdict||"").trim();
       it.review=String(v.comment||"");
       if(verdict==="승인"){
+        if(String(v.revised_draft||"").trim())it.draft=String(v.revised_draft).trim();
         it.status="승인";
         approved=true;
         break;
