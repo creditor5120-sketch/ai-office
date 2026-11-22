@@ -188,6 +188,8 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
  .joy{width:88px;height:88px;left:10px;bottom:10px}
  .joy-knob{width:38px;height:38px}
 }
+
+#deliverables{display:none;padding:12px;border-top:1px solid var(--line);max-height:32vh;overflow:auto}#deliverables.on{display:block}.dl-actions{display:flex;gap:6px;flex-wrap:wrap}.dl-actions button{padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}.dl-item{padding:8px 0;border-top:1px solid var(--line);white-space:pre-wrap;font-size:12px}
 </style>
 </head>
 <body data-view="office">
@@ -216,7 +218,7 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
   <aside id="side"></aside>
   <section id="chat">
     <div class="ch"><span id="av-head"></span><div><div><b id="hn"></b><span class="badge" id="hb"></span></div><div class="sub2" id="hs"></div></div></div>
-    <div class="msgs" id="msgs"></div>
+    <div class="msgs" id="msgs"></div><div id="deliverables"></div>
     <div class="cb" id="chatBox">
       <label class="px">메시지</label>
       <textarea id="inp" placeholder="메시지를 입력하세요"></textarea>
@@ -567,7 +569,7 @@ const aiCfg={provider:"auto",apiKey:"",model:"gemini-3.5-flash-lite"};
 try{const savedAi=JSON.parse(localStorage.getItem("sw_ai_cfg")||"null");if(savedAi){Object.assign(aiCfg,savedAi);if(aiCfg.model==="gemini-2.5-flash-lite"||aiCfg.model==="gemini-3.8-flash")aiCfg.model="gemini-3.5-flash-lite";}}catch(e){}
 
 const ROBOT_QUOTES=["welcome","안녕하세요","반가워요","sw ai office"];
-const st={sel:"alex",mode:"3d",view:"office",busy:{},study:{},hist:{},file:null,phase:{},wfOn:true,wfRun:false,robotChat:false,robotPhrase:"",robotUntil:0};
+const st={sel:"alex",mode:"3d",view:"office",busy:{},study:{},hist:{},file:null,phase:{},deliverables:null,wfOn:true,wfRun:false,robotChat:false,robotPhrase:"",robotUntil:0};
 const E=id=>EMP.find(e=>e.id===id);
 const msgs=$("#msgs"),inp=$("#inp"),stage=$("#stage");
 let renderer,scene,camera,fpvCam,V,rc,ring,root,sampleFn=null,gl3=null,robotBubbleEl=null;
@@ -1564,6 +1566,7 @@ function drawChat(){
     $("#hn").textContent="로비 AI 로봇";$("#hb").textContent="스몰토크";
     $("#hs").textContent="사실 기반 가벼운 대화 중 (현재 시각·날씨 등)";
     $("#chatBox").style.display="";$("#ceoNoticeBox").style.display="none";
+    renderDeliverables();
     msgs.innerHTML="";
     h.forEach(m=>bubble(m.role,m.show,m.t));
     inp.placeholder="로봇에게 오늘 날씨나 가벼운 이야기를 물어보세요…";$("#send").disabled=!!st.busy.robot;
@@ -1589,8 +1592,30 @@ function drawChat(){
   }
   h.forEach(m=>{bubble(m.role,m.show,m.t);if(m.act)approvalBar(m.act);});
   srvLiveDraw();
+  renderDeliverables();
   inp.placeholder=e.name+"에게 지시하거나 메시지를 입력하세요…";$("#send").disabled=!!st.busy[e.id];
 }
+
+function renderDeliverables(){
+ const box=$("#deliverables"),d=st.deliverables;
+ if(!box)return;
+ if(!d||st.sel!=="alex"||st.robotChat){box.classList.remove("on");box.innerHTML="";return;}
+ const ok=d.items.filter(x=>x.status==="승인"&&x.draft);
+ box.classList.add("on");
+ box.innerHTML='<b>📄 업무 결과물 · '+d.overall+'</b><div class="dl-actions"><button data-dl="copy">전체 복사</button><button data-dl="word" '+(ok.length?'':'disabled')+'>Word 다운로드(.doc)</button><button data-dl="pdf" '+(ok.length?'':'disabled')+'>PDF 저장/인쇄</button></div><div class="dl-item">승인 '+ok.length+'건 / 배정 '+d.items.length+'건</div>'+d.items.map(x=>'<div class="dl-item"><b>'+esc(x.name)+' — '+esc(x.status)+'</b>'+esc(x.task)+(x.review?'\n검수: '+esc(x.review):'')+'</div>').join("");
+}
+function exportDeliverable(kind){
+ const d=st.deliverables;if(!d)return;
+ const items=d.items.filter(x=>x.status==="승인"&&x.draft);
+ if(!items.length)return;
+ const escDoc=x=>esc(String(x||""));
+ const html='<!doctype html><html lang="ko"><meta charset="utf-8"><title>'+escDoc(d.title)+'</title><style>body{font-family:Arial,sans-serif;line-height:1.6;margin:32px}pre{white-space:pre-wrap;word-break:break-word}</style><h1>'+escDoc(d.title)+'</h1><p>SW AI OFFICE · '+escDoc(d.created)+'</p>'+items.map(x=>'<h2>'+escDoc(x.name)+'</h2><pre>'+escDoc(x.draft)+'</pre>').join("");
+ if(kind==="copy"){const t=items.map(x=>'['+x.name+']\n'+x.draft).join('\n\n');if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t);else alert("이 환경에서는 자동 복사를 지원하지 않습니다.");return;}
+ if(kind==="word"){const u=URL.createObjectURL(new Blob(['\ufeff',html],{type:"application/msword;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="SW_AI_OFFICE_업무결과물.doc";a.click();setTimeout(()=>URL.revokeObjectURL(u),1200);return;}
+ const w=window.open("","_blank");if(!w){alert("새 창이 차단되었습니다. Safari에서 팝업을 허용해 주세요.");return;}w.document.write(html);w.document.close();w.onload=()=>w.print();
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-dl]");if(b)exportDeliverable(b.dataset.dl);});
+
 function setIcon(){
   $("#vt").innerHTML=st.view==="office"
    ?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4"/><circle cx="12" cy="12" r="2.5"/></svg>'
