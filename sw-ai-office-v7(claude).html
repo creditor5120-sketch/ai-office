@@ -1426,7 +1426,7 @@ async function callConfiguredLLM(inputMsgs){
       const url="https://generativelanguage.googleapis.com/"+ver+"/models/"+encodeURIComponent(m)+":generateContent?key="+encodeURIComponent(cleanKey);
       const payload={contents:contents};
       const lastPrompt=convo.length?String(convo[convo.length-1].content||""):"";
-      const jsonMode=/JSON만|json만|JSON\\s*형식|JSON으로 출력|출력 규칙/i.test(lastPrompt);
+      const jsonMode=/JSON만|json만|JSON\s*형식|JSON으로 출력|출력 규칙/i.test(lastPrompt);
       if(jsonMode)payload.generationConfig={responseMimeType:"application/json"};
       if(!geminiNoSearch)payload.tools=[{google_search:{}}];
       if(sysMsg && sysMsg.trim() && convo.length>0){
@@ -1627,7 +1627,7 @@ function wfLog(text){
   if(st.sel==="alex"&&!st.robotChat)drawChat();
 }
 function parseJSON(t){
-  const raw=String(t).trim().replace(/^\`\`\`(?:json)?\s*/i,"").replace(/\`\`\`\s*$/,"").trim();
+  const raw=String(t).trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\x60{3}\s*$/,"").trim();
   try{return JSON.parse(raw);}catch(e){}
   const start=raw.indexOf("{");
   if(start<0)throw new Error("AI 응답에서 JSON을 찾지 못했습니다. 응답 앞부분: "+raw.slice(0,180));
@@ -1636,7 +1636,7 @@ function parseJSON(t){
     const ch=raw[i];
     if(inString){
       if(escaped)escaped=false;
-      else if(ch==="\\\\")escaped=true;
+      else if(ch==="\\")escaped=true;
       else if(ch==='"')inString=false;
       continue;
     }
