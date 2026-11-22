@@ -1398,6 +1398,15 @@ async function fetchRetry(url,opt){
   }
   throw new Error("네트워크 연결 실패("+((last&&last.message)||"알 수 없음")+"): 인터넷 연결이 끊겼거나 화면이 꺼져 요청이 중단되었을 수 있습니다. 연결을 확인하고 다시 지시해 주세요.");
 }
+async function fetchGeminiRetry(url,opt){
+  let res;
+  for(let k=0;k<3;k++){
+    res=await fetchRetry(url,opt);
+    if(res.status!==503||k===2)return res;
+    await sleep(1800*(k+1));
+  }
+  return res;
+}
 let geminiNoSearch=false;
 async function callConfiguredLLM(inputMsgs,options={}){
   if(aiCfg.provider==="local")throw new Error("내장 업무비서 모드로 설정되어 있습니다.");
@@ -1430,7 +1439,18 @@ async function callConfiguredLLM(inputMsgs,options={}){
       if(sysMsg && sysMsg.trim() && convo.length>0){
         payload.system_instruction={parts:[{text:sysMsg.trim()}]};
       }
-      let res=await fetchRetry(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      const requestOpt={method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)};
+      let activeModel=m;
+      let res=await fetchGeminiRetry(url,requestOpt);
+      if(res.status===503&&m==="gemini-3.5-flash-lite"){
+        const fallbackModel="gemini-2.5-flash";
+        const fallbackUrl="https://generativelanguage.googleapis.com/"+ver+"/models/"+encodeURIComponent(fallbackModel)+":generateContent?key="+encodeURIComponent(cleanKey);
+        const fallbackRes=await fetchGeminiRetry(fallbackUrl,requestOpt);
+        if(fallbackRes.ok||fallbackRes.status!==503){
+          res=fallbackRes;
+          activeModel=fallbackModel;
+        }
+      }
       if(!res.ok&&(res.status===429||res.status===400)&&payload.tools){
         const p2={contents:payload.contents};if(payload.system_instruction)p2.system_instruction=payload.system_instruction;
         const r2=await fetchRetry(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p2)});
@@ -1461,7 +1481,7 @@ async function callConfiguredLLM(inputMsgs,options={}){
         const qv=(errJson?.error?.details||[]).flatMap(d=>d.violations||[]).map(v=>v.quotaMetric||v.quotaId).filter(Boolean);
         if(qv.length)errDetail+=" [한도 항목: "+[...new Set(qv)].join(", ")+"]";
       }catch(e){}
-      lastErr=new Error("Gemini API 오류 (HTTP "+res.status+", "+ver+", 모델: "+m+")"+(errDetail?" - "+errDetail:""));
+      lastErr=new Error("Gemini API 오류 (HTTP "+res.status+", "+ver+", 모델: "+activeModel+")"+(errDetail?" - "+errDetail:""));
       if(res.status!==404)throw lastErr;
     }
     throw lastErr;
