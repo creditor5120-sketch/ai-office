@@ -1,0 +1,54 @@
+name: SW AI OFFICE v3.15 workflow bridge tests
+
+on:
+  push:
+    branches: [work/v315-office-workflow-bridge]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'SW_AI_Office_v3_15.html'
+      - 'SW_AI_Office_Latest.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'tests/v315-workflow-bridge.test.mjs'
+      - 'tests/v315-office-browser-smoke.mjs'
+      - 'tests/worker-auth-audit.test.mjs'
+      - 'tests/d1-read-only-preflight.test.mjs'
+      - 'docs/D1_READ_ONLY_PREFLIGHT.sql'
+      - 'worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js'
+      - '.github/workflows/v315-bridge-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  bridge-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify untouched office source matches the approved original
+        run: |
+          test -s SW_AI_Office_v3_15.html
+          test "$(git hash-object SW_AI_Office_v3_15.html)" = "5b42a3c1ee8bfdff1b5141057b0db21e2517d5c3"
+      - name: Run Worker auth and approval contract tests
+        run: node --test tests/worker-auth-audit.test.mjs
+      - name: Run v3.15 workflow bridge tests
+        run: node --test tests/v315-workflow-bridge.test.mjs
+      - name: Verify D1 preflight is read-only and complete
+        run: node --test tests/d1-read-only-preflight.test.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Render latest office and verify workflow panel
+        run: node tests/v315-office-browser-smoke.mjs
+      - name: Upload desktop and iPad browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sw-ai-office-v315-browser-smoke
+          path: artifacts/*.png
+          if-no-files-found: warn
