@@ -8,6 +8,10 @@ export default {
       "https://creditor5120-sketch.github.io",
       "https://work-v315-office-workflow-br.sw-ai-office-preview.pages.dev"
     ]);
+    // Cloudflare Pages creates immutable deployment-specific preview hostnames.
+    // Trust only HTTPS subdomains of this exact Pages project; CORS is not authentication.
+    const isProjectPreviewOrigin =
+      /^https:\/\/[a-z0-9-]+\.sw-ai-office-preview\.pages\.dev$/i.test(requestOrigin);
     const corsHeaders = {
 
       "Access-Control-Allow-Origin": allowedOrigins.has(requestOrigin)
