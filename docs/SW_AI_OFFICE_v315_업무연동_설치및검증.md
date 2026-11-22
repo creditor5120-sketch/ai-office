@@ -64,7 +64,7 @@
 | `DB` | 기존 D1 바인딩 |
 
 주의:
-- Worker CORS는 GitHub Pages 운영 주소(`https://creditor5120-sketch.github.io`)와 승인된 Cloudflare Pages 미리보기 주소(`https://work-v315-office-workflow-br.sw-ai-office-preview.pages.dev`)만 허용한다. 다른 Origin은 응답의 허용 Origin으로 반영하지 않는다.
+- Worker CORS는 GitHub Pages 운영 주소(`https://creditor5120-sketch.github.io`)와 이 프로젝트에 속한 HTTPS Cloudflare Pages 미리보기 주소(`https://<배포별주소>.sw-ai-office-preview.pages.dev`)를 허용한다. 프로젝트 접미사가 정확히 일치하는 주소만 정규식으로 허용하며, 다른 도메인·다른 프로젝트의 Origin은 허용하지 않는다. CORS는 브라우저의 교차 출처 접근 제어일 뿐 인증 수단이 아니므로 모든 POST 요청에는 별도 `OFFICE_ACCESS_TOKEN`이 필요하다.
 - CORS 허용은 인증이 아니다. 모든 POST 요청은 별도의 `OFFICE_ACCESS_TOKEN`을 요구하며 대표 결정은 추가로 `REPRESENTATIVE_ACCESS_TOKEN`을 요구한다.
 - 이 브랜치의 Worker 코드는 `OPENROUTER_API_KEY`가 있으면 OpenRouter를 우선 사용하고, 없으면 `GEMINI_API_KEY`로 Gemini를 사용한다. 기존 OpenRouter Secret을 유지한 채 연동할 수 있으며, 두 키가 모두 있으면 OpenRouter가 우선된다.
 - 기존 D1 데이터베이스를 새로 만들거나 교체하지 않는다.
