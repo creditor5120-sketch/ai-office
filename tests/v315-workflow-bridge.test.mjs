@@ -296,6 +296,11 @@ test('workflow engine control is injected beside the original office settings bu
   assert.match(wrapperSource, /button\.setAttribute\('aria-expanded',String\(opened\)\)/);
 });
 
+test('latest bridge load failure message names the active adapter file', () => {
+  assert.match(wrapperSource, /workflow-bridge-latest\\.js의 배포 경로를 확인해 주세요/);
+  assert.doesNotMatch(wrapperSource, /workflow-bridge-v315\\.js의 배포 경로를 확인해 주세요/);
+});
+
 test('workflow engine control does not replace or mutate the approved office HTML', async () => {
   const office = await readFile(new URL('../SW_AI_Office_v3_15.html', import.meta.url), 'utf8');
   assert.ok(office.includes('async function callConfiguredLLM(inputMsgs)'));
