@@ -1425,16 +1425,13 @@ async function callConfiguredLLM(inputMsgs){
     for(const ver of endpoints){
       const url="https://generativelanguage.googleapis.com/"+ver+"/models/"+encodeURIComponent(m)+":generateContent?key="+encodeURIComponent(cleanKey);
       const payload={contents:contents};
-      const lastPrompt=convo.length?String(convo[convo.length-1].content||""):"";
-      const jsonMode=/JSON만|json만|JSON\s*형식|JSON으로 출력|출력 규칙/i.test(lastPrompt);
-      if(jsonMode)payload.generationConfig={responseMimeType:"application/json"};
       if(!geminiNoSearch)payload.tools=[{google_search:{}}];
       if(sysMsg && sysMsg.trim() && convo.length>0){
         payload.system_instruction={parts:[{text:sysMsg.trim()}]};
       }
       let res=await fetchRetry(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
       if(!res.ok&&(res.status===429||res.status===400)&&payload.tools){
-        const p2={contents:payload.contents};if(payload.system_instruction)p2.system_instruction=payload.system_instruction;if(payload.generationConfig)p2.generationConfig=payload.generationConfig;
+        const p2={contents:payload.contents};if(payload.system_instruction)p2.system_instruction=payload.system_instruction;
         const r2=await fetchRetry(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p2)});
         if(r2.ok)geminiNoSearch=true;
         res=r2;
@@ -1570,6 +1567,7 @@ function drawChat(){
     msgs.appendChild(d);
   }
   h.forEach(m=>{bubble(m.role,m.show,m.t);if(m.act)approvalBar(m.act);});
+  srvLiveDraw();
   inp.placeholder=e.name+"에게 지시하거나 메시지를 입력하세요…";$("#send").disabled=!!st.busy[e.id];
 }
 function setIcon(){
@@ -1627,30 +1625,10 @@ function wfLog(text){
   if(st.sel==="alex"&&!st.robotChat)drawChat();
 }
 function parseJSON(t){
-  const raw=String(t).trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\x60{3}\s*$/,"").trim();
-  try{return JSON.parse(raw);}catch(e){}
-  const start=raw.indexOf("{");
-  if(start<0)throw new Error("AI 응답에서 JSON을 찾지 못했습니다. 응답 앞부분: "+raw.slice(0,180));
-  let depth=0,inString=false,escaped=false;
-  for(let i=start;i<raw.length;i++){
-    const ch=raw[i];
-    if(inString){
-      if(escaped)escaped=false;
-      else if(ch==="\\")escaped=true;
-      else if(ch==='"')inString=false;
-      continue;
-    }
-    if(ch==='"'){inString=true;continue;}
-    if(ch==="{")depth++;
-    else if(ch==="}"){
-      depth--;
-      if(depth===0){
-        try{return JSON.parse(raw.slice(start,i+1));}
-        catch(e){throw new Error("AI 응답의 JSON 형식이 올바르지 않습니다: "+e.message);}
-      }
-    }
-  }
-  throw new Error("AI 응답의 JSON이 완성되지 않았습니다.");
+  const s=String(t).replace(/```json|```/g,"").trim();
+  const a=s.indexOf("{"),b=s.lastIndexOf("}");
+  if(a<0||b<=a)throw new Error("AI 응답에서 JSON을 찾지 못했습니다.");
+  return JSON.parse(s.slice(a,b+1));
 }
 function mkInput(sys,text){
   return aiCfg.provider==="auto"
@@ -1934,12 +1912,35 @@ async function srvPost(payload,extra){
   return {status:res.status,data:data||{}};
 }
 let srvLastStage="";
+const srvLive={on:false,start:0,stage:"",calls:0,fails:0,lastEvt:0,lastResp:0,note:""};
+function srvFmt(ms){const x=Math.max(0,Math.round(ms/1000));return x>=60?Math.floor(x/60)+"분 "+(x%60)+"초":x+"초";}
+function srvLiveText(){
+  const now=Date.now(),L=srvLive,idle=Math.max(0,now-Math.max(L.lastEvt,L.lastResp,L.start));
+  let t="⏳ 서버에서 처리 중 · 경과 "+srvFmt(now-L.start)+"\n현재 단계: "+(L.stage||"접수 확인 중")+"\nAI 호출 완료 "+L.calls+"회"+(L.fails?" · 실패 "+L.fails+"회(자동 재시도)":"")+" · 마지막 진행 "+srvFmt(idle)+" 전";
+  if(L.note)t+="\n"+L.note;
+  if(idle>180000)t+="\n⚠ 3분 넘게 새 진행이 없습니다. AI 응답이 늦거나 막혔을 수 있습니다. 조금 더 기다려 보시고, 계속 변화가 없으면 새로고침 후 '이어서'를 입력하세요.";
+  return t;
+}
+function srvLiveDraw(){
+  if(!srvLive.on)return;
+  const hint=$("#hint");if(hint)hint.textContent="⏳ 처리 중 · "+srvFmt(Date.now()-srvLive.start)+" · "+(srvLive.stage||"접수 확인 중");
+  if(st.robotChat||st.sel!=="alex")return;
+  let d=document.getElementById("srvLive");
+  if(!d){d=document.createElement("div");d.id="srvLive";d.className="b ai";d.style.borderStyle="dashed";msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+  d.textContent=srvLiveText();
+}
 async function srvApplyProgress(taskId){
   try{
     const r=await srvPost({action:"get_task_history",taskId:taskId});
     if(r.status!==200||!r.data.events||!r.data.events.length)return;
-    const ev=[...r.data.events].reverse().find(x=>x.eventType==="WORKFLOW_STAGE_STARTED");
-    if(!ev||ev.stage===srvLastStage)return;
+    const evs=r.data.events;
+    srvLive.calls=evs.filter(x=>x.eventType==="AI_CALL_COMPLETED").length;
+    srvLive.fails=evs.filter(x=>x.eventType==="AI_CALL_FAILED").length;
+    const tm=Date.parse(evs[evs.length-1].createdAt);if(tm)srvLive.lastEvt=tm;
+    const ev=[...evs].reverse().find(x=>x.eventType==="WORKFLOW_STAGE_STARTED");
+    if(!ev)return;
+    srvLive.stage=String(ev.stage||"");
+    if(ev.stage===srvLastStage)return;
     srvLastStage=ev.stage;
     Object.keys(st.phase).forEach(id=>setPhase(id,null));
     const names=(ev.detail&&ev.detail.participants)||[];
@@ -1956,16 +1957,21 @@ async function srvApplyProgress(taskId){
 }
 async function srvRun(job){
   st.wfRun=true;srvLastStage="";
+  Object.assign(srvLive,{on:true,start:Date.now(),stage:"",calls:0,fails:0,lastEvt:0,lastResp:Date.now(),note:""});
   setPhase("alex","업무 검토 중");
-  const timer=setInterval(()=>srvApplyProgress(job.taskId),6000);
+  const timer=setInterval(()=>srvApplyProgress(job.taskId),5000);
+  const first=setTimeout(()=>srvApplyProgress(job.taskId),2500);
+  const tick=setInterval(srvLiveDraw,1000);srvLiveDraw();
   let netErr=0,quotaWaits=0,n=0;
   const stop=(msg,keep)=>{const e=new Error(msg);e.keep=!!keep;return e;};
   try{
     while(n++<600){
       let r;
-      try{r=await srvPost(job.payload);netErr=0;}
+      srvLive.note="서버에 요청 중 — AI 응답을 기다리고 있습니다(한 번에 최대 2분 걸릴 수 있음)";
+      try{r=await srvPost(job.payload);netErr=0;srvLive.lastResp=Date.now();}
       catch(e){
         if(++netErr>=5)throw stop("서버에 연결하지 못했습니다. Worker 주소와 접근 토큰, 그리고 이 페이지가 Worker가 허용한 주소(GitHub Pages)에서 열렸는지 확인해 주세요.",true);
+        srvLive.note="서버 연결 재시도 중 ("+netErr+"/5)";
         await sleep(4000);continue;
       }
       const d=r.data||{};
@@ -1973,19 +1979,22 @@ async function srvRun(job){
       if(r.status===200&&d.status)throw stop(d.message||("업무 상태: "+d.status),false);
       const retry=r.status===202||r.status===429||(r.status===409&&(d.resumeRequired||/처리 중|잠금/.test(String(d.error||""))));
       if(retry){
+        const wait=Math.min(Math.max(Number(d.resumeDelayMs)||1500,1200),600000);
         if(r.status===429){
           quotaWaits++;
           if(quotaWaits===1){wfLog("Gemini 사용 한도로 대기 중입니다. 한도가 풀리면 자동으로 이어서 처리합니다.");drawChat();}
           if(quotaWaits>6)throw stop("Gemini 사용 한도가 풀리지 않아 잠시 멈췄습니다.",true);
-        }
-        await sleep(Math.min(Math.max(Number(d.resumeDelayMs)||1500,1200),600000));
+          srvLive.note="Gemini 사용 한도 대기 중 — 약 "+srvFmt(wait)+" 뒤 다시 시도합니다("+quotaWaits+"/6)";
+        }else if(r.status===409)srvLive.note="다른 처리가 끝나기를 기다리는 중입니다";
+        else srvLive.note="서버 응답 정상 — 다음 단계를 이어서 진행합니다";
+        await sleep(wait);
         continue;
       }
       const msg=(d.error||("서버 응답 오류 "+r.status))+(d.currentStage?" (단계: "+d.currentStage+")":"");
       throw stop(msg,r.status===500);
     }
     throw stop("처리 시간이 너무 길어 멈췄습니다.",true);
-  }finally{clearInterval(timer);}
+  }finally{clearInterval(timer);clearInterval(tick);clearTimeout(first);srvLive.on=false;const el=document.getElementById("srvLive");if(el)el.remove();const hh=$("#hint");if(hh)hh.textContent="";}
 }
 function srvShowResult(d){
   const h=st.hist.alex=st.hist.alex||[],gate=(d.workflow&&d.workflow.reviewGate)||{};
