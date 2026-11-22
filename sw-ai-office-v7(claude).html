@@ -1648,7 +1648,7 @@ function parseJSON(t){
       }
     }
   }
-  const preview=s.replace(/\\s+/g," ").slice(0,220);
+  const preview=s.replace(/\s+/g," ").slice(0,220);
   throw new Error("AI 응답에 유효한 JSON 객체가 없습니다. 응답 일부: "+(preview||"(빈 응답)"));
 }
 function mkInput(sys,text){
