@@ -1399,7 +1399,7 @@ async function fetchRetry(url,opt){
   throw new Error("네트워크 연결 실패("+((last&&last.message)||"알 수 없음")+"): 인터넷 연결이 끊겼거나 화면이 꺼져 요청이 중단되었을 수 있습니다. 연결을 확인하고 다시 지시해 주세요.");
 }
 let geminiNoSearch=false;
-async function callConfiguredLLM(inputMsgs){
+async function callConfiguredLLM(inputMsgs,options={}){
   if(aiCfg.provider==="local")throw new Error("내장 업무비서 모드로 설정되어 있습니다.");
   if(aiCfg.provider==="auto"){
     if(!sampleFn){try{if(window.claude&&claude.use)sampleFn=await claude.use("sample");}catch(e){}}
@@ -1425,7 +1425,8 @@ async function callConfiguredLLM(inputMsgs){
     for(const ver of endpoints){
       const url="https://generativelanguage.googleapis.com/"+ver+"/models/"+encodeURIComponent(m)+":generateContent?key="+encodeURIComponent(cleanKey);
       const payload={contents:contents};
-      if(!geminiNoSearch)payload.tools=[{google_search:{}}];
+      if(options.json){payload.generationConfig={responseMimeType:"application/json"};}
+      else if(!geminiNoSearch)payload.tools=[{google_search:{}}];
       if(sysMsg && sysMsg.trim() && convo.length>0){
         payload.system_instruction={parts:[{text:sysMsg.trim()}]};
       }
@@ -1625,19 +1626,39 @@ function wfLog(text){
   if(st.sel==="alex"&&!st.robotChat)drawChat();
 }
 function parseJSON(t){
-  const s=String(t).replace(/```json|```/g,"").trim();
-  const a=s.indexOf("{"),b=s.lastIndexOf("}");
-  if(a<0||b<=a)throw new Error("AI 응답에서 JSON을 찾지 못했습니다.");
-  return JSON.parse(s.slice(a,b+1));
+  const s=String(t).replace(/```json|```/gi,"").trim();
+  for(let start=0;start<s.length;start++){
+    if(s[start]!=="{")continue;
+    let depth=0,inString=false,escaped=false;
+    for(let i=start;i<s.length;i++){
+      const ch=s[i];
+      if(inString){
+        if(escaped)escaped=false;
+        else if(ch==="\\\\")escaped=true;
+        else if(ch==='"')inString=false;
+        continue;
+      }
+      if(ch==='"'){inString=true;continue;}
+      if(ch==="{")depth++;
+      else if(ch==="}"){
+        depth--;
+        if(depth===0){
+          try{return JSON.parse(s.slice(start,i+1));}catch(e){break;}
+        }
+      }
+    }
+  }
+  const preview=s.replace(/\\s+/g," ").slice(0,220);
+  throw new Error("AI 응답에 유효한 JSON 객체가 없습니다. 응답 일부: "+(preview||"(빈 응답)"));
 }
 function mkInput(sys,text){
   return aiCfg.provider==="auto"
     ?[{role:"user",content:sys+"\n\n[요청]\n"+text}]
     :[{role:"system",content:sys},{role:"user",content:text}];
 }
-async function callAs(emp,text){
+async function callAs(emp,text,options={}){
   await paceLLM();
-  const r=await callConfiguredLLM(mkInput(emp.sys,text));
+  const r=await callConfiguredLLM(mkInput(emp.sys,text),options);
   const t=((r&&r.text)||"").trim();
   if(!t)throw new Error(emp.name+"의 응답이 비어 있습니다.");
   return t;
@@ -1661,7 +1682,7 @@ async function reviewItem(it){
   setPhase(rid,"검수 중");
   if(rid!=="alex")await toMeet(rid);
   try{
-    const v=parseJSON(await callAs(rv,"[단테 대표님 원 지시]\n"+it.full+"\n\n[담당자 "+E(it.id).name+"의 결과물]\n"+it.draft+"\n\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목.\n설명 없이 JSON만 출력하세요: {\"verdict\":\"승인\" 또는 \"보완\",\"comment\":\"보완이면 구체적 수정 사항, 승인이면 한 줄 의견\"}"));
+    const v=parseJSON(await callAs(rv,"[단테 대표님 원 지시]\n"+it.full+"\n\n[담당자 "+E(it.id).name+"의 결과물]\n"+it.draft+"\n\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목.\n설명 없이 JSON만 출력하세요: {\"verdict\":\"승인\" 또는 \"보완\",\"comment\":\"보완이면 구체적 수정 사항, 승인이면 한 줄 의견\"}",{json:true}));
     it.review=String(v.comment||"");
     if(v.verdict==="보완"){
       it.status="재작업";setPhase(it.id,"재작업");
@@ -1690,7 +1711,7 @@ async function runDirective(text,f){
   try{
     let step=0;const wf=t=>wfLog(["①","②","③","④","⑤","⑥","⑦"][step++]+" "+t);
     const roster=TEAM_LEADS.map(id=>{const l=E(id);return id+" | "+l.name+" | "+l.badge+" | 팀 업무: "+(l.duty||"")+" | 팀원: "+membersOf(id).map(m=>E(m).name+"("+E(m).duty+")").join(" / ");}).join("\n");
-    const plan=parseJSON(await callAs(a,"[단테 대표님 업무 지시]\n"+full+"\n\n[업무를 배정할 수 있는 팀(팀장)]\n"+roster+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"summary\":\"업무 해석과 처리 방향 2~3문장\",\"collab\":true 또는 false,\"assignments\":[{\"id\":\"팀장 id\",\"task\":\"그 팀에 줄 구체적 업무 지시\"}]}\nassignments는 관련 있는 팀만 1~3개이며, id는 반드시 위 팀장 id만 씁니다. collab은 2개 이상 팀이 자료·판단·결과물을 서로 맞춰야 하면 true, 각자 독립적으로 처리할 수 있으면 false입니다. 알렉스 본인과 대표는 배정하지 않습니다. 사실 확인이 필요한 항목은 task에 '확인 필요'라고 적습니다."));
+    const plan=parseJSON(await callAs(a,"[단테 대표님 업무 지시]\n"+full+"\n\n[업무를 배정할 수 있는 팀(팀장)]\n"+roster+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"summary\":\"업무 해석과 처리 방향 2~3문장\",\"collab\":true 또는 false,\"assignments\":[{\"id\":\"팀장 id\",\"task\":\"그 팀에 줄 구체적 업무 지시\"}]}\nassignments는 관련 있는 팀만 1~3개이며, id는 반드시 위 팀장 id만 씁니다. collab은 2개 이상 팀이 자료·판단·결과물을 서로 맞춰야 하면 true, 각자 독립적으로 처리할 수 있으면 false입니다. 알렉스 본인과 대표는 배정하지 않습니다. 사실 확인이 필요한 항목은 task에 '확인 필요'라고 적습니다.",{json:true}));
     const byLead=new Map();
     (plan.assignments||[]).forEach(x=>{
       if(!x||!E(x.id))return;
@@ -1733,7 +1754,7 @@ async function runDirective(text,f){
       setPhase(t.lead,"업무 배분 중");
       let asg=[];
       try{
-        const r=parseJSON(await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+(minutes?"\n\n[협업 회의 결과]\n"+minutes:"")+"\n\n[배정 가능한 팀원]\n"+ms.map(m=>m+" | "+E(m).name+" | "+E(m).badge+" | "+(E(m).duty||"")).join("\n")+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"assignments\":[{\"id\":\"팀원 id\",\"task\":\"팀원에게 줄 구체적 작업 지시\"}]}\n필요한 팀원만 1~"+ms.length+"명 배정하고, id는 위 팀원 id만 씁니다. 팀장 본인은 배정하지 않습니다."));
+        const r=parseJSON(await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+(minutes?"\n\n[협업 회의 결과]\n"+minutes:"")+"\n\n[배정 가능한 팀원]\n"+ms.map(m=>m+" | "+E(m).name+" | "+E(m).badge+" | "+(E(m).duty||"")).join("\n")+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"assignments\":[{\"id\":\"팀원 id\",\"task\":\"팀원에게 줄 구체적 작업 지시\"}]}\n필요한 팀원만 1~"+ms.length+"명 배정하고, id는 위 팀원 id만 씁니다. 팀장 본인은 배정하지 않습니다.",{json:true}));
         const seen=new Set();
         (r.assignments||[]).forEach(x=>{if(x&&ms.includes(x.id)&&!seen.has(x.id)){seen.add(x.id);asg.push({id:x.id,task:String(x.task||"")});}});
       }catch(err){}
