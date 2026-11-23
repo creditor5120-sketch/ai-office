@@ -7,12 +7,13 @@ on:
       - "automation/ai-autopilot.mjs"
       - ".github/workflows/sw-ai-office-autopilot.yml"
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17,47 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 concurrency:
   group: sw-ai-office-autopilot
@@ -95,6 +96,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr merge "${{ steps.proposal.outputs.url }}" --squash --delete-branch
+
+      - name: 다음 자동 개발 회차 즉시 예약
+        if: steps.patch.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run sw-ai-office-autopilot.yml --ref main
 
       - name: 수정안이 없을 때 점검 보고서 보관
         if: steps.patch.outputs.changed != 'true'
