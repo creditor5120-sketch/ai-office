@@ -7,7 +7,7 @@ on:
       - "automation/ai-autopilot.mjs"
       - ".github/workflows/sw-ai-office-autopilot.yml"
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17 */2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ concurrency:
 jobs:
   ai-maintenance:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
@@ -64,14 +64,16 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
 
-      - name: 자동 회귀 테스트
+      - name: 전체 회귀 테스트
         if: steps.patch.outputs.changed == 'true'
         run: |
-          node --test tests/v7-dance-time.test.mjs
+          node --test tests/*.test.mjs
+          node tests/v315-office-browser-smoke.mjs
           node tests/v7-dance-time-browser-smoke.mjs
 
-      - name: 검토용 PR 생성
+      - name: 변경사항 커밋 및 PR 생성
         if: steps.patch.outputs.changed == 'true'
+        id: proposal
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -80,12 +82,20 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$BRANCH"
-          git add -- 'sw-ai-office-v7(claude).html' tests/v7-dance-time.test.mjs tests/v7-dance-time-browser-smoke.mjs ai-autopilot-report.md
-          git commit -m "chore: AI autopilot maintenance proposal"
+          git add -- office-v315-integrated.html workflow-bridge-latest.js tests/v315-workflow-bridge.test.mjs tests/v315-office-browser-smoke.mjs ai-autopilot-report.md
+          git commit -m "chore: SW AI OFFICE autonomous maintenance"
           git push origin "$BRANCH"
-          gh pr create --base main --head "$BRANCH" \
-            --title "SW AI OFFICE 자동 개발 제안" \
-            --body-file ai-autopilot-report.md
+          PR_URL=$(gh pr create --base main --head "$BRANCH" \
+            --title "SW AI OFFICE 자동 개발 개선" \
+            --body-file ai-autopilot-report.md)
+          echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: 테스트 통과 변경사항 자동 병합
+        if: steps.patch.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr merge "${{ steps.proposal.outputs.url }}" --squash --delete-branch
 
       - name: 수정안이 없을 때 점검 보고서 보관
         if: steps.patch.outputs.changed != 'true'
