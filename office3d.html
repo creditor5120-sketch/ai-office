@@ -743,7 +743,8 @@ function renderTaskHistory(){
  const list=document.getElementById('taskHistoryList');if(!list)return;
  const history=loadCombinedTaskHistory();
  list.replaceChildren();
- const visibleHistory=history.filter(record=>!record.employeeId||record.employeeId===selected?.userData.person.id||(Array.isArray(record.employeeIds)&&record.employeeIds.includes(selected?.userData.person.id)));
+ const isRepresentative=selected?.userData.person.id==='CEO';
+  const visibleHistory=history.filter(record=>isRepresentative||!record.employeeId||record.employeeId===selected?.userData.person.id||(Array.isArray(record.employeeIds)&&record.employeeIds.includes(selected?.userData.person.id)));
  if(!visibleHistory.length){list.textContent='이 직원의 저장된 업무 기록이 없습니다.';return}
  visibleHistory.slice(0,5).forEach(record=>{
   const item=document.createElement('button');item.type='button';item.className='historyItem';
