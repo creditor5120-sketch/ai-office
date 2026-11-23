@@ -35,6 +35,10 @@ test("all AI employees except the representative gather in one hallway row", () 
   assert.match(html, /c\.mode="dance"/);
 });
 
+test("movement resolves safely when pathfinding returns no route", () => {
+  assert.match(html, /function walk\(c,pts\)[\s\S]*?if\(!c\.path\.length\)\{c\.done=null;r\(\);\}/);
+});
+
 test("dance animation and return-to-desk command are present", () => {
   assert.match(html, /c\.mode==="dance"/);
   assert.match(html, /async function stopDanceTime\(command\)/);
