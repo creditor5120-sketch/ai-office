@@ -142,6 +142,10 @@ try {
   if (!resumedPayload || resumedPayload.taskId !== interruptedFixture.taskId || resumedPayload.idempotencyKey !== interruptedFixture.taskId || resumedPayload.employeeId !== 'COO') {
     throw new Error('중단 업무 이어하기가 기존 업무 ID·멱등성 키를 재사용하지 않았습니다: ' + JSON.stringify(resumedPayload));
   }
+  // Verify that the bridge does not generate a new taskId when resuming
+  if (resumedPayload.taskId !== 'smoke-resume-existing-task') {
+    throw new Error('중단 업무 이어하기가 기존 업무 ID를 유지하지 않았습니다.');
+  }
   await page.evaluate(() => localStorage.removeItem('swAIOfficePendingTask'));
 
   const restoreFixture = {
