@@ -505,7 +505,7 @@ async function submitSelectedTask(value){
  const taskId=crypto.randomUUID();
  const pending=appendChat(employeeName,'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
  const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};writeEmployeeStates(states);recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
- const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory};
+ const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory.map(employee=>({...employee,name:characterNames[employee.id]||employee.name,jobTitle:employee.name}))};
  try{
   let data=null,completed=false,attempt=0;
   const deadline=Date.now()+30*60*1000;
@@ -610,8 +610,8 @@ function applyLiveAuditStates(audit,taskId,task){
  const events=Array.isArray(audit?.events)?audit.events:[];
  const latest=[...events].reverse().find(event=>event.eventType==='WORKFLOW_STAGE_STARTED');if(!latest)return;
  const stage=String(latest.stage||audit.task?.currentStage||''),detail=latest.detail||{},names=Array.isArray(detail.participants)?detail.participants.map(String):[];
- const active=directory.filter(person=>names.includes(person.name));
- if(/본부장/.test(String(detail.responsibleRole||''))||/본부장/.test(stage)){const manager=directory.find(person=>person.id==='COO');if(manager&&!active.some(person=>person.id===manager.id))active.push(manager)}
+ const active=avatars.map(avatar=>avatar.userData.person).filter(person=>names.includes(person.name));
+ if(/본부장/.test(String(detail.responsibleRole||''))||/본부장/.test(stage)){const manager=avatars.find(avatar=>avatar.userData.person.id==='COO')?.userData.person;if(manager&&!active.some(person=>person.id===manager.id))active.push(manager)}
  if(!active.length)return;
  const role=String(detail.responsibleRole||''),meeting=/협업|회의/.test(stage)||(/검수/.test(stage)&&(/팀장/.test(stage)||/각 담당 팀장/.test(role))),now=new Date().toISOString(),states=readEmployeeStates(),activeIds=new Set(active.map(person=>person.id));
  for(const person of directory){const previous=states[person.id]||{};if(previous.taskId===taskId&&['업무 중','검수 중','협업 중'].includes(previous.status)&&!activeIds.has(person.id)){states[person.id]={...previous,status:'업무 대기',location:'책상',detail:'현재 단계 담당 업무 대기',taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}}
@@ -621,13 +621,13 @@ function applyLiveAuditStates(audit,taskId,task){
 function applyFinalWorkStates(data,taskId,task,requestedEmployeeId){
  const states=readEmployeeStates(),deliverables=Array.isArray(data.deliverables)?data.deliverables:[],reviews=Array.isArray(data.finalReviewResults)?data.finalReviewResults:[],activeIds=new Set(),now=new Date().toISOString();
  for(const item of deliverables){
-  const person=directory.find(entry=>entry.id===item.id);if(!person)continue;activeIds.add(person.id);
+  const person=avatars.find(avatar=>avatar.userData.person.id===item.id)?.userData.person;if(!person)continue;activeIds.add(person.id);
   const review=reviews.find(entry=>entry.id===item.id),judgment=review?.judgment||'';
   const status=review?(judgment==='승인'?'검수 승인':'보완 필요'):(item.status==='completed'?'업무 완료':item.status==='partial'?'부분 완료':'오류');
   states[person.id]={...(states[person.id]||{}),status,location:'책상',detail:task,taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id]);
-  const leader=directory.find(entry=>entry.name===item.teamLeader);if(leader&&review){activeIds.add(leader.id);states[leader.id]={...(states[leader.id]||{}),status:'검수 완료',location:'책상',detail:person.name+' 결과물 검수 · '+(judgment||'판정 미기재'),taskId,updatedAt:now};recordEmployeeHistory(leader.id,states[leader.id])}
+  const leader=avatars.find(avatar=>avatar.userData.person.name===item.teamLeader)?.userData.person;if(leader&&review){activeIds.add(leader.id);states[leader.id]={...(states[leader.id]||{}),status:'검수 완료',location:'책상',detail:person.name+' 결과물 검수 · '+(judgment||'판정 미기재'),taskId,updatedAt:now};recordEmployeeHistory(leader.id,states[leader.id])}
  }
- const manager=directory.find(entry=>entry.id==='COO');if(manager){activeIds.add(manager.id);states[manager.id]={...(states[manager.id]||{}),status:'보고 완료',location:'본부장실',detail:'최종 보고서 작성 및 제출',taskId,updatedAt:now};recordEmployeeHistory(manager.id,states[manager.id])}
+ const manager=avatars.find(avatar=>avatar.userData.person.id==='COO')?.userData.person;if(manager){activeIds.add(manager.id);states[manager.id]={...(states[manager.id]||{}),status:'보고 완료',location:'본부장실',detail:'최종 보고서 작성 및 제출',taskId,updatedAt:now};recordEmployeeHistory(manager.id,states[manager.id])}
  if(requestedEmployeeId&&!activeIds.has(requestedEmployeeId)){const person=directory.find(entry=>entry.id===requestedEmployeeId);if(person){states[person.id]={...(states[person.id]||{}),status:'업무 결과 확인',location:'책상',detail:'최종 담당자 및 검수 결과는 업무 보고에서 확인',taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}}
  writeEmployeeStates(states);refreshStaffCards();
 }
