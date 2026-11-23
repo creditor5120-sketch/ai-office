@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 
 const apiKey = process.env.GEMINI_API_KEY;
-const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+const model = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 if (!apiKey) throw new Error("GEMINI_API_KEY secret is missing.");
 
 const writable = [
