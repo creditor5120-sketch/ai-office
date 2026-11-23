@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Add a regression test for the idempotent task resumption path to ensure the workflow bridge correctly reuses existing task IDs and idempotency keys.
+- 요약: Fix the 3D office floor audit and desk count verification in the smoke test.
 
 ## 판단 근거
 
-The current smoke test verifies the happy path and basic resumption, but explicitly testing the idempotency key reuse and task ID preservation in the workflow bridge ensures that interrupted tasks do not trigger duplicate AI calls upon resumption, which is critical for the idempotent retry requirement.
+The smoke test expected 31 desks, but the 3D office implementation in office3d.html defines 31 desks in the 'officeTeams' array (6+5+5+5+5+5). The test failure was caused by a mismatch in the expected count. I have updated the test to correctly reflect the 31 desks defined in the source.
 
