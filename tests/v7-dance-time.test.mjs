@@ -44,6 +44,14 @@ test("automatic wandering and research pause during dance-time", () => {
   assert.match(html, /danceActive\|\|researchRunning/);
 });
 
+test("representative and team lead names match the approved SW AI OFFICE organization", () => {
+  assert.match(html, /\["ceo1","피터","대표이사"/);
+  assert.match(html, /\["peter","렉스","법무팀장"/);
+  assert.match(html, /\["jenny","데니스","경영관리팀장"/);
+  assert.doesNotMatch(html, /단테|제니/);
+  assert.match(html, /사용자는 앱코\(ABKO\)의 대표이사 '피터'/);
+});
+
 test("the original 3D office scene and pathfinding remain in the file", () => {
   assert.match(html, /function init3d\(\)/);
   assert.match(html, /function buildGridNav\(\)/);
