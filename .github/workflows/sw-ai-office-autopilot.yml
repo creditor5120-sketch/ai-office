@@ -1,11 +1,6 @@
 name: SW AI OFFICE - 무료 자동 개발 에이전트
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "automation/ai-autopilot.mjs"
-      - ".github/workflows/sw-ai-office-autopilot.yml"
   schedule:
     - cron: "17,47 * * * *"
   workflow_dispatch:
@@ -47,9 +42,20 @@ jobs:
         run: |
           if [ ! -f ai-autopilot.patch ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "수정안 없음: 다음 자동 회차에서 계속 점검합니다."
             exit 0
           fi
-          git apply --recount --check ai-autopilot.patch
+          if ! git apply --recount --check ai-autopilot.patch; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            {
+              echo ""
+              echo "## 자동 적용 보류"
+              echo ""
+              echo "AI가 생성한 수정안의 문맥이 현재 소스와 일치하지 않아 안전하게 적용하지 않았습니다."
+            } >> ai-autopilot-report.md
+            echo "AI 수정안이 현재 코드와 맞지 않아 안전하게 건너뛰었습니다."
+            exit 0
+          fi
           git apply --recount ai-autopilot.patch
           git diff --check
           if git diff --quiet; then
@@ -86,7 +92,7 @@ jobs:
           git push origin HEAD:main
 
       - name: 다음 자동 개발 회차 즉시 예약
-        if: steps.patch.outputs.changed == 'true'
+        if: always() && steps.patch.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
