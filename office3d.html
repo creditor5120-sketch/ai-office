@@ -513,7 +513,7 @@ async function submitSelectedTask(value,resumeRecord=null){
  taskSubmissionInProgress=true;
  const history=document.getElementById('chatHistory');
  if(!resumeRecord){appendChat('나',task);document.getElementById('taskInput').value=''}
- const taskId=resumeRecord.taskId||crypto.randomUUID();
+ const taskId=resumeRecord?.taskId||crypto.randomUUID();
  savePendingTask({task,taskId,employeeId:p.id,employeeName,status:'PROCESSING',savedAt:resumeRecord.savedAt||new Date().toISOString()});
  const pending=appendChat(employeeName,resumeRecord?'기존 업무 ID로 중단된 업무를 이어서 확인합니다.':'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
  const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};writeEmployeeStates(states);recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
