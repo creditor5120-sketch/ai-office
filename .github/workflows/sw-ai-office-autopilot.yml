@@ -99,11 +99,13 @@ jobs:
           git rebase origin/main
           git push origin HEAD:main
 
-      - name: 다음 자동 개발 회차 즉시 예약
-        if: always() && steps.patch.outcome == 'success'
+      - name: 다음 자동 개발 회차 예약 (일시 오류가 있어도 계속)
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          echo "다음 회차를 위해 5분 대기합니다."
+          sleep 300
           gh workflow run sw-ai-office-autopilot.yml --ref main
 
       - name: 수정안이 없을 때 점검 보고서 보관
