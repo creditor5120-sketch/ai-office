@@ -7,7 +7,7 @@ on:
       - "automation/ai-autopilot.mjs"
       - ".github/workflows/sw-ai-office-autopilot.yml"
   schedule:
-    - cron: "17 */2 * * *"
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -38,7 +38,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINIAPIKEY }}
           GEMINI_MODEL: gemini-3.5-flash-lite
-          GEMINI_FALLBACK_MODELS: gemini-3.8-flash
+          GEMINI_FALLBACK_MODELS: ""
         run: node automation/ai-autopilot.mjs
 
       - name: 수정안 적용 및 변경 여부 확인
