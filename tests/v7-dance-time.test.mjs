@@ -35,6 +35,10 @@ test("all AI employees except the representative gather in one hallway row", () 
   assert.match(html, /c\.mode="dance"/);
 });
 
+test("movement resolves safely when pathfinding returns no route", () => {
+  assert.match(html, /function walk\(c,pts\)[\s\S]*?if\(!c\.path\.length\)\{c\.done=null;r\(\);\}/);
+});
+
 test("dance animation and return-to-desk command are present", () => {
   assert.match(html, /c\.mode==="dance"/);
   assert.match(html, /async function stopDanceTime\(command\)/);
@@ -63,6 +67,34 @@ test("server live progress uses the chronological audit event API contract", () 
   assert.ok(html.includes("Date.parse(evs[evs.length-1].createdAt)"));
   assert.ok(html.includes('const ev=[...evs].reverse().find(x=>x.eventType==="WORKFLOW_STAGE_STARTED")'));
   assert.ok(!html.includes("evs[0]?.createdAt"));
+});
+
+test("the 3D office exposes the existing server recent-task and audit-history APIs", () => {
+  assert.match(html, /id="historyBtn"/);
+  assert.match(html, /id="historyModal"/);
+  assert.match(html, /action:"get_recent_tasks",limit:30/);
+  assert.match(html, /action:"get_task_history",taskId:String\(taskId\)/);
+  assert.match(worker, /if \(body\.action === "get_recent_tasks"\)/);
+  assert.match(worker, /if \(body\.action === "get_task_history"\)/);
+});
+
+test("server task history renders untrusted task and event data as text, not HTML", () => {
+  const start = html.indexOf("function historyRenderDetail(data)");
+  const end = html.indexOf("async function historyLoadDetail", start);
+  assert.ok(start >= 0 && end > start);
+  const render = html.slice(start, end);
+  assert.match(render, /historyNode\("pre","",detail\.slice\(0,3000\)\)/);
+  assert.match(render, /historyNode\("pre","",resultText\.slice\(0,12000\)\)/);
+  assert.doesNotMatch(render, /innerHTML/);
+  assert.match(html, /function historyNode\(tag,className,text\)[\s\S]*?n\.textContent=String\(text\)/);
+});
+
+test("recent task history uses chronological Worker events and displays bounded saved details", () => {
+  assert.match(worker, /ORDER BY created_at DESC, rowid DESC LIMIT 301/);
+  assert.match(worker, /\}\)\.reverse\(\);/);
+  assert.match(html, /\(Array\.isArray\(data\.events\)\?data\.events:\[\]\)\.forEach/);
+  assert.match(html, /if\(data\.truncated\)/);
+  assert.match(html, /resultText\.slice\(0,12000\)/);
 });
 
 test("the original 3D office scene and pathfinding remain in the file", () => {

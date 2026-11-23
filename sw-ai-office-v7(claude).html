@@ -190,6 +190,7 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
 }
 
 #deliverables{display:none;padding:12px;border-top:1px solid var(--line);max-height:32vh;overflow:auto}#deliverables.on{display:block}.dl-actions{display:flex;gap:6px;flex-wrap:wrap}.dl-actions button{padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}.dl-item{padding:8px 0;border-top:1px solid var(--line);white-space:pre-wrap;font-size:12px}
+#historyModal .mb{width:min(760px,94vw);max-height:88vh}#historyLayout{display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.4fr);gap:12px;min-height:240px}#historyList{overflow:auto;max-height:58vh;border:1px solid var(--line)}.history-row{display:block;width:100%;text-align:left;padding:10px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;cursor:pointer}.history-row:hover,.history-row.on{background:var(--card)}.history-row small{display:block;color:var(--mute);margin-top:4px}.history-detail{overflow:auto;max-height:58vh;border:1px solid var(--line);padding:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.55}.history-event{padding:8px 0;border-bottom:1px solid var(--line)}.history-event:last-child{border:0}@media(max-width:600px){#historyLayout{grid-template-columns:1fr}#historyList{max-height:25vh}.history-detail{max-height:40vh}}
 </style>
 </head>
 <body data-view="office">
@@ -202,6 +203,7 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
   <div class="hi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2.2.7 3.5 2.6 3.5 5.5"/></svg><span id="cnt"></span></div>
   <div class="hi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg><span id="engLabel" class="eng-tag" title="AI 연결 설정">online · AI연결</span></div>
   <button class="ib" id="vt"></button>
+  <button class="lo" id="historyBtn" type="button" title="서버에 저장된 최근 업무와 처리 이력">업무 이력</button>
   <button class="ib" title="밝게/어둡게" id="gear"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg></button>
   <button class="ib" title="AI 연결 설정" id="aiCfgBtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </header>
@@ -267,6 +269,17 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
       • 외부 브라우저에서는 Gemini/OpenAI 키를 넣으면 실제 LLM이 응답하며, 키가 없어도 내장 업무비서 엔진이 실무형 초안을 생성합니다.
     </div>
     <div class="row"><span class="sp"></span><button class="btn" id="aiCancel">닫기</button><button class="btn pri ready" id="aiSave">저장</button></div>
+  </div>
+</div>
+
+<div id="historyModal" class="ai-modal" hidden>
+  <div class="mb">
+    <div class="row"><b class="px">📚 서버 업무 이력</b><span class="sp"></span><button class="btn" id="historyRefresh" type="button">새로고침</button><button class="btn" id="historyClose" type="button">닫기</button></div>
+    <div class="sub2" id="historyMessage" role="status">최근 업무를 불러오는 중입니다.</div>
+    <div id="historyLayout">
+      <div id="historyList" aria-label="최근 업무 목록"></div>
+      <div id="historyDetail" class="history-detail" aria-live="polite">왼쪽 목록에서 업무를 선택하면 단계별 처리 이력을 볼 수 있습니다.</div>
+    </div>
   </div>
 </div>
 
@@ -1167,7 +1180,7 @@ function tick(dt,t){
   const s=cOf(st.sel);if(s){ring.visible=true;ring.position.x=s.g.position.x;ring.position.z=s.g.position.z;}else ring.visible=false;
 }
 
-function walk(c,pts){return new Promise(r=>{c.path=pts.slice();c.done=r;c.mode="walk";drawLabel(c);});}
+function walk(c,pts){return new Promise(r=>{c.path=Array.isArray(pts)?pts.slice():[];c.done=r;c.mode="walk";drawLabel(c);if(!c.path.length){c.done=null;r();}});}
 function danceChat(role,text){
   const h=st.hist.alex=st.hist.alex||[];
   h.push({role,content:text,show:text,t:T()});
@@ -2052,6 +2065,85 @@ async function srvPost(payload,extra){
   let data=null;try{data=await res.json();}catch(e){}
   return {status:res.status,data:data||{}};
 }
+
+/* ---------- 서버에 저장된 최근 업무 및 감사 이력 ---------- */
+const historyStatusLabel={RECEIVED:"접수",PROCESSING:"처리 중",WAITING_FOR_API_QUOTA:"API 대기",COMPLETED:"완료",PARTIAL_COMPLETED:"부분 완료",FAILED:"실패",CANCELLED:"취소됨"};
+function historyDate(value){
+  if(!value)return "시각 미기록";
+  const d=new Date(value);return Number.isNaN(d.getTime())?String(value):d.toLocaleString("ko-KR");
+}
+function historyNode(tag,className,text){
+  const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=String(text);return n;
+}
+function historySetMessage(message){const n=$("#historyMessage");if(n)n.textContent=message;}
+function historyRenderList(tasks){
+  const list=$("#historyList");list.replaceChildren();
+  if(!tasks.length){list.appendChild(historyNode("div","history-row","저장된 업무가 없습니다."));return;}
+  tasks.forEach(task=>{
+    const b=historyNode("button","history-row");
+    b.type="button";b.dataset.taskId=String(task.taskId||"");
+    const title=historyNode("strong","",String(task.task||"제목 없는 업무"));
+    const meta=historyNode("small","",(historyStatusLabel[task.status]||task.status||"상태 미상")+" · "+historyDate(task.createdAt));
+    const stage=historyNode("small","",String(task.currentStage||"현재 단계 미기록"));
+    b.append(title,meta,stage);
+    b.addEventListener("click",()=>historyLoadDetail(task.taskId,b));
+    list.appendChild(b);
+  });
+}
+async function historyLoadList(){
+  const list=$("#historyList"),detail=$("#historyDetail");
+  if(!srvCfg.url||!srvCfg.token){historySetMessage("서버 조회를 사용하려면 AI 연결 설정에서 Worker 주소와 접근 토큰을 먼저 저장해 주세요.");list.replaceChildren();detail.textContent="서버 연결 설정이 없어 조회하지 않았습니다.";return;}
+  historySetMessage("서버에 저장된 최근 업무를 불러오는 중입니다.");list.replaceChildren();detail.textContent="업무를 선택하면 단계별 이력이 표시됩니다.";
+  try{
+    const r=await srvPost({action:"get_recent_tasks",limit:30});
+    if(r.status!==200)throw new Error((r.data&&r.data.error)||("최근 업무 조회 실패 (응답 "+r.status+")"));
+    const tasks=Array.isArray(r.data.tasks)?r.data.tasks:[];
+    historyRenderList(tasks);historySetMessage("서버 저장 업무 "+tasks.length+"건");
+  }catch(e){historySetMessage("조회하지 못했습니다: "+(e&&e.message?e.message:String(e)));}
+}
+function historyRenderDetail(data){
+  const box=$("#historyDetail");box.replaceChildren();
+  const task=data.task||{};
+  box.appendChild(historyNode("h3","",String(task.taskId||"업무 상세")));
+  box.appendChild(historyNode("div","", "상태: "+(historyStatusLabel[task.status]||task.status||"미상")));
+  box.appendChild(historyNode("div","", "현재 단계: "+(task.currentStage||"미기록")));
+  box.appendChild(historyNode("div","", "접수: "+historyDate(task.createdAt)));
+  box.appendChild(historyNode("div","", "최근 변경: "+historyDate(task.updatedAt)));
+  if(task.completedAt)box.appendChild(historyNode("div","", "완료: "+historyDate(task.completedAt)));
+  if(task.error)box.appendChild(historyNode("pre","", "오류: "+task.error));
+  box.appendChild(historyNode("h4","","처리 이력 ("+(data.eventCount||0)+"건)"));
+  (Array.isArray(data.events)?data.events:[]).forEach(ev=>{
+    const item=historyNode("div","history-event");
+    item.appendChild(historyNode("strong","",String(ev.stage||ev.eventType||"이벤트")));
+    item.appendChild(historyNode("div","",historyDate(ev.createdAt)+" · "+String(ev.actor||"담당자 미상")+" · "+String(ev.eventType||"")));
+    if(ev.detail&&Object.keys(ev.detail).length){
+      let detail="";try{detail=JSON.stringify(ev.detail,null,2);}catch(_){detail=String(ev.detail);}
+      item.appendChild(historyNode("pre","",detail.slice(0,3000)));
+    }
+    box.appendChild(item);
+  });
+  if(data.truncated)box.appendChild(historyNode("div","", "※ 이력은 최근 300건까지만 표시됩니다."));
+  if(data.result!==null&&data.result!==undefined){
+    box.appendChild(historyNode("h4","","저장된 처리 결과"));
+    let resultText="";try{resultText=typeof data.result==="string"?data.result:JSON.stringify(data.result,null,2);}catch(_){resultText=String(data.result);}
+    box.appendChild(historyNode("pre","",resultText.slice(0,12000)));
+  }
+}
+async function historyLoadDetail(taskId,button){
+  if(!taskId)return;
+  document.querySelectorAll("#historyList .history-row").forEach(n=>n.classList.toggle("on",n===button));
+  const box=$("#historyDetail");box.textContent="선택한 업무의 이력을 불러오는 중입니다.";
+  try{
+    const r=await srvPost({action:"get_task_history",taskId:String(taskId)});
+    if(r.status!==200)throw new Error((r.data&&r.data.error)||("업무 이력 조회 실패 (응답 "+r.status+")"));
+    historyRenderDetail(r.data);
+  }catch(e){box.textContent="이력을 조회하지 못했습니다: "+(e&&e.message?e.message:String(e));}
+}
+function openHistoryModal(){ $("#historyModal").hidden=false;historyLoadList(); }
+$("#historyBtn").onclick=openHistoryModal;
+$("#historyRefresh").onclick=historyLoadList;
+$("#historyClose").onclick=()=>{$("#historyModal").hidden=true;};
+$("#historyModal").addEventListener("click",e=>{if(e.target.id==="historyModal")$("#historyModal").hidden=true;});
 let srvLastStage="";
 const srvLive={on:false,start:0,stage:"",calls:0,fails:0,lastEvt:0,lastResp:0,note:""};
 function srvFmt(ms){const x=Math.max(0,Math.round(ms/1000));return x>=60?Math.floor(x/60)+"분 "+(x%60)+"초":x+"초";}

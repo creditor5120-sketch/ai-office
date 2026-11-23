@@ -29,6 +29,12 @@ try {
 
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "load", timeout: 30000 });
   await page.waitForSelector("#gl canvas", { timeout: 30000 });
+  // The default selected employee is Alex; assert the routing precondition
+  // without clicking the off-canvas employee card in the desktop layout.
+  await page.waitForFunction(() => {
+    const card = document.querySelector('#side [data-e="alex"]');
+    return card?.classList.contains("on") && document.querySelector("#hn")?.textContent === "알렉스";
+  }, null, { timeout: 10000 });
   await page.locator("#inp").fill("댄스타임");
   await page.locator("#send").click();
 
