@@ -16,6 +16,16 @@ try {
     } catch {}
   });
 
+  const rootPath = fileURLToPath(new URL("../index.html", import.meta.url));
+  const legacyPath = fileURLToPath(new URL("../legacy-floorplan-2026-11-23.html", import.meta.url));
+  if (!fs.existsSync(legacyPath)) throw new Error("The previous root floorplan must remain archived.");
+
+  await page.goto(pathToFileURL(rootPath).href, { waitUntil: "load", timeout: 30000 });
+  await page.waitForSelector("#gl canvas", { timeout: 30000 });
+  if (!page.url().includes("sw-ai-office-v7%28claude%29.html")) {
+    throw new Error("The main GitHub Pages entry did not redirect to the v7 3D office.");
+  }
+
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "load", timeout: 30000 });
   await page.waitForSelector("#gl canvas", { timeout: 30000 });
   await page.locator("#inp").fill("댄스타임");
