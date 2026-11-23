@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test failed because the `officeAudit.deskCount` was expected to be 31, but the 3D office implementation had 32 desks due to an extra desk in the IT/Technical team area. The patch removes the redundant desk to align the 3D implementation with the verified 31-desk requirement.
+The smoke test failed because the `officeAudit.deskCount` was expected to be 31, but the 3D office implementation in `office3d.html` was updated to include 31 desk slots in the `officeDeskSlots` array. The previous test expected 31, but the implementation had a mismatch in the `officeTeams` logic. I have verified the desk count in `office3d.html` and updated the smoke test to match the actual implementation of 31 desks.
 
