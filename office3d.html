@@ -443,7 +443,7 @@ avatars.forEach((avatar,index)=>{
  avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
  avatar.userData.targetX=x*.8;avatar.userData.targetZ=z*.8;
 });
-window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount:31,avatarCount:avatars.length,visibleOffice:officeStructure.visible});
+window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:officeStructure.visible});
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
 function makeStaffCard(p,detail=false){
