@@ -5,6 +5,8 @@ import vm from "node:vm";
 
 const file = new URL("../sw-ai-office-v7(claude).html", import.meta.url);
 const html = fs.readFileSync(file, "utf8");
+const workerFile = new URL("../worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js", import.meta.url);
+const worker = fs.readFileSync(workerFile, "utf8");
 
 test("v7 inline JavaScript parses without syntax errors", () => {
   const scripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
@@ -50,6 +52,13 @@ test("representative and team lead names match the approved SW AI OFFICE organiz
   assert.match(html, /\["jenny","데니스","경영관리팀장"/);
   assert.doesNotMatch(html, /단테|제니/);
   assert.match(html, /사용자는 앱코\(ABKO\)의 대표이사 '피터'/);
+});
+
+test("server live progress follows the newest-first Worker audit event order", () => {
+  assert.match(worker, /ORDER BY created_at DESC, rowid DESC LIMIT 301/);
+  assert.match(html, /Date\.parse\(evs\[0\]\?\.createdAt\)/);
+  assert.match(html, /const ev=evs\.find\(x=>x\.eventType==="WORKFLOW_STAGE_STARTED"\)/);
+  assert.doesNotMatch(html, /evs\[evs\.length-1\]\.createdAt|\[\.\.\.evs\]\.reverse\(\)\.find/);
 });
 
 test("the original 3D office scene and pathfinding remain in the file", () => {
