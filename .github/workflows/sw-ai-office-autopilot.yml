@@ -1,6 +1,11 @@
 name: SW AI OFFICE - 무료 자동 개발 에이전트
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "automation/ai-autopilot.mjs"
+      - ".github/workflows/sw-ai-office-autopilot.yml"
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
@@ -32,7 +37,7 @@ jobs:
       - name: Gemini 자동 점검 및 수정안 생성
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-2.5-flash
+          GEMINI_MODEL: gemini-3.8-flash
         run: node automation/ai-autopilot.mjs
 
       - name: 수정안 적용 및 변경 여부 확인
