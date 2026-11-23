@@ -82,7 +82,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$BRANCH"
-          git add -- office-v315-integrated.html workflow-bridge-latest.js tests/v315-workflow-bridge.test.mjs tests/v315-office-browser-smoke.mjs ai-autopilot-report.md
+          git add -- index.html office-v315-integrated.html workflow-bridge-latest.js tests/entrypoint.test.mjs tests/v315-workflow-bridge.test.mjs tests/v315-office-browser-smoke.mjs ai-autopilot-report.md
           git commit -m "chore: SW AI OFFICE autonomous maintenance"
           git push origin "$BRANCH"
           PR_URL=$(gh pr create --base main --head "$BRANCH" \
