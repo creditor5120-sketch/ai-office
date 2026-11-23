@@ -94,6 +94,9 @@ jobs:
             exit 0
           fi
           git commit -m "chore: SW AI OFFICE autonomous maintenance"
+          # 개발 중 main에 다른 변경이 먼저 반영되면 최신 main 위로 안전하게 재배치한다.
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main
 
       - name: 다음 자동 개발 회차 즉시 예약
