@@ -149,10 +149,10 @@ try {
   await page.locator('#detailToggle').click();
   await page.locator('#appMain').waitFor({ state: 'visible' });
   const backLink = await page.locator('header a.action').getAttribute('href');
-  if (backLink !== './index.html') throw new Error(`Unexpected 2D navigation target: ${backLink}`);
+  if (backLink !== './office-map.html') throw new Error(`Unexpected 2D navigation target: ${backLink}`);
 
   await page.locator('header a.action').click();
-  await page.waitForURL('**/index.html', { timeout: 15000 });
+  await page.waitForURL('**/office-map.html', { timeout: 15000 });
   await page.locator('.office-name').waitFor({ state: 'visible', timeout: 10000 });
   const twoDName = (await page.locator('.office-name').innerText()).trim();
   if (twoDName !== 'SW AI OFFICE') throw new Error(`Unexpected 2D office title: ${twoDName}`);
