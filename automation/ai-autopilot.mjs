@@ -70,7 +70,7 @@ const body = {
 const models = [model, ...(process.env.GEMINI_FALLBACK_MODELS || "").split(",").map(x => x.trim()).filter(Boolean)];
 const retryableStatuses = new Set([500, 502, 503, 504]);
 const quotaRetryPattern = /retry in ([0-9]+(?:\.[0-9]+)?)s/i;
-const delays = [5000];
+const delays = [15000, 45000, 90000];
 let response;
 let raw = "";
 let successful = false;
