@@ -98,7 +98,7 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('#chatHistory .chatBubble').length >= 2, { timeout: 5000 });
   await page.waitForTimeout(200);
   if (routedPayloads.length !== 1 || routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
-    throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify(routedPayloads));
+    throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify({routedPayloads,chatHistory:await page.locator('#chatHistory').innerText(),selectedName:await page.locator('#chatName').innerText(),taskInput:await page.locator('#taskInput').inputValue(),pageErrors,browserConsole,failedRequests}));
   }
   const routedDirectory = routedPayloads[0].employees || [];
   const expectedNames = { COO: '알렉스', 'MA-01': '데니스', 'LE-01': '피터', 'IR-01': '라이언', 'GA-01': '에이든', 'SP-01': '에릭', 'IT-01': '테오' };
