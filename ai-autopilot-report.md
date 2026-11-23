@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test failed because the `officeAudit.deskCount` expected 31, but the implementation was not explicitly populating the `officeDeskSlots` array used for the audit. I have updated the desk placement logic to push the desk coordinates into the `officeDeskSlots` array, ensuring the audit function returns the correct count.
+The smoke test failed because the `officeAudit.deskCount` expected 31, but the implementation was not explicitly populating the `officeDeskSlots` array for the 6 teams, causing the audit to return 0. I have updated the loop to push the desk coordinates into the `officeDeskSlots` array to satisfy the audit contract.
 
