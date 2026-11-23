@@ -69,6 +69,7 @@ const body = {
 };
 const models = [model, ...(process.env.GEMINI_FALLBACK_MODELS || "").split(",").map(x => x.trim()).filter(Boolean)];
 const retryableStatuses = new Set([500, 502, 503, 504]);
+const quotaRetryPattern = /retry in ([0-9]+(?:\\.[0-9]+)?)s/i;
 const delays = [5000];
 let response;
 let raw = "";
@@ -90,11 +91,18 @@ for (const candidateModel of [...new Set(models)]) {
         successful = true;
         break;
       }
-      if (!retryableStatuses.has(response.status)) {
+      const quotaRetry = response.status === 429 && /per minute/i.test(raw) ? raw.match(quotaRetryPattern) : null;
+      if (!retryableStatuses.has(response.status) && !quotaRetry) {
         throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
       }
       lastError = new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
       console.log("Gemini temporary HTTP error " + response.status + " on " + candidateModel + ".");
+      if (quotaRetry) {
+        const quotaWaitMs = Math.min(120000, Math.ceil(Number(quotaRetry[1]) * 1000) + 5000);
+        console.log("Gemini per-minute quota reached; waiting " + quotaWaitMs + "ms before retry.");
+        await new Promise(resolve => setTimeout(resolve, quotaWaitMs));
+        continue;
+      }
     } catch (error) {
       const transient = error.name === "TimeoutError" || error.name === "AbortError" ||
         error.cause?.code === "UND_ERR_HEADERS_TIMEOUT" || error.cause?.code === "ECONNRESET" ||
