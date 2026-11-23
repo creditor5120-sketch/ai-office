@@ -51,7 +51,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 <header><div class="brand">SW AI OFFICE<small>AI 가상 사무실</small></div><div class="tools"><a class="action" href="./office-map.html" style="text-decoration:none">2D 사무실</a><button id="home">전체 보기</button><button id="view2d">2D 보기</button><button id="detailToggle" title="상세 업무 보기">↗ 업무 상세</button></div></header>
 <div id="appMain">
  <section id="officeStage"><div id="scene"></div><div id="officeStatus">● 전체 구성원 <b id="activeCount">-</b>명</div><div id="officeTools"><button id="zoomOut">－ 축소</button><button id="zoomIn">＋ 확대</button><button id="resetView">전체 보기</button><span class="interactionHint">드래그: 회전 · 휠: 확대/축소</span></div></section>
- <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button></div></aside>
+ <aside id="chatPanel"><div id="chatHead"><div id="chatAvatar">👤</div><div><strong id="chatName">알렉스</strong><small id="chatRole">본부장 · 업무 지시를 기다리고 있습니다</small></div></div><div id="chatHistory"><div class="chatBubble" id="chatIntro">직원을 선택하면 담당 업무와 대화 내용을 확인할 수 있습니다. 이 화면에서 바로 업무를 지시할 수 있습니다.</div></div><div id="taskComposer"><label>업무 지시 · 답변은 이 창에 표시</label><input id="officeChatToken" type="password" autocomplete="off" placeholder="서버 접속 인증값 입력" style="width:100%;padding:9px;border:1px solid #c8b995;background:#fffdf7;font:inherit"><textarea id="taskInput" placeholder="선택한 직원에게 간단한 대화나 업무지시를 입력하세요."></textarea><button id="sendTask">입력 전송 →</button><div id="pendingTaskRecovery" style="display:none;margin-top:7px;padding:9px;border:1px solid #c9b995;background:#fff8e8;font-size:12px"><span id="pendingTaskRecoveryText">중단된 업무가 있습니다.</span><button type="button" id="resumePendingTask" style="margin-top:7px;padding:7px 10px;border:0;background:#8b603e;color:#fff;cursor:pointer">중단된 업무 이어하기</button></div></div></aside>
 </div>
 <div id="staffStrip"></div>
 <section id="detailView"><aside id="detailEmployees"><h3>직원 목록</h3><div id="detailEmployeeList"></div></aside><section id="detailConversation"><div id="detailTop">알렉스 · 본부장</div><div id="detailMessages"><div class="chatBubble">직원을 선택하면 해당 직원의 상세 업무 화면이 표시됩니다. 업무 지시를 입력하면 기존 업무 처리 화면으로 연결됩니다.</div></div><section id="taskHistoryPanel"><h3>최근 업무 기록</h3><div id="taskHistoryList">저장된 업무 기록이 없습니다.</div><div class="decisionPanel" id="representativeDecisionPanel"><strong>대표 최종 결정</strong><small id="decisionTaskHint">업무 기록을 선택하면 승인 또는 반려를 기록할 수 있습니다.</small><input id="representativeAccessToken" type="password" autocomplete="off" placeholder="대표 승인 전용 인증값"><textarea id="representativeDecisionReason" placeholder="반려 사유 또는 승인 의견 (선택)"></textarea><div class="decisionActions"><button type="button" id="representativeApprove" class="primary" disabled>대표 승인</button><button type="button" id="representativeReject" disabled>대표 반려</button></div><small>일반 서버 인증값과 대표 승인 전용 토큰이 모두 필요합니다. D1에 최종 결정 이력만 기록합니다. 외부 시스템 실행은 하지 않습니다. 개인별 계정 로그인·신원 확인 기능과는 별개입니다.</small></div></section></section></section>
@@ -467,6 +467,16 @@ document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1
 document.getElementById('resetView').onclick=()=>{controls.target.set(0,0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(27,29,29));controls.update()};
 
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null,selectedTaskForDecision=null;
+const PENDING_TASK_KEY='swAIOfficePendingTask';
+function readPendingTask(){try{const value=JSON.parse(localStorage.getItem(PENDING_TASK_KEY)||'null');return value&&typeof value==='object'&&value.taskId&&value.task&&value.employeeId?value:null}catch(_){return null}}
+function renderPendingTaskRecovery(){
+ const record=readPendingTask(),panel=document.getElementById('pendingTaskRecovery'),label=document.getElementById('pendingTaskRecoveryText'),button=document.getElementById('resumePendingTask');
+ if(!panel||!label||!button)return;
+ panel.style.display=record?'block':'none';
+ if(record){const person=directory.find(item=>item.id===record.employeeId);label.textContent='이어 할 업무: '+(person?.name||record.employeeName||'담당 직원')+' · '+String(record.task).slice(0,90)+(record.status==='INTERRUPTED'?' · 이전 실행이 중단됨':' · 진행 중이던 업무')}
+}
+function savePendingTask(record){try{localStorage.setItem(PENDING_TASK_KEY,JSON.stringify(record))}catch(error){console.warn('진행 중 업무 복구 정보 저장 실패:',error)}renderPendingTaskRecovery()}
+function clearPendingTask(taskId){const record=readPendingTask();if(record&&record.taskId===taskId){localStorage.removeItem(PENDING_TASK_KEY);renderPendingTaskRecovery()}}
 renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(avatarRoot.children,true);if(!hits.length)return;const a=hits[0].object.userData.avatar;if(a)selectAvatar(a)});
 function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
@@ -490,20 +500,20 @@ function selectAvatar(a,showProfile=true){
  if(showProfile){modal.classList.add('show');}
 }
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
-async function submitSelectedTask(value){
- const task=(value||'').trim(),selectedPerson=selected?.userData.person;
- if(!selectedPerson||!task)return;
- // 대표이사 단테의 전사 업무 지시는 본부장 알렉스(COO)에게 전달한다.
- const p=selectedPerson.id==='CEO'?staff.find(person=>person.id==='COO'):selectedPerson;
+async function submitSelectedTask(value,resumeRecord=null){
+ const task=String(resumeRecord?.task||value||'').trim(),selectedPerson=selected?.userData.person;
+ if(!task)return;
+ // 이어하기는 저장된 담당자 ID를 기준으로 복구하고, 신규 업무는 현재 선택된 직원을 기준으로 처리한다.
+ const p=resumeRecord?directory.find(person=>person.id===resumeRecord.employeeId):(selectedPerson?.id==='CEO'?staff.find(person=>person.id==='COO'):selectedPerson);
  if(!p){appendChat('시스템','본부장 알렉스를 찾을 수 없어 업무를 접수하지 못했습니다.');return}
  const employeeName=p.id==='COO'?'알렉스':p.name;
  const token=document.getElementById('officeChatToken').value.trim();
  if(!token){appendChat('시스템','서버 접속 인증값을 먼저 입력해 주세요.');return}
  const history=document.getElementById('chatHistory');
- appendChat('나',task);
- document.getElementById('taskInput').value='';
- const taskId=crypto.randomUUID();
- const pending=appendChat(employeeName,'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
+ if(!resumeRecord){appendChat('나',task);document.getElementById('taskInput').value=''}
+ const taskId=resumeRecord.taskId||crypto.randomUUID();
+ savePendingTask({task,taskId,employeeId:p.id,employeeName,status:'PROCESSING',savedAt:resumeRecord.savedAt||new Date().toISOString()});
+ const pending=appendChat(employeeName,resumeRecord?'기존 업무 ID로 중단된 업무를 이어서 확인합니다.':'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
  const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};writeEmployeeStates(states);recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
  const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory.map(employee=>({...employee,name:characterNames[employee.id]||employee.name,jobTitle:employee.name}))};
  try{
@@ -552,6 +562,7 @@ async function submitSelectedTask(value){
   let audit=null;try{audit=await fetchTaskAuditHistory(taskId,token)}catch(auditError){updateChatBubble(pending,data.reply+'\n\n서버 상세 이력 조회는 실패했습니다: '+(auditError.message||String(auditError)))}
   applyFinalWorkStates(data,taskId,task,p.id);
   saveTaskHistory(task,taskId,data.reply,data.deliverables||[],data.workflow||{},data.finalReviewResults||[],audit,p);
+  clearPendingTask(taskId);
   renderTaskHistory();
   renderWorkflowSummary(data,audit,p.id);
   refreshStaffCards();
@@ -559,7 +570,8 @@ async function submitSelectedTask(value){
   const failedStates=readEmployeeStates();
   failedStates[p.id]={...(failedStates[p.id]||{}),status:'오류',detail:(error.message||String(error)).slice(0,240),taskId,updatedAt:new Date().toISOString()};
   writeEmployeeStates(failedStates);recordEmployeeHistory(p.id,failedStates[p.id]);refreshStaffCards();
-  updateChatBubble(pending,'처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId);
+  savePendingTask({task,taskId,employeeId:p.id,employeeName,status:'INTERRUPTED',savedAt:resumeRecord?.savedAt||new Date().toISOString(),lastError:(error.message||String(error)).slice(0,300)});
+  updateChatBubble(pending,'처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId+'\n업무 복구 영역에서 같은 업무 ID로 다시 이어 할 수 있습니다.');
  }
 }
 function readEmployeeChats(){try{const value=JSON.parse(localStorage.getItem('swAIOfficeChatHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}}
@@ -803,6 +815,14 @@ function renderWorkflowSummary(data,audit=null,employeeId=selected?.userData.per
 function refreshStaffCards(){const states=readEmployeeStates();document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>{const p=avatars.find(a=>a.userData.person.id===el.dataset.emp)?.userData.person;if(!p)return;const status=el.querySelector('.staffStatus');if(status)status.textContent='상태: '+(states[p.id]?.status||p.workStatus||'업무 대기')});syncAvatarWorkStates(true);if(selected)selectAvatar(selected,false)}
 document.getElementById('sendTask').onclick=()=>submitSelectedTask(document.getElementById('taskInput').value);
 document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitSelectedTask(e.target.value)}});
+document.getElementById('resumePendingTask').addEventListener('click',()=>{
+ const record=readPendingTask();if(!record)return;
+ const person=avatars.find(avatar=>avatar.userData.person.id===record.employeeId);
+ if(!person){appendChat('시스템','저장된 업무 담당자를 찾을 수 없어 이어 할 수 없습니다. 업무 ID: '+record.taskId);return}
+ selectAvatar(person,false);
+ submitSelectedTask(record.task,record);
+});
+renderPendingTaskRecovery();
 
 
 let is2D=new URLSearchParams(location.search).get('view')==='2d';
