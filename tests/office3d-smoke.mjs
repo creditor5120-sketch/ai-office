@@ -77,6 +77,38 @@ try {
   await legalLeadCard.click();
   const legalLeadName = (await page.locator('#chatName').innerText()).trim();
   if (legalLeadName !== '피터') throw new Error(`법무팀장 이름 오류: expected 피터, found ${legalLeadName || '(empty)'}`);
+  // 대표 단테의 전사 업무 지시는 알렉스에게, 직원 선택 지시는 해당 직원에게 전달되어야 한다.
+  await page.locator('#close').click();
+  await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
+  await page.locator('#officeChatToken').fill('smoke-test-api-token');
+  const routedPayloads = [];
+  await page.route('https://ai-office-api.creditor5120.workers.dev/', async route => {
+    const body = route.request().postDataJSON();
+    if (!body.action) {
+      routedPayloads.push(body);
+      await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'smoke route capture' }) });
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
+    }
+  });
+  await page.locator('#staffStrip .staffCard[data-emp="CEO"]').click();
+  await page.locator('#close').click();
+  await page.locator('#taskInput').fill('대표 업무 라우팅 회귀 테스트');
+  await page.locator('#sendTask').click();
+  await page.waitForFunction(() => document.querySelectorAll('#chatHistory .chatBubble').length >= 2, { timeout: 5000 });
+  await page.waitForFunction(() => window.__smokeRoutedPayloadsReady === true, { timeout: 1000 }).catch(() => {});
+  await page.waitForTimeout(200);
+  if (routedPayloads.length !== 1 || routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
+    throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify(routedPayloads));
+  }
+  await page.locator('#staffStrip .staffCard[data-emp="LE-01"]').click();
+  await page.locator('#close').click();
+  await page.locator('#taskInput').fill('직원 직접 업무 라우팅 회귀 테스트');
+  await page.locator('#sendTask').click();
+  await page.waitForTimeout(200);
+  if (routedPayloads.length !== 2 || routedPayloads[1].employeeId !== 'LE-01' || routedPayloads[1].employee !== '피터') {
+    throw new Error('직원 직접 지시 경로가 유지되지 않았습니다: ' + JSON.stringify(routedPayloads));
+  }
   const restoreFixture = {
     taskId: 'smoke-history-restore',
     task: '복원 테스트 업무 지시',
