@@ -467,7 +467,7 @@ document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1
 document.getElementById('resetView').onclick=()=>{controls.target.set(0,0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(27,29,29));controls.update()};
 
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null,selectedTaskForDecision=null;
-const PENDING_TASK_KEY='swAIOfficePendingTask';
+const PENDING_TASK_KEY='swAIOfficePendingTask';let taskSubmissionInProgress=false;
 function readPendingTask(){try{const value=JSON.parse(localStorage.getItem(PENDING_TASK_KEY)||'null');return value&&typeof value==='object'&&value.taskId&&value.task&&value.employeeId?value:null}catch(_){return null}}
 function renderPendingTaskRecovery(){
  const record=readPendingTask(),panel=document.getElementById('pendingTaskRecovery'),label=document.getElementById('pendingTaskRecoveryText'),button=document.getElementById('resumePendingTask');
@@ -509,6 +509,8 @@ async function submitSelectedTask(value,resumeRecord=null){
  const employeeName=p.id==='COO'?'알렉스':p.name;
  const token=document.getElementById('officeChatToken').value.trim();
  if(!token){appendChat('시스템','서버 접속 인증값을 먼저 입력해 주세요.');return}
+ if(taskSubmissionInProgress){appendChat('시스템','현재 업무가 처리 중입니다. 중복 실행을 막기 위해 완료 또는 중단 후 다시 시도해 주세요.');return}
+ taskSubmissionInProgress=true;
  const history=document.getElementById('chatHistory');
  if(!resumeRecord){appendChat('나',task);document.getElementById('taskInput').value=''}
  const taskId=resumeRecord.taskId||crypto.randomUUID();
@@ -572,7 +574,7 @@ async function submitSelectedTask(value,resumeRecord=null){
   writeEmployeeStates(failedStates);recordEmployeeHistory(p.id,failedStates[p.id]);refreshStaffCards();
   savePendingTask({task,taskId,employeeId:p.id,employeeName,status:'INTERRUPTED',savedAt:resumeRecord?.savedAt||new Date().toISOString(),lastError:(error.message||String(error)).slice(0,300)});
   updateChatBubble(pending,'처리 오류: '+(error.message||String(error))+'\n업무 ID: '+taskId+'\n업무 복구 영역에서 같은 업무 ID로 다시 이어 할 수 있습니다.');
- }
+ }finally{taskSubmissionInProgress=false;renderPendingTaskRecovery()}
 }
 function readEmployeeChats(){try{const value=JSON.parse(localStorage.getItem('swAIOfficeChatHistory')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch(_){return {}}}
 function renderEmployeeChat(employeeId,introText='이 직원과의 대화가 여기에 기록됩니다. 간단한 대화나 업무 지시를 입력할 수 있습니다.'){
