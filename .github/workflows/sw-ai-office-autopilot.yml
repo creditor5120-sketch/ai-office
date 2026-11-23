@@ -36,7 +36,7 @@ jobs:
 
       - name: Gemini 자동 점검 및 수정안 생성
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINIAPIKEY }}
           GEMINI_MODEL: gemini-3.8-flash
         run: node automation/ai-autopilot.mjs
 
