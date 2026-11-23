@@ -325,7 +325,7 @@ const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
 function makePixelSheet(person,index,seated=false){
  const c=document.createElement('canvas');c.width=128;c.height=40;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
  const colors=[['#6f91b4','#3c5c7d','#30251f','#f0c9a9'],['#75977f','#46566a','#49372b','#e9bd9c'],['#9a829e','#46566a','#241f20','#f1c9ad'],['#b58b68','#46566a','#62452e','#e6b995'],['#70849a','#46566a','#252b34','#efc8a5'],['#6d9a9a','#46566a','#382b25','#f0c9a9']];
- const p=colors[index%colors.length],isPeter=person.id==='CEO',isAlex=person.id==='COO',shirt=isPeter?'#777d83':isAlex?'#8dbbd5':p[0],hair=isPeter?'#24201e':p[2],skin=p[3],pants=isPeter?'#3c5c7d':p[1];
+ const p=colors[index%colors.length],isDante=person.id==='CEO',isAlex=person.id==='COO',shirt=isDante?'#777d83':isAlex?'#8dbbd5':p[0],hair=isDante?'#24201e':p[2],skin=p[3],pants=isDante?'#3c5c7d':p[1];
  const r=(x,y,w,h,color)=>{q.fillStyle=color;q.fillRect(x,y,w,h)};
  for(let f=0;f<4;f++){
   const o=f*32,step=f%2;
@@ -338,7 +338,7 @@ function makePixelSheet(person,index,seated=false){
    r(o+10,24+(step?1:0),5,9,pants);r(o+19,24+(step?0:1),5,9,pants);
   }
   r(o+8,15,16,11,shirt);r(o+10,13,12,3,shirt);
-  if(isPeter){r(o+15,15,2,10,'#f4f1e9');r(o+14,14,1,12,'#d5d8da')}
+  if(isDante){r(o+15,15,2,10,'#f4f1e9');r(o+14,14,1,12,'#d5d8da')}
   if(isAlex){r(o+10,15,4,10,'#283849');r(o+18,15,4,10,'#283849');r(o+14,14,4,3,'#f4f1e9')}
   if(seated){
    r(o+5,16,4,7,shirt);r(o+23,16,4,7,shirt);
@@ -350,7 +350,7 @@ function makePixelSheet(person,index,seated=false){
   r(o+9,3,14,12,skin);r(o+8,5,2,7,hair);r(o+22,5,2,7,hair);r(o+9,2,14,4,hair);r(o+11,1,10,2,hair);
   if(index%3===0){r(o+9,5,5,3,hair);r(o+18,5,5,2,hair)}else if(index%3===1){r(o+8,6,4,7,hair)}else{r(o+18,5,5,3,hair)}
   r(o+12,9,2,2,'#263849');r(o+19,9,2,2,'#263849');r(o+15,12,4,1,'#9b5e55');
-  if(isPeter||isAlex){r(o+10,8,5,1,'#293746');r(o+10,8,1,4,'#293746');r(o+14,8,1,4,'#293746');r(o+18,8,5,1,'#293746');r(o+22,8,1,4,'#293746');r(o+18,11,5,1,'#293746');r(o+15,9,3,1,'#293746')}
+  if(isDante||isAlex){r(o+10,8,5,1,'#293746');r(o+10,8,1,4,'#293746');r(o+14,8,1,4,'#293746');r(o+18,8,5,1,'#293746');r(o+22,8,1,4,'#293746');r(o+18,11,5,1,'#293746');r(o+15,9,3,1,'#293746')}
  }
  const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;t.generateMipmaps=false;t.repeat.set(.25,1);return t;
 }
@@ -403,8 +403,8 @@ function makeAvatar(person,index,x,z){
 
  avatarRoot.add(sprite);avatars.push(sprite);
 }
-const peter={id:'CEO',name:'피터',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
-const staff=[peter,...directory];
+const dante={id:'CEO',name:'단테',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
+const staff=[dante,...directory];
 const zoneSlots={
 '본부장실':[[18,-10]],
 '경영관리':[[-27,-14],[-25.8,-14],[-24.6,-14],[-27,-7],[-25.8,-7]],
@@ -415,11 +415,11 @@ const zoneSlots={
 '기술·IT':[[2,4],[6,4],[10,4],[2,12],[6,12]]
 };
 const used={};function nextSlot(dept){const a=zoneSlots[dept]||[[0,0]];const n=used[dept]||0;used[dept]=n+1;return a[n%a.length]}
-makeAvatar(peter,0,-20,9.7);
+makeAvatar(dante,0,-20,9.7);
 const characterNames={
  'COO':'알렉스',
  'MA-01':'데니스','MA-02':'카리나','MA-03':'이던','MA-04':'클로이','MA-05':'루카스',
- 'LE-01':'렉스','LE-02':'앤','LE-03':'소피아','LE-04':'줄리안','LE-05':'민준',
+ 'LE-01':'피터','LE-02':'앤','LE-03':'소피아','LE-04':'줄리안','LE-05':'민준',
  'IR-01':'라이언','IR-02':'수지','IR-03':'케빈','IR-04':'해나','IR-05':'노아','IR-06':'지안',
  'GA-01':'에이든','GA-02':'로라','GA-03':'브라이언','GA-04':'미아','GA-05':'오웬',
  'SP-01':'에릭','SP-02':'노라','SP-03':'제이슨','SP-04':'이사벨라','SP-05':'아담',
@@ -436,7 +436,7 @@ for(const p of directory){
 avatarRoot.scale.set(.8,1,.8);
 avatars.forEach((avatar,index)=>{
  let x,z;
- if(index===0){x=0;z=-.15;} // 대표이사 피터
+ if(index===0){x=0;z=-.15;} // 대표이사 단테
  else if(index===1){x=11;z=-.15;} // 본부장 알렉스
  else {[x,z]=officeDeskSlots[index-2]||[0,0];}
  avatar.position.set(x*.8,.82,z*.8);
