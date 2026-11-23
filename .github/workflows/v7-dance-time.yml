@@ -1,0 +1,37 @@
+name: SW AI OFFICE v7 dance-time regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sw-ai-office-v7(claude).html'
+      - 'tests/v7-dance-time.test.mjs'
+      - 'tests/v7-dance-time-browser-smoke.mjs'
+      - '.github/workflows/v7-dance-time.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'sw-ai-office-v7(claude).html'
+      - 'tests/v7-dance-time.test.mjs'
+      - 'tests/v7-dance-time-browser-smoke.mjs'
+      - '.github/workflows/v7-dance-time.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  dance-time:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run v7 dance-time syntax and behavior checks
+        run: node --test tests/v7-dance-time.test.mjs
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test v7 dance-time movement and return in Chromium
+        run: node tests/v7-dance-time-browser-smoke.mjs
