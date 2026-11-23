@@ -613,9 +613,9 @@ function applyLiveAuditStates(audit,taskId,task){
  const active=avatars.map(avatar=>avatar.userData.person).filter(person=>names.includes(person.name));
  if(/본부장/.test(String(detail.responsibleRole||''))||/본부장/.test(stage)){const manager=avatars.find(avatar=>avatar.userData.person.id==='COO')?.userData.person;if(manager&&!active.some(person=>person.id===manager.id))active.push(manager)}
  if(!active.length)return;
- const role=String(detail.responsibleRole||''),meeting=/협업|회의/.test(stage)||(/검수/.test(stage)&&(/팀장/.test(stage)||/각 담당 팀장/.test(role))),now=new Date().toISOString(),states=readEmployeeStates(),activeIds=new Set(active.map(person=>person.id));
+ const role=String(detail.responsibleRole||''),collaboration=/협업|회의/.test(stage),meeting=collaboration||(/검수/.test(stage)&&(/팀장/.test(stage)||/각 담당 팀장/.test(role))),now=new Date().toISOString(),states=readEmployeeStates(),activeIds=new Set(active.map(person=>person.id));
  for(const person of directory){const previous=states[person.id]||{};if(previous.taskId===taskId&&['업무 중','검수 중','협업 중'].includes(previous.status)&&!activeIds.has(person.id)){states[person.id]={...previous,status:'업무 대기',location:'책상',detail:'현재 단계 담당 업무 대기',taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}}
- for(const person of active){const previous=states[person.id]||{};states[person.id]={...previous,status:meeting?'검수 중':'업무 중',location:meeting?'회의실':'책상',detail:stage,taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}
+ for(const person of active){const previous=states[person.id]||{};states[person.id]={...previous,status:collaboration?'협업 중':meeting?'검수 중':'업무 중',location:meeting?'회의실':'책상',detail:stage,taskId,updatedAt:now};recordEmployeeHistory(person.id,states[person.id])}
  writeEmployeeStates(states);refreshStaffCards();
 }
 function applyFinalWorkStates(data,taskId,task,requestedEmployeeId){
@@ -902,7 +902,7 @@ function animate(){
    avatar.position.x=u.targetX;avatar.position.z=u.targetZ;
    if(u.frame!==0){u.texture.offset.x=0;u.frame=0}
   }
-  const active=u.workStatus==='업무 중'||u.workStatus==='검수 중';
+  const active=u.workStatus==='업무 중'||u.workStatus==='검수 중'||u.workStatus==='협업 중';
   const shouldSit=!moving;
   if(shouldSit!==u.isSeated){
    const nextTexture=shouldSit?u.seatedTexture:u.walkTexture;
