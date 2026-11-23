@@ -491,18 +491,21 @@ function selectAvatar(a,showProfile=true){
 }
 document.getElementById('close').onclick=()=>modal.classList.remove('show');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 async function submitSelectedTask(value){
- const task=(value||'').trim(),p=selected?.userData.person;
- if(!p||!task)return;
- if(p.id==='CEO'){appendChat('시스템','대표이사 캐릭터는 최종 의사결정자입니다. 업무 지시는 본부장 또는 담당 직원을 선택해 주세요.');return}
+ const task=(value||'').trim(),selectedPerson=selected?.userData.person;
+ if(!selectedPerson||!task)return;
+ // 대표이사 단테의 전사 업무 지시는 본부장 알렉스에게 전달한다. 직원 선택 시에는 해당 직원 경로를 유지한다.
+ const p=selectedPerson.id==='CEO'?directory.find(person=>person.id==='COO'):selectedPerson;
+ if(!p){appendChat('시스템','본부장 알렉스를 찾을 수 없어 업무를 접수하지 못했습니다.');return}
+ const employeeName=p.id==='COO'?'알렉스':p.name;
  const token=document.getElementById('officeChatToken').value.trim();
  if(!token){appendChat('시스템','서버 접속 인증값을 먼저 입력해 주세요.');return}
  const history=document.getElementById('chatHistory');
  appendChat('나',task);
  document.getElementById('taskInput').value='';
  const taskId=crypto.randomUUID();
- const pending=appendChat(p.name,'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
+ const pending=appendChat(employeeName,'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
  const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};writeEmployeeStates(states);recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
- const payload={task,taskId,idempotencyKey:taskId,employee:p.name,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory};
+ const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory};
  try{
   let data=null,completed=false,attempt=0;
   const deadline=Date.now()+30*60*1000;
