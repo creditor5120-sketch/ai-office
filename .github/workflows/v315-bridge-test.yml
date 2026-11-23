@@ -3,6 +3,19 @@ name: SW AI OFFICE v3.15 workflow bridge tests
 on:
   push:
     branches: [main, work/v315-office-workflow-bridge]
+    paths:
+      - 'SW_AI_Office_v3_15.html'
+      - 'SW_AI_Office_Latest.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'workflow-bridge-latest.js'
+      - 'tests/v315-workflow-bridge.test.mjs'
+      - 'tests/v315-office-browser-smoke.mjs'
+      - 'tests/worker-auth-audit.test.mjs'
+      - 'tests/d1-read-only-preflight.test.mjs'
+      - 'docs/D1_READ_ONLY_PREFLIGHT.sql'
+      - 'worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js'
+      - '.github/workflows/v315-bridge-test.yml'
   pull_request:
     branches: [main]
     paths:
