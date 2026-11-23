@@ -1180,7 +1180,7 @@ function tick(dt,t){
   const s=cOf(st.sel);if(s){ring.visible=true;ring.position.x=s.g.position.x;ring.position.z=s.g.position.z;}else ring.visible=false;
 }
 
-function walk(c,pts){return new Promise(r=>{c.path=pts.slice();c.done=r;c.mode="walk";drawLabel(c);});}
+function walk(c,pts){return new Promise(r=>{c.path=Array.isArray(pts)?pts.slice():[];c.done=r;c.mode="walk";drawLabel(c);if(!c.path.length){c.done=null;r();}});}
 function danceChat(role,text){
   const h=st.hist.alex=st.hist.alex||[];
   h.push({role,content:text,show:text,t:T()});
