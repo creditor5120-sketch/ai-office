@@ -2077,9 +2077,9 @@ async function srvApplyProgress(taskId){
     const evs=r.data.events;
     srvLive.calls=evs.filter(x=>x.eventType==="AI_CALL_COMPLETED").length;
     srvLive.fails=evs.filter(x=>x.eventType==="AI_CALL_FAILED").length;
-    // Worker returns events newest-first; use the newest event and newest workflow stage directly.
-    const tm=Date.parse(evs[0]?.createdAt);if(tm)srvLive.lastEvt=tm;
-    const ev=evs.find(x=>x.eventType==="WORKFLOW_STAGE_STARTED");
+    // Worker normalizes its newest-first D1 query into chronological API order.
+    const tm=Date.parse(evs[evs.length-1].createdAt);if(tm)srvLive.lastEvt=tm;
+    const ev=[...evs].reverse().find(x=>x.eventType==="WORKFLOW_STAGE_STARTED");
     if(!ev)return;
     srvLive.stage=String(ev.stage||"");
     if(ev.stage===srvLastStage)return;
