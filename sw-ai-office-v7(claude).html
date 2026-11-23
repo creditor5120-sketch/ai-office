@@ -225,7 +225,7 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
       <span id="hint" hidden></span><div class="row"><input type="file" id="file" accept=".txt,.md,.csv,.json" hidden><button class="btn" id="fb">＋ 파일</button><button class="btn pri" id="send">전송 →</button></div>
     </div>
     <div class="cb" id="ceoNoticeBox" style="display:none;text-align:center;">
-      <div class="sub2" style="font-size:13px;line-height:1.5;">👑 <b>단테 대표님 전용 보고 수신함</b>입니다.<br/>직원들의 자율 리서치 및 업무 보고가 이곳으로 모입니다. 업무 지시는 본부장 <b>알렉스</b>나 각 담당자에게 전달해 주세요.</div>
+      <div class="sub2" style="font-size:13px;line-height:1.5;">👑 <b>피터 대표님 전용 보고 수신함</b>입니다.<br/>직원들의 자율 리서치 및 업무 보고가 이곳으로 모입니다. 업무 지시는 본부장 <b>알렉스</b>나 각 담당자에게 전달해 주세요.</div>
     </div>
   </section>
   <div id="strip"></div>
@@ -273,12 +273,12 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
 <div id="flow"><svg><path id="fp"/><circle class="fd" r="3.5"/><circle class="fd" r="3.5"/><circle class="fd" r="3.5"/><circle class="fd" r="3.5"/></svg></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const COMMON = "당신은 코스닥 상장사 앱코(ABKO) 경영관리부 소속 AI 담당자입니다. 사용자는 앱코(ABKO)의 대표이사 '단테'입니다. 사용자를 부를 때는 항상 '단테 대표님'으로 호칭하세요. 규칙: 한국어로, 쉬운 말로 간결하게 답합니다. 사실에 근거해서만 답하고, 모르거나 확실하지 않으면 추측하지 말고 “확인되지 않음”이라고 분명히 말합니다. 법령 조문·수치·날짜는 확신이 없으면 지어내지 말고 원문 확인이 필요하다고 안내합니다. 인터넷 검색과 관련 사이트 조사가 가능할 때는 실제 검색·조사 결과를 바탕으로 동향과 관련 사이트·참고 출처를 정리하고, 확인되지 않은 사실이나 수치는 임의로 지어내지 않습니다. 답은 핵심 결론을 먼저 쓰고 근거를 뒤에 붙입니다. ";
+const COMMON = "당신은 코스닥 상장사 앱코(ABKO) 경영관리부 소속 AI 담당자입니다. 사용자는 앱코(ABKO)의 대표이사 '피터'입니다. 사용자를 부를 때는 항상 '피터 대표님'으로 호칭하세요. 규칙: 한국어로, 쉬운 말로 간결하게 답합니다. 사실에 근거해서만 답하고, 모르거나 확실하지 않으면 추측하지 말고 “확인되지 않음”이라고 분명히 말합니다. 법령 조문·수치·날짜는 확신이 없으면 지어내지 말고 원문 확인이 필요하다고 안내합니다. 인터넷 검색과 관련 사이트 조사가 가능할 때는 실제 검색·조사 결과를 바탕으로 동향과 관련 사이트·참고 출처를 정리하고, 확인되지 않은 사실이나 수치는 임의로 지어내지 않습니다. 답은 핵심 결론을 먼저 쓰고 근거를 뒤에 붙입니다. ";
 function mk(d){return Object.assign({},d,{sys:COMMON+"당신은 "+d.badge+" "+d.name+"입니다. "+d.duty});}
 const EMP=[
  ["alex","알렉스","본부장","hq","#6b3d1e","#f0c7a3","#8fb4dc","전체 업무를 분석해 담당 팀과 직원에게 배정할 방안을 정리하고, 대표 보고용 요약과 의사결정 선택지의 장단점을 정리합니다.",1,""],
- ["ceo1","단테","대표이사","ceo","#1b1b1f","#f4cfae","#1f3a5f","최종 의사결정권자로서 보고받은 내용에 판단 기준과 보완 지시를 합니다. 핵심 결론과 승인 여부를 먼저 말하고 필요한 보완점을 짧게 제시합니다.",1,""],
- ["jenny","제니","경영관리팀장","shared","#1b1b1f","#f4cfae","#1f3a5f","경영관리 업무(예산, 경영 지표, 사내 보고)를 정리하고 팀원 결과물을 검수합니다.",0,"bob"],
+ ["ceo1","피터","대표이사","ceo","#1b1b1f","#f4cfae","#1f3a5f","최종 의사결정권자로서 보고받은 내용에 판단 기준과 보완 지시를 합니다. 핵심 결론과 승인 여부를 먼저 말하고 필요한 보완점을 짧게 제시합니다.",1,""],
+ ["jenny","데니스","경영관리팀장","shared","#1b1b1f","#f4cfae","#1f3a5f","경영관리 업무(예산, 경영 지표, 사내 보고)를 정리하고 팀원 결과물을 검수합니다.",0,"bob"],
  ["karina","카리나","경영관리 담당","shared","#1b1b1f","#f4cfae","#eeeeee","경영 지표와 막대 그래프 보고 자료의 구성, 월간·분기 실적 정리를 돕습니다. 수치는 사용자가 준 것만 사용합니다.",0,"long"],
  ["ethan","이던","경영관리 담당","shared","#3a2a1e","#f0c7a3","#8a8d93","예산 편성·집행 계산, 원가·손익 표 정리를 돕습니다. 계산 과정과 가정을 함께 적습니다.",0,""],
  ["aiden","에이든","총무팀장","shared","#8a8d93","#f4cfae","#6a7a4a","주주총회·이사회 준비 절차와 서류, 정관·사내 규정, 등기·인감·문서 관리를 돕습니다.",0,""],
@@ -287,7 +287,7 @@ const EMP=[
  ["eric","에릭","전략기획팀장","shared","#b8601f","#f0c7a3","#3a3d44","중장기 전략, 투자·신사업 검토, 시장 동향 정리와 보고서 구성을 돕습니다.",0,""],
  ["nora","노라","전략기획 담당","shared","#6b3d1e","#f4cfae","#5a3a6a","회의 기록과 아이디어 정리, 논점을 문서로 옮기는 일을 돕습니다.",0,"long"],
  ["jason","제이슨","전략기획 담당","shared","#1b1b1f","#f0c7a3","#6a8a9a","중장기 로드맵과 일정 계획 초안, 과제 우선순위 정리를 돕습니다.",1,""],
- ["peter","피터","법무팀장","legal","#1b1b1f","#f4cfae","#3a3d44","계약서 검토(위험 조항, 수정 제안), 법률 쟁점 정리, 내용증명·공문 초안, 상법·자본시장법 등 한국 법령 기준 설명을 돕습니다. 최종 법률 판단은 담당자와 외부 변호사가 한다는 점을 필요할 때만 짧게 덧붙입니다.",0,""],
+ ["peter","렉스","법무팀장","legal","#1b1b1f","#f4cfae","#3a3d44","계약서 검토(위험 조항, 수정 제안), 법률 쟁점 정리, 내용증명·공문 초안, 상법·자본시장법 등 한국 법령 기준 설명을 돕습니다. 최종 법률 판단은 담당자와 외부 변호사가 한다는 점을 필요할 때만 짧게 덧붙입니다.",0,""],
  ["ann","앤","법무 담당","legal","#3a2a1e","#f4cfae","#26272b","법령·판례 조사와 쟁점 정리, 법률 검토 메모를 돕습니다. 확인되지 않은 조문·판례는 원문 확인이 필요하다고 안내합니다.",1,"bun"],
  ["sophia","소피아","법무 담당","legal","#8a5a33","#f4cfae","#7a7d85","계약서 검토(위험 조항, 수정 제안)와 계약 조건 비교표 작성을 돕습니다.",0,"long"],
  ["ryan","라이언","IR팀장","ir","#1b1b1f","#f4cfae","#2b3a5c","공시 문안 검토, 투자자 문의 답변 초안, 실적 설명 자료 구성, 공정공시·미공개중요정보 관리 유의점을 안내합니다. 회사 수치는 사용자가 준 것만 사용합니다.",0,""],
@@ -695,7 +695,7 @@ function wchart(i){
        x.fillText(t1,nx,t2?ny-7:ny);
        if(t2){x.fillStyle="#cbd5e1";x.font="11px "+FONT;x.fillText(t2,nx,ny+9);}
      };
-     const teams=[[52,196,"경영관리","제니·카리나·이던","#10b981"],[136,196,"총무","에이든·로라·브라이언","#f59e0b"],[220,196,"전략기획","에릭·노라·제이슨","#06b6d4"],[304,196,"법무","피터·앤·소피아","#ef4444"],[388,196,"IR","라이언·수지·케빈","#8b5cf6"],[468,196,"IT·기술","테오·아바·조이","#3b82f6"]];
+     const teams=[[52,196,"경영관리","데니스·카리나·이던","#10b981"],[136,196,"총무","에이든·로라·브라이언","#f59e0b"],[220,196,"전략기획","에릭·노라·제이슨","#06b6d4"],[304,196,"법무","렉스·앤·소피아","#ef4444"],[388,196,"IR","라이언·수지·케빈","#8b5cf6"],[468,196,"IT·기술","테오·아바·조이","#3b82f6"]];
      x.strokeStyle="#475569";x.lineWidth=2;
      x.beginPath();x.moveTo(256,64);x.lineTo(256,144);x.moveTo(52,144);x.lineTo(468,144);
      teams.forEach(([tx])=>{x.moveTo(tx,144);x.lineTo(tx,172);});
@@ -703,7 +703,7 @@ function wchart(i){
      const p=(t*0.6)%1;
      const pulseIdx=Math.floor(t*0.6)%teams.length;
      x.fillStyle="#facc15";x.beginPath();x.arc(256,64+p*80,3.5,0,Math.PI*2);x.fill();
-     drawNode(256,44,126,34,"#1e3a5f","#60a5fa","단테 (대표이사)","");
+     drawNode(256,44,126,34,"#1e3a5f","#60a5fa","피터 (대표이사)","");
      drawNode(256,104,126,36,"#2a4aa0","#93c5fd","알렉스","본부장");
      teams.forEach(([tx,ty,nm,mb,col],idx)=>{
        drawNode(tx,ty,76,46,"#1e293b",idx===pulseIdx?"#facc15":col,nm,mb.split("·")[0]);
@@ -1328,7 +1328,7 @@ function init3d(){
   const STUDY_TOPICS={
     legal:[
       {badge:"법무리서치",tag:"🔍 법령·판례",sub:"🔍 상장사 법무·공시 기준 실제 조사 중",query:"코스닥 상장사(앱코 ABKO 등 하드웨어·주변기기 제조·유통사) 법무팀 관점에서 최근 상법·자본시장법·공정거래법·하도급법 또는 전자계약 실무상 주의해야 할 최신 규제·판례 동향 1가지를 사실에 근거해 3~4문장으로 간결히 요약해 보고하세요."},
-      {badge:"계약리서치",tag:"🔍 계약리스크",sub:"🔍 유통·공급 계약 쟁점 실제 조사 중",query:"IT 주변기기·소형가전 제조·유통 상장사의 국내외 공급·유통·OEM 계약 검토 시 핵심 법적 체크포인트 1가지를 근거와 함께 3~4문장으로 요약해 단테 대표님께 보고하세요."}
+      {badge:"계약리서치",tag:"🔍 계약리스크",sub:"🔍 유통·공급 계약 쟁점 실제 조사 중",query:"IT 주변기기·소형가전 제조·유통 상장사의 국내외 공급·유통·OEM 계약 검토 시 핵심 법적 체크포인트 1가지를 근거와 함께 3~4문장으로 요약해 피터 대표님께 보고하세요."}
     ],
     ir:[
       {badge:"IR리서치",tag:"🔍 시장·IR동향",sub:"🔍 코스닥·주변기기 업황 실제 조사 중",query:"코스닥 상장사 앱코(ABKO) 및 국내외 PC 주변기기·게이밍 기어·소형가전 업계의 최근 시장 동향이나 투자자 주요 관심 이슈를 검색·확인해 사실 위주로 3~4문장 요약 보고하세요. 확인되지 않은 수치는 쓰지 마세요."},
@@ -1342,7 +1342,7 @@ function init3d(){
       {badge:"기술리서치",tag:"🔍 AI·보안동향",sub:"🔍 기업용 AI·정보보안 이슈 조사 중",query:"상장사 사내 AI 업무 도구 도입 시 정보유출 방지, 개인정보보호법·AI 기본법 준수 등 IT·보안 실무 체크포인트 1가지를 3~4문장으로 요약 보고하세요."}
     ],
     hq:[
-      {badge:"전략리서치",tag:"🔍 전사전략검토",sub:"🔍 앱코 핵심 경영 현안 종합 조사 중",query:"코스닥 상장사 앱코(ABKO)의 본부장 관점에서 수익성 개선, 주주 소통, 법무·공시 리스크 관리를 위해 단테 대표님이 챙겨야 할 핵심 우선순위 1가지를 3~4문장으로 요약 보고하세요."}
+      {badge:"전략리서치",tag:"🔍 전사전략검토",sub:"🔍 앱코 핵심 경영 현안 종합 조사 중",query:"코스닥 상장사 앱코(ABKO)의 본부장 관점에서 수익성 개선, 주주 소통, 법무·공시 리스크 관리를 위해 피터 대표님이 챙겨야 할 핵심 우선순위 1가지를 3~4문장으로 요약 보고하세요."}
     ]
   };
   function assignStudy(e){
@@ -1431,15 +1431,15 @@ function localAssistantReply(e, promptText){
   const p=promptText.trim();
   const shortP=p.length>60?p.slice(0,60)+"…":p;
   if(e.id==="peter"||e.room==="legal"){
-    return "단테 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 건은 계약 상대방 지위, 책임 제한·해지 조항, 상장사 내부통제/공시 연관성을 우선 검토해야 합니다.\n\n• 실무 검토 초안:\n  1) 당사 지위(갑/을·화주/공급사 등) 및 핵심 의무 범위 확인\n  2) 손해배상 상한, 해지·위약벌, 지식재산·개인정보 조항 점검\n  3) 전자서명(모두싸인) 체결 전 최종 문안 및 결재 확인\n• 확인 필요 사항: 계약서/공문 원문, 당사자 정보, 확정 일자 및 관련 법령 조문 원문 확인이 필요합니다.";
+    return "피터 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 건은 계약 상대방 지위, 책임 제한·해지 조항, 상장사 내부통제/공시 연관성을 우선 검토해야 합니다.\n\n• 실무 검토 초안:\n  1) 당사 지위(갑/을·화주/공급사 등) 및 핵심 의무 범위 확인\n  2) 손해배상 상한, 해지·위약벌, 지식재산·개인정보 조항 점검\n  3) 전자서명(모두싸인) 체결 전 최종 문안 및 결재 확인\n• 확인 필요 사항: 계약서/공문 원문, 당사자 정보, 확정 일자 및 관련 법령 조문 원문 확인이 필요합니다.";
   }
   if(e.id==="ryan"||e.room==="ir"){
-    return "단테 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 건은 제공된 사실·수치만을 기준으로 투자자 소통 방향과 공정공시·미공개정보 리스크를 함께 점검해야 합니다.\n\n• IR 실무 초안:\n  1) 핵심 메시지 요약(추진 배경·기대 효과·주의점)\n  2) 주주·투자자 예상 Q&A 및 대응 원칙 정리\n  3) 공시 의무 및 미공개중요정보 관리 여부 확인\n• 확인 필요 사항: 미확정 수치·일정은 임의 기재하지 않으며, 원자료 및 공시 기준 확인이 필요합니다.";
+    return "피터 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 건은 제공된 사실·수치만을 기준으로 투자자 소통 방향과 공정공시·미공개정보 리스크를 함께 점검해야 합니다.\n\n• IR 실무 초안:\n  1) 핵심 메시지 요약(추진 배경·기대 효과·주의점)\n  2) 주주·투자자 예상 Q&A 및 대응 원칙 정리\n  3) 공시 의무 및 미공개중요정보 관리 여부 확인\n• 확인 필요 사항: 미확정 수치·일정은 임의 기재하지 않으며, 원자료 및 공시 기준 확인이 필요합니다.";
   }
   if(e.id==="alex"){
-    return "단테 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 업무를 즉시 실행할 수 있도록 담당 배정과 처리 순서를 정리했습니다.\n\n• 실행 계획:\n  1) 1단계(사실·자료 취합): 관련 문서·조건·일정 정리\n  2) 2단계(전문 검토): 법무(피터)·재무/경영관리(제니)·IR(라이언) 등 쟁점 검토\n  3) 3단계(의사결정): 단테 대표님 보고 및 실행 확정\n• 즉시 진행 팁: 대상 문안이나 구체 조건을 붙여주시면 해당 담당자 관점으로 초안을 바로 작성합니다.";
+    return "피터 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 업무를 즉시 실행할 수 있도록 담당 배정과 처리 순서를 정리했습니다.\n\n• 실행 계획:\n  1) 1단계(사실·자료 취합): 관련 문서·조건·일정 정리\n  2) 2단계(전문 검토): 법무(렉스)·재무/경영관리(데니스)·IR(라이언) 등 쟁점 검토\n  3) 3단계(의사결정): 피터 대표님 보고 및 실행 확정\n• 즉시 진행 팁: 대상 문안이나 구체 조건을 붙여주시면 해당 담당자 관점으로 초안을 바로 작성합니다.";
   }
-  return "단테 대표님, 핵심 결론입니다. "+e.name+"("+e.badge+")이 '"+shortP+"' 업무에 대한 1차 실무 처리안을 정리했습니다.\n\n• 처리 단계:\n  1) 요구사항 핵심 목표 및 산출물 형태 확정\n  2) 필요 데이터·규정·선행 자료 확인\n  3) 초안 작성 및 검토 후 최종 반영\n• 안내: 구체 수치·규정 조문·날짜는 확인되지 않은 항목을 임의 추정하지 않으며 원문 확인이 필요합니다.";
+  return "피터 대표님, 핵심 결론입니다. "+e.name+"("+e.badge+")이 '"+shortP+"' 업무에 대한 1차 실무 처리안을 정리했습니다.\n\n• 처리 단계:\n  1) 요구사항 핵심 목표 및 산출물 형태 확정\n  2) 필요 데이터·규정·선행 자료 확인\n  3) 초안 작성 및 검토 후 최종 반영\n• 안내: 구체 수치·규정 조문·날짜는 확인되지 않은 항목을 임의 추정하지 않으며 원문 확인이 필요합니다.";
 }
 
 async function fetchRetry(url,opt){
@@ -1604,7 +1604,7 @@ function openRobotSmalltalk(){
   st.hist.robot=st.hist.robot||[];
   if(!st.hist.robot.length){
     const nowKst=new Date().toLocaleTimeString("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit"});
-    st.hist.robot.push({role:"assistant",content:"안녕하세요, 단테 대표님! 로비 AI 로봇이에요 ("+nowKst+" 기준). 오늘 날씨나 간단한 잡담, 사무실 이야기 편하게 걸어 주세요 🤖",show:"안녕하세요, 단테 대표님! 로비 AI 로봇이에요 ("+nowKst+" 기준). 오늘 날씨나 간단한 잡담, 사무실 이야기 편하게 걸어 주세요 🤖",t:T()});
+    st.hist.robot.push({role:"assistant",content:"안녕하세요, 피터 대표님! 로비 AI 로봇이에요 ("+nowKst+" 기준). 오늘 날씨나 간단한 잡담, 사무실 이야기 편하게 걸어 주세요 🤖",show:"안녕하세요, 피터 대표님! 로비 AI 로봇이에요 ("+nowKst+" 기준). 오늘 날씨나 간단한 잡담, 사무실 이야기 편하게 걸어 주세요 🤖",t:T()});
   }
   drawChat();
   inp.focus();
@@ -1625,7 +1625,7 @@ function drawChat(){
   const e=E(st.sel),h=st.hist[e.id]=st.hist[e.id]||[],c=cOf(e.id),rest=c&&c.away&&!st.busy[e.id];
   $("#av-head").innerHTML=pix(e);$("#hn").textContent=e.name;$("#hb").textContent=e.badge;
   if(e.id==="ceo1"){
-    $("#hs").textContent="단테 대표님 보고함 — 직원들의 자율 리서치·업무 보고 수신 중";
+    $("#hs").textContent="피터 대표님 보고함 — 직원들의 자율 리서치·업무 보고 수신 중";
     $("#chatBox").style.display="none";$("#ceoNoticeBox").style.display="";
   }else{
     const curTask=st.phase[e.id]||(st.study[e.id]&&st.study[e.id].sub.replace(/^🔍\s*/,""));
@@ -1779,7 +1779,7 @@ async function reviewItem(it){
   try{
     let approved=false;
     for(let round=1;round<=3;round++){
-      const v=parseJSON(await callAs(rv,"[단테 대표님 원 지시]\n"+it.full+"\n\n[담당자 "+worker.name+"의 작업 지시]\n"+it.task+"\n\n[검수 회차] "+round+"/3\n[담당자 결과물]\n"+it.draft+"\n\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목, 실무 활용 가능성. 승인 시에는 문서 표현과 구조를 다듬은 최종 수정본 전문을 revised_draft에 작성하세요. 보완이면 수정 지시를 comment에 작성하고 revised_draft는 빈 문자열로 둡니다.\n설명 없이 JSON만 출력하세요: {\"verdict\":\"승인\" 또는 \"보완\",\"comment\":\"검수 의견\",\"revised_draft\":\"승인된 최종 문서 전문\"}",{json:true}));
+      const v=parseJSON(await callAs(rv,"[피터 대표님 원 지시]\n"+it.full+"\n\n[담당자 "+worker.name+"의 작업 지시]\n"+it.task+"\n\n[검수 회차] "+round+"/3\n[담당자 결과물]\n"+it.draft+"\n\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목, 실무 활용 가능성. 승인 시에는 문서 표현과 구조를 다듬은 최종 수정본 전문을 revised_draft에 작성하세요. 보완이면 수정 지시를 comment에 작성하고 revised_draft는 빈 문자열로 둡니다.\n설명 없이 JSON만 출력하세요: {\"verdict\":\"승인\" 또는 \"보완\",\"comment\":\"검수 의견\",\"revised_draft\":\"승인된 최종 문서 전문\"}",{json:true}));
       const verdict=String(v.verdict||"").trim();
       it.review=String(v.comment||"");
       if(verdict==="승인"){
@@ -1813,7 +1813,7 @@ async function runDirective(text,f){
   h.push({role:"user",content:full,show:(f?"📎 "+f.name+"\n":"")+text,t:T()});
   inp.value="";st.file=null;$("#hint").textContent="";
   if(aiCfg.provider==="local"){
-    wfLog("단테 대표님, AI 연결이 필요합니다. 톱니바퀴(AI 연결 설정)에서 Claude 자동 또는 Gemini·OpenAI를 선택해 주세요. 내장비서 모드에서는 업무 배분이 실행되지 않습니다.");
+    wfLog("피터 대표님, AI 연결이 필요합니다. 톱니바퀴(AI 연결 설정)에서 Claude 자동 또는 Gemini·OpenAI를 선택해 주세요. 내장비서 모드에서는 업무 배분이 실행되지 않습니다.");
     drawChat();return;
   }
   st.wfRun=true;
@@ -1822,7 +1822,7 @@ async function runDirective(text,f){
   try{
     let step=0;const wf=t=>wfLog(["①","②","③","④","⑤","⑥","⑦"][step++]+" "+t);
     const roster=TEAM_LEADS.map(id=>{const l=E(id);return id+" | "+l.name+" | "+l.badge+" | 팀 업무: "+(l.duty||"")+" | 팀원: "+membersOf(id).map(m=>E(m).name+"("+E(m).duty+")").join(" / ");}).join("\n");
-    const plan=parseJSON(await callAs(a,"[단테 대표님 업무 지시]\n"+full+"\n\n[업무를 배정할 수 있는 팀(팀장)]\n"+roster+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"summary\":\"업무 해석과 처리 방향 2~3문장\",\"collab\":true 또는 false,\"assignments\":[{\"id\":\"팀장 id\",\"task\":\"그 팀에 줄 구체적 업무 지시\"}]}\nassignments는 관련 있는 팀만 1~3개이며, id는 반드시 위 팀장 id만 씁니다. collab은 2개 이상 팀이 자료·판단·결과물을 서로 맞춰야 하면 true, 각자 독립적으로 처리할 수 있으면 false입니다. 알렉스 본인과 대표는 배정하지 않습니다. 사실 확인이 필요한 항목은 task에 '확인 필요'라고 적습니다.",{json:true}));
+    const plan=parseJSON(await callAs(a,"[피터 대표님 업무 지시]\n"+full+"\n\n[업무를 배정할 수 있는 팀(팀장)]\n"+roster+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"summary\":\"업무 해석과 처리 방향 2~3문장\",\"collab\":true 또는 false,\"assignments\":[{\"id\":\"팀장 id\",\"task\":\"그 팀에 줄 구체적 업무 지시\"}]}\nassignments는 관련 있는 팀만 1~3개이며, id는 반드시 위 팀장 id만 씁니다. collab은 2개 이상 팀이 자료·판단·결과물을 서로 맞춰야 하면 true, 각자 독립적으로 처리할 수 있으면 false입니다. 알렉스 본인과 대표는 배정하지 않습니다. 사실 확인이 필요한 항목은 task에 '확인 필요'라고 적습니다.",{json:true}));
     const byLead=new Map();
     (plan.assignments||[]).forEach(x=>{
       if(!x||!E(x.id))return;
@@ -1832,7 +1832,7 @@ async function runDirective(text,f){
     });
     const teams=[...byLead.entries()].slice(0,3).map(([lid,task])=>({lead:lid,task:task,items:[],report:""}));
     if(!teams.length)throw new Error("배분할 담당 팀을 정하지 못했습니다.");
-    wf("업무 검토 완료 (단테 대표님 지시 반영)\n"+(plan.summary||"")+"\n\n배분: "+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+")").join(", "));
+    wf("업무 검토 완료 (피터 대표님 지시 반영)\n"+(plan.summary||"")+"\n\n배분: "+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+")").join(", "));
     setPhase("alex",null);
     teams.forEach(t=>setPhase(t.lead,"배정"));
 
@@ -1847,12 +1847,12 @@ async function runDirective(text,f){
         const L=E(t.lead),tag=L.name+"("+L.badge+")";
         const others=teams.filter(o=>o!==t).map(o=>E(o.lead).name+"("+E(o.lead).badge+"): "+o.task).join("\n");
         try{
-          return tag+"\n"+await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+"\n\n[함께 협업할 팀의 업무]\n"+others+"\n\n협업 회의에서 발언할 내용을 5문장 이내로 쓰세요: 1) 우리 팀이 맡을 범위 2) 다른 팀에서 받아야 할 자료나 판단 3) 다른 팀에 제공할 것 4) 순서·일정상 주의점 5) 사실 확인이 필요한 부분. 업무 내용에 없는 수치는 만들지 마세요.");
+          return tag+"\n"+await callAs(L,"[피터 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+"\n\n[함께 협업할 팀의 업무]\n"+others+"\n\n협업 회의에서 발언할 내용을 5문장 이내로 쓰세요: 1) 우리 팀이 맡을 범위 2) 다른 팀에서 받아야 할 자료나 판단 3) 다른 팀에 제공할 것 4) 순서·일정상 주의점 5) 사실 확인이 필요한 부분. 업무 내용에 없는 수치는 만들지 마세요.");
         }catch(err){return tag+"\n(발언 생성 실패: "+err.message+")";}
       }));
       const speeches=(await Promise.all([seated,talk]))[1];
       try{
-        minutes=await callAs(a,"[단테 대표님 원 지시]\n"+full+"\n\n[팀별 배정 업무]\n"+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+"): "+t.task).join("\n")+"\n\n[팀장 발언]\n"+speeches.join("\n\n")+"\n\n협업 회의록을 작성하세요. 순서: 1) 역할 분담 2) 팀 간 전달 사항(누가 누구에게 무엇을) 3) 처리 순서 4) 중복·충돌 조정 5) 사실 확인이 필요한 사항. 발언에 없는 내용과 수치는 추가하지 마세요. 10문장 이내.");
+        minutes=await callAs(a,"[피터 대표님 원 지시]\n"+full+"\n\n[팀별 배정 업무]\n"+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+"): "+t.task).join("\n")+"\n\n[팀장 발언]\n"+speeches.join("\n\n")+"\n\n협업 회의록을 작성하세요. 순서: 1) 역할 분담 2) 팀 간 전달 사항(누가 누구에게 무엇을) 3) 처리 순서 4) 중복·충돌 조정 5) 사실 확인이 필요한 사항. 발언에 없는 내용과 수치는 추가하지 마세요. 10문장 이내.");
       }catch(err){minutes="(회의록 작성 실패: "+err.message+")";}
       wf("협업 회의 (회의실: "+ids.map(id=>E(id).name).join(", ")+")\n\n"+speeches.join("\n\n")+"\n\n[회의록]\n"+minutes);
       ids.forEach(id=>{setPhase(id,null);const cc=cOf(id);if(cc){cc.tok++;goDesk(cc,cc.tok);}});
@@ -1865,7 +1865,7 @@ async function runDirective(text,f){
       setPhase(t.lead,"업무 배분 중");
       let asg=[];
       try{
-        const r=parseJSON(await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+(minutes?"\n\n[협업 회의 결과]\n"+minutes:"")+"\n\n[배정 가능한 팀원]\n"+ms.map(m=>m+" | "+E(m).name+" | "+E(m).badge+" | "+(E(m).duty||"")).join("\n")+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"assignments\":[{\"id\":\"팀원 id\",\"task\":\"팀원에게 줄 구체적 작업 지시\"}]}\n필요한 팀원만 1~"+ms.length+"명 배정하고, id는 위 팀원 id만 씁니다. 팀장 본인은 배정하지 않습니다.",{json:true}));
+        const r=parseJSON(await callAs(L,"[피터 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+(minutes?"\n\n[협업 회의 결과]\n"+minutes:"")+"\n\n[배정 가능한 팀원]\n"+ms.map(m=>m+" | "+E(m).name+" | "+E(m).badge+" | "+(E(m).duty||"")).join("\n")+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"assignments\":[{\"id\":\"팀원 id\",\"task\":\"팀원에게 줄 구체적 작업 지시\"}]}\n필요한 팀원만 1~"+ms.length+"명 배정하고, id는 위 팀원 id만 씁니다. 팀장 본인은 배정하지 않습니다.",{json:true}));
         const seen=new Set();
         (r.assignments||[]).forEach(x=>{if(x&&ms.includes(x.id)&&!seen.has(x.id)){seen.add(x.id);asg.push({id:x.id,task:String(x.task||"")});}});
       }catch(err){}
@@ -1882,7 +1882,7 @@ async function runDirective(text,f){
     await Promise.all(items.map(async it=>{
       setPhase(it.id,"작업 중");
       try{
-        it.draft=await callAs(E(it.id),"[단테 대표님 원 지시]\n"+full+"\n\n[배분된 작업]\n"+it.task+"\n\n결과물을 작성하세요. 사실, 분석, 제안, 미확인 정보를 구분해 표시하고, 출처가 없는 수치는 쓰지 마세요.");
+        it.draft=await callAs(E(it.id),"[피터 대표님 원 지시]\n"+full+"\n\n[배분된 작업]\n"+it.task+"\n\n결과물을 작성하세요. 사실, 분석, 제안, 미확인 정보를 구분해 표시하고, 출처가 없는 수치는 쓰지 마세요.");
         it.status="검수 대기";
       }catch(err){it.status="작업 실패";it.review=err.message;}
       setPhase(it.id,it.status);
@@ -1899,23 +1899,23 @@ async function runDirective(text,f){
       setPhase(t.lead,"보고서 작성 중");
       const body=t.items.map(it=>"■ "+E(it.id).name+"("+E(it.id).badge+") / 상태: "+it.status+"\n검수 의견: "+(it.review||"-")+"\n결과물:\n"+(it.draft||"(결과 없음)")).join("\n\n");
       try{
-        t.report=await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 준 업무]\n"+t.task+"\n\n[팀원 결과와 검수 의견]\n"+body+"\n\n위 내용으로 알렉스 본부장에게 올릴 팀 보고서를 작성하세요. 순서: 핵심 결론, 팀원별 결과 요약, 보완 내역, 확인되지 않은 사항. 결과물에 없는 수치는 추가하지 마세요.");
+        t.report=await callAs(L,"[피터 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 준 업무]\n"+t.task+"\n\n[팀원 결과와 검수 의견]\n"+body+"\n\n위 내용으로 알렉스 본부장에게 올릴 팀 보고서를 작성하세요. 순서: 핵심 결론, 팀원별 결과 요약, 보완 내역, 확인되지 않은 사항. 결과물에 없는 수치는 추가하지 마세요.");
       }catch(err){t.report="(팀 보고서 작성 실패: "+err.message+")\n\n"+body;}
       setPhase(t.lead,null);
     }));
     wf("팀장 보고 완료 → 알렉스 취합\n"+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+")").join(", "));
 
-    // ⑥ 알렉스가 최종 보고서를 작성해 단테 대표님께 보고
+    // ⑥ 알렉스가 최종 보고서를 작성해 피터 대표님께 보고
     setPhase("alex","보고서 작성 중");
     const body=teams.map(t=>"■ "+E(t.lead).name+"("+E(t.lead).badge+") 팀 보고\n[검수 내역] "+t.items.map(it=>E(it.id).name+": "+it.status+(it.review?" — "+it.review:"")).join(" / ")+"\n"+t.report).join("\n\n");
     let report;
-    try{report=await callAs(a,"[단테 대표님 원 지시]\n"+full+(minutes?"\n\n[협업 회의록]\n"+minutes:"")+"\n\n[팀별 보고와 검수 내역]\n"+body+"\n\n위 내용으로 단테 대표님께 올릴 최종 보고서를 작성하세요. 순서: 1) 핵심 결론 2) 팀별 결과 요약 3) 검수 과정과 보완 내역 4) 확인되지 않았거나 추가 확인이 필요한 사항 5) 외부 실행 여부: 이번 업무에서 외부 발송·공시·계약 실행은 하지 않았으며, 필요하면 단테 대표님 승인 후 진행합니다. 협업 회의록이 있으면 그 결정 사항을 반영하세요. 결과물에 없는 수치는 추가하지 마세요.");}catch(err){report="(알렉스 최종 보고서 작성 실패: "+err.message+")\n\n아래는 팀별 보고 원문입니다.\n\n"+body;}
+    try{report=await callAs(a,"[피터 대표님 원 지시]\n"+full+(minutes?"\n\n[협업 회의록]\n"+minutes:"")+"\n\n[팀별 보고와 검수 내역]\n"+body+"\n\n위 내용으로 피터 대표님께 올릴 최종 보고서를 작성하세요. 순서: 1) 핵심 결론 2) 팀별 결과 요약 3) 검수 과정과 보완 내역 4) 확인되지 않았거나 추가 확인이 필요한 사항 5) 외부 실행 여부: 이번 업무에서 외부 발송·공시·계약 실행은 하지 않았으며, 필요하면 피터 대표님 승인 후 진행합니다. 협업 회의록이 있으면 그 결정 사항을 반영하세요. 결과물에 없는 수치는 추가하지 마세요.");}catch(err){report="(알렉스 최종 보고서 작성 실패: "+err.message+")\n\n아래는 팀별 보고 원문입니다.\n\n"+body;}
     const approvedItems=items.filter(it=>it.status==="승인"&&String(it.draft||"").trim());
     const incompleteItems=items.filter(it=>it.status!=="승인");
     const overall=incompleteItems.length?"부분 완료":"검수 완료";
     st.deliverables={title:(full.split("\n")[0]||"업무 결과물").slice(0,36),created:new Date().toLocaleString("ko-KR"),overall:overall,items:items.map(it=>({name:E(it.id).name,task:it.task,status:it.status,review:it.review||"",draft:it.draft||""})),report:report};
     report+="\n\n[시스템 완료 판정] "+overall+" — 배정 "+items.length+"건 중 승인 "+approvedItems.length+"건, 미완료 "+incompleteItems.length+"건. "+(incompleteItems.length?"실패·미검수·보완 건이 있어 전체 업무의 최종 완료로 볼 수 없습니다.":"모든 배정 결과물이 팀장 검수를 통과했습니다.");
-    h.push({role:"assistant",content:report,show:"📋 단테 대표님 보고\n\n"+report,t:T()});
+    h.push({role:"assistant",content:report,show:"📋 피터 대표님 보고\n\n"+report,t:T()});
   }catch(err){
     wfLog("⚠ 업무 진행 중 문제가 발생했습니다: "+(err&&err.message?err.message:String(err))+"\n내용을 확인한 뒤 다시 지시해 주세요.");
   }finally{
@@ -1949,7 +1949,7 @@ async function send(){
     h.push({role:"user",content:text,show:text,t:T()});
     inp.value="";st.busy.robot=true;drawChat();
     const factCtx=await fetchLiveFactContext(text);
-    const sys="당신은 sw ai office 로비를 순찰하는 친근한 AI 로봇입니다. 사용자를 '단테 대표님'으로 부르며 다정하고 간결하게(2~3문장) 스몰토크하세요. 반드시 사실에 근거해 답하고, 모르는 최신 정보는 지어내지 말고 확인되지 않았다고 말하세요.\n[실시간 확인된 사실]\n"+factCtx;
+    const sys="당신은 sw ai office 로비를 순찰하는 친근한 AI 로봇입니다. 사용자를 '피터 대표님'으로 부르며 다정하고 간결하게(2~3문장) 스몰토크하세요. 반드시 사실에 근거해 답하고, 모르는 최신 정보는 지어내지 말고 확인되지 않았다고 말하세요.\n[실시간 확인된 사실]\n"+factCtx;
     const convo=h.slice(-8).map((m,i)=>({role:m.role,content:i===0?sys+"\n\n[사용자 말]\n"+m.content:m.content}));
     let replyText="";
     try{
@@ -1968,11 +1968,11 @@ async function send(){
     }catch(e){}
     if(!replyText){
       if(/날씨|기온|온도|비|눈/i.test(text)&&factCtx.includes("실시간 서울 기상 관측")){
-        replyText="단테 대표님, "+factCtx.split("\n")[1].replace("실시간 서울 기상 관측(Open-Meteo): ","현재 서울 날씨는 ")+"이에요! 외출이나 환기하실 때 참고하세요 😊";
+        replyText="피터 대표님, "+factCtx.split("\n")[1].replace("실시간 서울 기상 관측(Open-Meteo): ","현재 서울 날씨는 ")+"이에요! 외출이나 환기하실 때 참고하세요 😊";
       }else if(/몇\s*시|시간|날짜|오늘\s*며칠|요일/i.test(text)){
-        replyText="단테 대표님, "+factCtx.split("\n")[0]+"입니다! 오늘도 좋은 하루 보내세요 🤖";
+        replyText="피터 대표님, "+factCtx.split("\n")[0]+"입니다! 오늘도 좋은 하루 보내세요 🤖";
       }else{
-        replyText="단테 대표님, 말씀 반가워요! 지금도 현재 서울 날씨나 시각은 바로 알려드릴 수 있고, AI 연결 설정이 연결되어 있으면 최신 정보까지 찾아서 대화할 수 있어요 😊";
+        replyText="피터 대표님, 말씀 반가워요! 지금도 현재 서울 날씨나 시각은 바로 알려드릴 수 있고, AI 연결 설정이 연결되어 있으면 최신 정보까지 찾아서 대화할 수 있어요 😊";
       }
     }
     h.push({role:"assistant",content:replyText,show:replyText,t:T()});
@@ -1998,7 +1998,7 @@ async function send(){
   drawCards();drawChat();
   const input=h
     .filter(m=>m && !m.wf && typeof m.content==="string" && m.content.trim().length>0)
-    .map((m,i)=>({role:m.role,content:i===0?e.sys+"\n\n[단테 대표님 요청]\n"+m.content.trim():m.content.trim()}));
+    .map((m,i)=>({role:m.role,content:i===0?e.sys+"\n\n[피터 대표님 요청]\n"+m.content.trim():m.content.trim()}));
   bubble("assistant","응답을 불러오는 중입니다…",T());
   let replyText="";
   try{
@@ -2043,7 +2043,7 @@ function srvEmployees(){
     const coo=e.id==="alex",dept=coo?"본부장실":srvDeptOf(e);
     if(!dept)return;
     out.push({id:coo?"COO":e.id,name:e.name,department:dept,position:e.badge,
-      instruction:"당신은 앱코(ABKO) 경영관리부 소속 AI "+e.badge+" "+e.name+"입니다. 사용자는 대표이사 '단테'이며 '단테 대표님'으로 호칭합니다. 사실에 근거해서만 답하고, 모르거나 확실하지 않으면 '확인되지 않음'이라고 말합니다. "+(e.duty||"")});
+      instruction:"당신은 앱코(ABKO) 경영관리부 소속 AI "+e.badge+" "+e.name+"입니다. 사용자는 대표이사 '피터'이며 '피터 대표님'으로 호칭합니다. 사실에 근거해서만 답하고, 모르거나 확실하지 않으면 '확인되지 않음'이라고 말합니다. "+(e.duty||"")});
   });
   return out;
 }
@@ -2147,7 +2147,7 @@ function srvShowResult(d){
     const txt="📄 결과물 · 상태: "+(label[x.status]||x.status)+(rv?" · 팀장 2차 검수: "+rv.judgment:"")+"\n\n"+x.content;
     hh.push({role:"assistant",content:txt,show:txt,t:T()});
   });
-  const rep="📋 단테 대표님 보고 (서버 처리 · 업무번호 "+d.taskId+")\n직원별 결과물은 각 직원 카드를 눌러 확인하세요.\n\n"+d.reply;
+  const rep="📋 피터 대표님 보고 (서버 처리 · 업무번호 "+d.taskId+")\n직원별 결과물은 각 직원 카드를 눌러 확인하세요.\n\n"+d.reply;
   h.push({role:"assistant",content:rep,show:rep,t:T(),act:{taskId:d.taskId,releaseAllowed:gate.finalReleaseAllowed===true}});
 }
 function approvalBar(act){
@@ -2176,7 +2176,7 @@ function srvPendingGet(){try{return JSON.parse(localStorage.getItem(SRV_PENDING)
 async function runDirectiveServer(text,f,auto){
   const h=st.hist.alex=st.hist.alex||[];
   if(!srvCfg.url||!srvCfg.token){
-    wfLog("단테 대표님, 서버 모드를 쓰려면 톱니바퀴(AI 연결 설정)에서 Worker 주소와 접근 토큰을 입력해 주세요.");drawChat();return;
+    wfLog("피터 대표님, 서버 모드를 쓰려면 톱니바퀴(AI 연결 설정)에서 Worker 주소와 접근 토큰을 입력해 주세요.");drawChat();return;
   }
   let job=null;
   if(auto||text.trim()==="이어서"){
@@ -2258,7 +2258,7 @@ $("#mc").onclick=()=>{$("#modal").hidden=true;};
 $("#ms").onclick=()=>{
   const name=$("#mn").value.trim(),role=$("#mrole").value.trim(),duty=$("#mi").value.trim(),room=$("#mr").value;
   if(!name||!role||!room){$("#mm").textContent="이름·부서·직책은 꼭 입력해 주세요.";return;}
-  const p=PAL[CUSTOM.length%PAL.length],d={id:"c"+Date.now(),name:name,badge:role,room:room,hair:p[0],skin:p[1],shirt:p[2],duty:duty||"단테 대표님의 업무를 돕습니다."};
+  const p=PAL[CUSTOM.length%PAL.length],d={id:"c"+Date.now(),name:name,badge:role,room:room,hair:p[0],skin:p[1],shirt:p[2],duty:duty||"피터 대표님의 업무를 돕습니다."};
   CUSTOM.push(d);try{localStorage.setItem("sw_custom",JSON.stringify(CUSTOM));}catch(e){}
   const ne=mk(d);EMP.push(ne);if(root)addChar(ne);$("#modal").hidden=true;st.sel=ne.id;drawAll();
   chars.forEach(drawLabel);
