@@ -69,6 +69,8 @@ try {
   await page.locator('#staffStrip .staffCard').first().click();
   const selectedName = (await page.locator('#chatName').innerText()).trim();
   if (selectedName !== '단테') throw new Error(`대표이사 첫 직원 카드 이름 오류: expected 단테, found ${selectedName || '(empty)'}`);
+  // 직원 카드를 누르면 프로필 모달이 열리므로 다음 직원 선택 전에 닫는다.
+  await page.locator('#close').click();
   const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]');
   await legalLeadCard.waitFor({ state: 'visible', timeout: 10000 });
   await legalLeadCard.click();
