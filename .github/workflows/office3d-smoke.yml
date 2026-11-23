@@ -1,6 +1,20 @@
 name: SW AI OFFICE 3D browser smoke test
 
 on:
+  push:
+    branches: [main, work/office3d-mainline-rebase]
+    paths:
+      - 'index.html'
+      - 'office3d.html'
+      - 'tests/office3d-entrypoint.test.mjs'
+      - 'tests/office3d-smoke.mjs'
+      - '.github/workflows/office3d-smoke.yml'
+      - 'employees.js'
+      - 'tests/worker-auth-audit.test.mjs'
+      - 'SW_AI_Office_v3_15.html'
+      - 'office-v315-integrated.html'
+      - 'workflow-bridge-v315.js'
+      - 'tests/v315-workflow-bridge.test.mjs'
   pull_request:
     branches: [main]
     paths:
