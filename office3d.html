@@ -319,7 +319,7 @@ legacyStructure.visible=false;
 officeStructure.position.y=0;
 officeStructure.scale.set(.8,1,.8);
 scene.add(officeStructure);
-// 아바타는 각 팀별 책상 구역 안에 정렬// 직원 아바타는 각 팀의 책상 구역에 배치// 직원 아바타: 부서별 구역 안에 배치
+// 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
 function makePixelSheet(person,index,seated=false){
@@ -443,7 +443,7 @@ avatars.forEach((avatar,index)=>{
  avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
  avatar.userData.targetX=x*.8;avatar.userData.targetZ=z*.8;
 });
-window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:officeTeams.length,deskCount:31,avatarCount:avatars.length,visibleOffice:officeStructure.visible});
+window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:officeTeams.length,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:officeStructure.visible});
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=staff.length;
 function makeStaffCard(p,detail=false){
