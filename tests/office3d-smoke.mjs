@@ -57,7 +57,7 @@ try {
   if (!officeAudit || officeAudit.floorCount !== 1 || officeAudit.activeFloor !== 1 || officeAudit.visibleOffice !== true) {
     throw new Error('단층 사무실 상태 감사 정보가 올바르지 않습니다: ' + JSON.stringify(officeAudit));
   }
-  if (officeAudit.teamCount !== 6 || officeAudit.deskCount !== 31) throw new Error('6개 팀 또는 31개 작업석 구성이 누락되었습니다');
+  if (officeAudit.teamCount !== 6 || officeAudit.deskCount !== 31) throw new Error('6개 팀 또는 31개 작업석 구성이 누락되었습니다: ' + JSON.stringify(officeAudit));
   if (officeAudit.avatarCount < 30) throw new Error('단층 사무실 직원 캐릭터가 충분하지 않습니다');
   await page.waitForTimeout(500);
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-single-floor.png' });
