@@ -46,36 +46,52 @@ const body = {
   contents: [{ role: "user", parts: [{ text: "Review current source and tests. Produce at most one safe minimal patch.\n\n" + source }] }],
   generationConfig: { temperature: 0.15, responseMimeType: "application/json" }
 };
-const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey);
+const models = [model, ...(process.env.GEMINI_FALLBACK_MODELS || "gemini-3.5-flash-lite").split(",").map(x => x.trim()).filter(Boolean)];
 const retryableStatuses = new Set([429, 500, 502, 503, 504]);
 const delays = [2000, 5000, 10000, 20000];
 let response;
 let raw = "";
-for (let attempt = 0; attempt <= delays.length; attempt++) {
-  try {
-    response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60000)
-    });
-    raw = await response.text();
-    if (response.ok) break;
-    if (!retryableStatuses.has(response.status) || attempt === delays.length) {
-      throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+let successful = false;
+let lastError = null;
+for (const candidateModel of [...new Set(models)]) {
+  const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + candidateModel + ":generateContent?key=" + encodeURIComponent(apiKey);
+  console.log("Trying Gemini model: " + candidateModel);
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(45000)
+      });
+      raw = await response.text();
+      if (response.ok) {
+        successful = true;
+        break;
+      }
+      if (!retryableStatuses.has(response.status)) {
+        throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+      }
+      lastError = new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+      console.log("Gemini temporary HTTP error " + response.status + " on " + candidateModel + ".");
+    } catch (error) {
+      const transient = error.name === "TimeoutError" || error.name === "AbortError" ||
+        error.cause?.code === "UND_ERR_HEADERS_TIMEOUT" || error.cause?.code === "ECONNRESET" ||
+        error.cause?.code === "ETIMEDOUT" || /fetch failed/i.test(error.message);
+      if (!transient) throw error;
+      lastError = error;
+      console.log("Gemini temporary network/timeout error on " + candidateModel + ".");
     }
-    console.log("Gemini temporary HTTP error " + response.status + ".");
-  } catch (error) {
-    const transient = error.name === "TimeoutError" || error.name === "AbortError" ||
-      error.cause?.code === "UND_ERR_HEADERS_TIMEOUT" || error.cause?.code === "ECONNRESET" ||
-      error.cause?.code === "ETIMEDOUT" || /fetch failed/i.test(error.message);
-    if (!transient || attempt === delays.length) throw error;
-    console.log("Gemini temporary network/timeout error; retry " + (attempt + 1) + "/" + delays.length + ".");
+    if (attempt < delays.length) {
+      const waitMs = delays[attempt];
+      console.log("Retrying " + candidateModel + " in " + waitMs + "ms (" + (attempt + 1) + "/" + delays.length + ").");
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
   }
-  const waitMs = delays[attempt];
-  console.log("Retrying Gemini request in " + waitMs + "ms.");
-  await new Promise(resolve => setTimeout(resolve, waitMs));
+  if (successful) break;
+  console.log("Model unavailable after retries; switching to the next configured fallback.");
 }
+if (!successful) throw lastError || new Error("All configured Gemini models failed.");
 const payload = JSON.parse(raw);
 const answer = payload.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
 let result;
