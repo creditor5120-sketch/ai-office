@@ -76,3 +76,5 @@ await fs.writeFile("ai-autopilot-report.md",
   "utf8");
 console.log(result.summary);
 console.log(patch ? "PATCH_READY" : "NO_PATCH");
+
+// Trigger a fresh GitHub Actions run to recheck repository secret delivery.
