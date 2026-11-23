@@ -38,6 +38,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINIAPIKEY }}
           GEMINI_MODEL: gemini-3.8-flash
+          GEMINI_FALLBACK_MODELS: gemini-3.5-flash-lite
         run: node automation/ai-autopilot.mjs
 
       - name: 수정안 적용 및 변경 여부 확인
