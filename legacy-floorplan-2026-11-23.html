@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEAM.AI.ID - sw ai office (AI Virtual Office)</title>
+  <style>
+    :root {
+      --bg-outer: #d7c7b0;
+      --bg-bar: #efe4d4;
+      --bg-panel: #f6efe4;
+      --bg-card: #fffdf9;
+      --bg-muted: #ebe0cf;
+      --border-soft: #cbb89d;
+      --border-mid: #a89275;
+      --border-dark: #4b3b2c;
+      --ink-main: #221c17;
+      --ink-sub: #584c40;
+      --ink-muted: #7a6b5c;
+      --accent: #3a6896;
+      --accent-dark: #25486b;
+      --ok-bg: #e7f5e9;
+      --ok-ink: #1e6f2c;
+      --warn-bg: #fff2df;
+      --warn-ink: #9c5b00;
+      --err-bg: #fdeaea;
+      --err-ink: #b71c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Noto Sans KR", sans-serif;
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: var(--ink-main);
+      background: var(--bg-outer);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 상단 헤더 */
+    .topbar {
+      background: var(--bg-bar);
+      border-bottom: 2px solid var(--border-soft);
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      background: #3d3126;
+      color: #fff9ee;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      padding: 6px 10px;
+      border-radius: 5px;
+    }
+
+    .title-stack {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .office-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-main);
+    }
+
+    .office-desc {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-sub);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill.online {
+      color: var(--ok-ink);
+      background: var(--ok-bg);
+      border-color: #9ccc65;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--ink-main);
+      border: 1.5px solid var(--border-mid);
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .btn:hover {
+      background: var(--bg-muted);
+    }
+
+    .btn.active {
+      background: var(--border-dark);
+      border-color: var(--border-dark);
+      color: #fffdf9;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent-dark);
+      color: #ffffff;
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-dark);
+    }
+
+    /* 모드 1: 3D 사무실 맵 + 우측 채팅 + 하단 가로 카드 */
+    .stage-map-mode {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .map-chat-split {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.38fr 1fr;
+      gap: 8px;
+      padding: 8px;
+      min-height: 520px;
+    }
+
+    .map-box {
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 7px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-header-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 11px;
+      background: #efe4d4;
+      border-bottom: 1px solid var(--border-soft);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .aktif-badge {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ok-ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2e7d32;
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      background: #ece0ce;
+      min-height: 360px;
+    }
+
+    canvas#officeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    canvas#officeCanvas:active {
+      cursor: grabbing;
+    }
+
+    .map-footer-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: #efe4d4;
+      border-top: 1px solid var(--border-soft);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .map-hints {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-sub);
+      flex-wrap: wrap;
+    }
+
+    .floor-view-btns {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* 모드 2: 좌측 세로 직원 목록 + 우측 넓은 채팅 */
+    .stage-list-mode {
+      flex: 1;
+      display: none;
+      grid-template-columns: 270px 1fr;
+      gap: 8px;
+      padding: 8px;
+      min-height: 560px;
+    }
+
+    .stage-list-mode.visible {
+      display: grid;
+    }
+
+    .stage-map-mode.hidden {
+      display: none;
+    }
+
+    .left-staff-sidebar {
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 7px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 690px;
+      overflow-y: auto;
+    }
+
+    .sidebar-staff-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 6px;
+      padding: 8px 9px;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .sidebar-staff-card.selected {
+      border: 2px solid var(--accent);
+      background: #f3f8fe;
+    }
+
+    .mini-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 5px;
+      background: #e5d8c5;
+      border: 1.5px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .sidebar-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-main);
+    }
+
+    .mini-badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--ok-bg);
+      color: var(--ok-ink);
+      border: 1px solid #a5d6a7;
+    }
+
+    .mini-badge.busy {
+      background: var(--warn-bg);
+      color: var(--warn-ink);
+      border-color: #ffcc80;
+    }
+
+    .mini-badge.error {
+      background: var(--err-bg);
+      color: var(--err-ink);
+      border-color: #ef9a9a;
+    }
+
+    .sidebar-meta {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-sub);
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2px;
+    }
+
+    .sidebar-role {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 우측 채팅 패널(공통) */
+    .chat-panel {
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 7px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-head {
+      background: #efe4d4;
+      border-bottom: 1px solid var(--border-soft);
+      padding: 9px 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .chat-head-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .chat-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      background: #dce8f5;
+      border: 1.5px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .chat-title-line {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .chat-staff-name {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .chat-role-pill {
+      background: #e4d7c3;
+      border: 1px solid var(--border-soft);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-sub);
+    }
+
+    .chat-sub-status {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-sub);
+      margin-top: 2px;
+    }
+
+    .retry-strip {
+      background: #fff8ea;
+      border-bottom: 1px solid #dfc084;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #5a3b00;
+      flex-wrap: wrap;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 12px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      background: var(--bg-card);
+      min-height: 240px;
+      max-height: 410px;
+    }
+
+    .msg-bubble {
+      border: 1px solid var(--border-soft);
+      border-radius: 7px;
+      padding: 9px 11px;
+      background: #faf5ec;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink-main);
+    }
+
+    .msg-bubble.me {
+      background: #e9f2fb;
+      border-color: #9cbcd9;
+      align-self: flex-end;
+      max-width: 90%;
+    }
+
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-sub);
+      margin-bottom: 4px;
+    }
+
+    .file-chip {
+      display: inline-block;
+      margin-top: 5px;
+      background: #e3eef9;
+      border: 1px solid #8eb2d6;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #1f466e;
+    }
+
+    .composer-area {
+      background: #efe4d4;
+      border-top: 1px solid var(--border-soft);
+      padding: 9px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .composer-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink-main);
+    }
+
+    textarea#chatTextarea {
+      width: 100%;
+      min-height: 64px;
+      resize: vertical;
+      border: 1.5px solid var(--border-mid);
+      border-radius: 5px;
+      padding: 7px 9px;
+      font-family: inherit;
+      font-size: 13px;
+      background: #ffffff;
+      color: var(--ink-main);
+    }
+
+    .composer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .composer-tools {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .composer-hint {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-sub);
+    }
+
+    /* 하단 가로 직원 바 */
+    .bottom-strip {
+      background: var(--bg-bar);
+      border-top: 2px solid var(--border-mid);
+      padding: 8px 10px;
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .bottom-card {
+      min-width: 175px;
+      max-width: 195px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 6px;
+      padding: 7px 9px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .bottom-card.selected {
+      border: 2px solid var(--accent);
+      background: #f3f8fe;
+    }
+
+    .bottom-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .bottom-card-name {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .bottom-card-line {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-sub);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bottom-card-sub {
+      font-size: 11px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .add-staff-btn {
+      min-width: 82px;
+      background: var(--bg-card);
+      border: 1.5px dashed var(--border-dark);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-weight: 800;
+      font-size: 12px;
+      color: var(--ink-main);
+      flex-shrink: 0;
+    }
+
+    .add-staff-btn:hover {
+      background: var(--bg-muted);
+    }
+
+    @media (max-width: 980px) {
+      .map-chat-split,
+      .stage-list-mode.visible {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-area">
+      <div class="brand-logo">TEAM.AI.ID</div>
+      <div class="title-stack">
+        <div class="office-name">sw ai office</div>
+        <div class="office-desc">AI Virtual Office</div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button id="toggleLayoutModeBtn" class="btn" type="button">좌측 직원 목록 보기</button>
+      <span id="headerStaffBadge" class="pill">29 karyawan</span>
+      <span class="pill online">● online</span>
+      <button id="testRetryBtn" class="btn" type="button">오류 시뮬레이션</button>
+      <button id="logoutBtn" class="btn" type="button">Logout</button>
+    </div>
+  </header>
+
+  <!-- 모드 1: 3D 사무실 맵 + 우측 채팅 + 하단 가로 직원 카드 -->
+  <div id="mapModeContainer" class="stage-map-mode">
+    <div class="map-chat-split">
+      <section class="map-box" aria-label="3D 사무실 맵">
+        <div class="map-header-strip">
+          <div id="canvasAktifBadge" class="aktif-badge">
+            <span class="dot"></span>
+            <span>29 karyawan aktif</span>
+          </div>
+          <span id="rosterCountNote" style="font-size:11.5px;font-weight:700;color:#584c40;"></span>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="officeCanvas"></canvas>
+        </div>
+
+        <div class="map-footer-strip">
+          <div class="map-hints">
+            <span>클릭하여 채팅</span>
+            <span>3D: 드래그 = 회전 • 우클릭 = 이동</span>
+            <span>휠 = 확대/축소</span>
+          </div>
+          <div class="floor-view-btns">
+            <button id="floor1Btn" class="btn active" type="button">1층</button>
+            <button id="floor2Btn" class="btn" type="button">2층</button>
+            <button id="view2dBtn" class="btn" type="button">2D</button>
+            <button id="view3dBtn" class="btn active" type="button">3D</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="sharedChatPanel" class="chat-panel" aria-label="채팅 패널"></section>
+    </div>
+
+    <footer id="bottomRosterBar" class="bottom-strip" aria-label="하단 직원 카드"></footer>
+  </div>
+
+  <!-- 모드 2: 좌측 세로 직원 목록 + 우측 넓은 채팅 -->
+  <div id="listModeContainer" class="stage-list-mode">
+    <aside id="leftSidebarList" class="left-staff-sidebar" aria-label="좌측 직원 목록"></aside>
+    <section id="listModeChatSlot" class="chat-panel" aria-label="좌측 목록 모드 채팅"></section>
+  </div>
+
+  <script>
+    // 재시도 정책 상수 (요구사항 고정)
+    const RETRY_LIMITS = {
+      modelUnavailable: 5,
+      timeout: 10,
+      MAX_QUOTA_RETRIES: 48
+    };
+
+    // 사용자 제공 명단 기반 초기 직원 데이터
+    const INITIAL_ROSTER = [
+      { name: '피터', dept: '대표', role: 'CEO / 대표', floor: 1, status: 'idle', progress: 0, note: 'Idle - 전사 의사결정 대기' },
+      { name: '알렉스', dept: '본부장', role: 'Manager / 본부장', floor: 1, status: 'idle', progress: 1, note: 'Idle - 총괄 조율 및 지시 대기' },
+
+      { name: '제니', dept: '경영관리 (4)', role: '경영관리 리드', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 운영 현황 점검' },
+      { name: '카리나', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 문서 및 일정 관리' },
+      { name: '이던', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 프로세스 지원' },
+      { name: '클로이', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 재무/정산 보조' },
+      { name: '루카스', dept: '경영관리 (4)', role: '경영관리 스태프', floor: 1, status: 'idle', progress: 0, note: '경영관리 - 자료 취합' },
+
+      { name: '단테', dept: '법무 (4)', role: 'Legal / 법무 리드', floor: 1, status: 'idle', progress: 0, note: '법무 - 계약 및 규정 검토' },
+      { name: '앤', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 조항 검토' },
+      { name: '민준', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 컴플라이언스 확인' },
+      { name: '소피아', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 자문 요약' },
+      { name: '줄리안', dept: '법무 (4)', role: 'Legal / 법무 스태프', floor: 1, status: 'idle', progress: 0, note: '법무 - 서류 대조' },
+
+      { name: '라이언', dept: 'IR (4)', role: 'IR / 대외협력 리드', floor: 1, status: 'idle', progress: 0, note: 'IR - 투자자 및 공시 대응' },
+      { name: '수지', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 주주 문의 정리' },
+      { name: '케빈', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 지표 모니터링' },
+      { name: '해나', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 보도자료 초안' },
+      { name: '노아', dept: 'IR (4)', role: 'IR 스태프', floor: 1, status: 'idle', progress: 0, note: 'IR - 일정 조율' },
+
+      { name: '에이든', dept: '총무 (4)', role: '총무 리드', floor: 1, status: 'busy', progress: 5, note: '총무 - 시설 및 비품 조율 중' },
+      { name: '로라', dept: '총무 (4)', role: '총무 스태프', floor: 1, status: 'idle', progress: 0, note: '총무 - 자산 관리' },
+      { name: '브라이언', dept: '총무 (4)', role: '총무 스태프', floor: 1, status: 'idle', progress: 0, note: '총무 - 출입 및 현장 지원' },
+      { name: '미아', dept: '총무 (4)', role: '총무 스태프', floor: 1, status: 'idle', progress: 0, note: '총무 - 물품 발주 확인' },
+      { name: '오웬', dept: '총무 (4)', role: '총무 스태프', floor: 2, status: 'idle', progress: 0, note: '총무 - 2층 공간 점검' },
+
+      { name: '에릭', dept: '전략기획 (4)', role: '전략기획 리드', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 중장기 로드맵' },
+      { name: '노라', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 시장 리서치' },
+      { name: '제이슨', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 사업성 분석' },
+      { name: '이사벨라', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 제휴안 검토' },
+      { name: '아담', dept: '전략기획 (4)', role: '전략기획 스태프', floor: 2, status: 'idle', progress: 0, note: '전략기획 - 보고서 정리' },
+
+      { name: '테오', dept: 'IT·기술 (5)', role: 'IT·기술 리드', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 인프라 및 자동화' },
+      { name: '아바', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 시스템 점검' },
+      { name: '레오', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 워크플로우 연동' },
+      { name: '조이', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 데이터 파이프라인' },
+      { name: '토니', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 보안 설정 확인' },
+      { name: '켄지', dept: 'IT·기술 (5)', role: 'IT·기술 스태프', floor: 2, status: 'idle', progress: 0, note: 'IT·기술 - 테스트 자동화' }
+    ];
+
+    const state = {
+      layoutMode: 'map', // 'map' | 'list'
+      floor: 1,
+      mode3D: true,
+      selectedId: 'staff_0', // 피터
+      zoom: 1.0,
+      panX: 0,
+      panY: 0,
+      yaw: 0,
+      isDragging: false,
+      dragButton: 0,
+      lastX: 0,
+      lastY: 0,
+      pendingFiles: [],
+      preservedQueue: [],
+      staff: []
+    };
+
+    function nowHHMM() {
+      const d = new Date();
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function initStaff() {
+      state.staff = INITIAL_ROSTER.map((item, idx) => {
+        const angle = idx * 1.15;
+        const radius = 0.08 + ((idx * 0.019) % 0.22);
+        return {
+          id: `staff_${idx}`,
+          name: item.name,
+          dept: item.dept,
+          role: item.role,
+          model: 'gpt-5-mini',
+          progress: item.progress,
+          status: item.status, // 'idle' | 'busy' | 'error'
+          statusText: `${item.status === 'busy' ? 'Working' : 'Idle'} - ${item.note}`,
+          badgeText: item.status === 'busy' ? '진행 중' : 'idle',
+          floor: item.floor,
+          x: Math.min(0.76, Math.max(0.24, 0.5 + Math.cos(angle) * radius)),
+          y: Math.min(0.74, Math.max(0.26, 0.5 + Math.sin(angle) * radius * 0.85)),
+          vx: (idx % 2 === 0 ? 1 : -1) * (0.00022 + (idx % 4) * 0.00006),
+          vy: (idx % 3 === 0 ? -1 : 1) * (0.0002 + (idx % 3) * 0.00005),
+          retries: { modelUnavailable: 0, timeout: 0, quota: 0 },
+          messages: [
+            {
+              sender: item.name,
+              role: `${item.dept} · ${item.role}`,
+              time: nowHHMM(),
+              text: `${item.name}(${item.dept}) 준비 완료되었습니다. 지시하실 업무나 검토 항목을 입력해 주세요.`
+            }
+          ]
+        };
+      });
+    }
+
+    function getSelected() {
+      return state.staff.find((s) => s.id === state.selectedId) || state.staff[0];
+    }
+
+    // 채팅 패널 HTML 생성 및 연결
+    function buildChatPanelMarkup(sel) {
+      return `
+        <div class="chat-head">
+          <div class="chat-head-left">
+            <div class="chat-avatar">${sel.name.slice(0, 1)}</div>
+            <div>
+              <div class="chat-title-line">
+                <span class="chat-staff-name">${sel.name}</span>
+                <span class="chat-role-pill">${sel.dept} · ${sel.role}</span>
+              </div>
+              <div class="chat-sub-status">${sel.statusText}</div>
+            </div>
+          </div>
+          <span class="pill">${sel.model} · ${sel.floor}층</span>
+        </div>
+
+        <div class="retry-strip">
+          <span>
+            재시도(${sel.name}): modelUnavailable ${sel.retries.modelUnavailable}/${RETRY_LIMITS.modelUnavailable} ·
+            timeout ${sel.retries.timeout}/${RETRY_LIMITS.timeout} ·
+            quota ${sel.retries.quota}/${RETRY_LIMITS.MAX_QUOTA_RETRIES} |
+            보존 업무: ${state.preservedQueue.length}건
+          </span>
+          <button id="reprocessBtn" class="btn" type="button">보존 업무 재처리</button>
+        </div>
+
+        <div id="messagesContainer" class="chat-messages">
+          ${sel.messages
+            .map(
+              (m) => `
+            <div class="msg-bubble ${m.sender === '나' ? 'me' : ''}">
+              <div class="msg-header">
+                <span>${m.sender}${m.role ? ' · ' + m.role : ''}</span>
+                <span>${m.time}</span>
+              </div>
+              <div style="white-space:pre-line;">${m.text}</div>
+              ${
+                m.files && m.files.length
+                  ? m.files.map((f) => `<span class="file-chip">첨부: ${f}</span>`).join(' ')
+                  : ''
+              }
+            </div>
+          `
+            )
+            .join('')}
+        </div>
+
+        <div class="composer-area">
+          <div class="composer-title">메시지</div>
+          <textarea id="chatTextarea" placeholder="${sel.name}에게 메시지를 작성하십시오..."></textarea>
+          <input id="filePicker" type="file" multiple style="display:none;" />
+          <div class="composer-bottom">
+            <div class="composer-tools">
+              <button id="attachBtn" class="btn" type="button">+ 파일</button>
+              <span id="fileNamePreview" class="composer-hint">${
+                state.pendingFiles.length ? state.pendingFiles.map((f) => f.name).join(', ') : ''
+              }</span>
+            </div>
+            <div class="composer-tools">
+              <span class="composer-hint">입력 전송 • Shift+새 줄 입력</span>
+              <button id="sendMsgBtn" class="btn primary" type="button">보내기 →</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindChatEvents() {
+      const reprocessBtn = document.getElementById('reprocessBtn');
+      if (reprocessBtn) {
+        reprocessBtn.addEventListener('click', () => {
+          state.staff.forEach((person) => {
+            person.retries.modelUnavailable = 0;
+            person.retries.timeout = 0;
+            person.retries.quota = 0;
+            if (person.status === 'error') {
+              person.status = 'idle';
+              person.badgeText = 'idle';
+              person.statusText = `Idle - ${person.note}`;
+            }
+          });
+          const count = state.preservedQueue.length;
+          state.preservedQueue = [];
+          const sel = getSelected();
+          sel.messages.push({
+            sender: '시스템',
+            role: '보존 큐 재처리',
+            time: nowHHMM(),
+            text: `보존된 업무 ${count}건을 재처리하고 재시도 카운터(modelUnavailable/timeout/quota)를 0으로 초기화했습니다.`
+          });
+          renderAll();
+        });
+      }
+
+      const attachBtn = document.getElementById('attachBtn');
+      const filePicker = document.getElementById('filePicker');
+      if (attachBtn && filePicker) {
+        attachBtn.addEventListener('click', () => filePicker.click());
+        filePicker.addEventListener('change', (e) => {
+          state.pendingFiles = Array.from(e.target.files || []);
+          const preview = document.getElementById('fileNamePreview');
+          if (preview) {
+            preview.textContent = state.pendingFiles.map((f) => f.name).join(', ');
+          }
+        });
+      }
+
+      const sendMsgBtn = document.getElementById('sendMsgBtn');
+      const chatTextarea = document.getElementById('chatTextarea');
+
+      function handleSend() {
+        if (!chatTextarea) return;
+        const text = chatTextarea.value.trim();
+        const files = state.pendingFiles.map((f) => f.name);
+        if (!text && files.length === 0) return;
+
+        const sel = getSelected();
+        sel.messages.push({
+          sender: '나',
+          role: '',
+          time: nowHHMM(),
+          text: text || '(파일 전송)',
+          files
+        });
+
+        if (text.includes('[modelUnavailable]')) {
+          sel.retries.modelUnavailable = Math.min(
+            RETRY_LIMITS.modelUnavailable,
+            sel.retries.modelUnavailable + 1
+          );
+          state.preservedQueue.push({ staffId: sel.id, text, files, type: 'modelUnavailable' });
+          sel.status = 'error';
+          sel.badgeText = '재시도';
+          sel.statusText = `modelUnavailable (${sel.retries.modelUnavailable}/${RETRY_LIMITS.modelUnavailable}) - 보존됨`;
+          sel.messages.push({
+            sender: sel.name,
+            role: sel.role,
+            time: nowHHMM(),
+            text: `modelUnavailable(${sel.retries.modelUnavailable}/${RETRY_LIMITS.modelUnavailable}) 발생. 업무를 보존 큐에 저장했습니다.`
+          });
+        } else if (text.includes('[timeout]')) {
+          sel.retries.timeout = Math.min(RETRY_LIMITS.timeout, sel.retries.timeout + 1);
+          state.preservedQueue.push({ staffId: sel.id, text, files, type: 'timeout' });
+          sel.status = 'error';
+          sel.badgeText = '재시도';
+          sel.statusText = `timeout (${sel.retries.timeout}/${RETRY_LIMITS.timeout}) - 보존됨`;
+          sel.messages.push({
+            sender: sel.name,
+            role: sel.role,
+            time: nowHHMM(),
+            text: `timeout(${sel.retries.timeout}/${RETRY_LIMITS.timeout}) 발생. 업무를 보존 큐에 저장했습니다.`
+          });
+        } else if (text.includes('[quota]')) {
+          sel.retries.quota = Math.min(RETRY_LIMITS.MAX_QUOTA_RETRIES, sel.retries.quota + 1);
+          state.preservedQueue.push({ staffId: sel.id, text, files, type: 'quota' });
+          sel.status = 'error';
+          sel.badgeText = '재시도';
+          sel.statusText = `quota (${sel.retries.quota}/${RETRY_LIMITS.MAX_QUOTA_RETRIES}) - 보존됨`;
+          sel.messages.push({
+            sender: sel.name,
+            role: sel.role,
+            time: nowHHMM(),
+            text: `MAX_QUOTA_RETRIES 카운트(${sel.retries.quota}/${RETRY_LIMITS.MAX_QUOTA_RETRIES}). 업무를 보존 큐에 저장했습니다.`
+          });
+        } else {
+          sel.progress = Math.min(100, sel.progress + 5);
+          sel.status = 'idle';
+          sel.badgeText = 'idle';
+          sel.statusText = `Idle - ${sel.note}`;
+          sel.messages.push({
+            sender: sel.name,
+            role: sel.role,
+            time: nowHHMM(),
+            text: `"${text || files.join(', ')}" 내용을 확인했습니다. (${sel.dept} / ${sel.role})`
+          });
+        }
+
+        state.pendingFiles = [];
+        renderAll();
+      }
+
+      if (sendMsgBtn) sendMsgBtn.addEventListener('click', handleSend);
+      if (chatTextarea) {
+        chatTextarea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        });
+      }
+
+      const msgBox = document.getElementById('messagesContainer');
+      if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    function renderChat() {
+      const sel = getSelected();
+      const markup = buildChatPanelMarkup(sel);
+      const mapSlot = document.getElementById('sharedChatPanel');
+      const listSlot = document.getElementById('listModeChatSlot');
+
+      if (state.layoutMode === 'map') {
+        mapSlot.innerHTML = markup;
+        listSlot.innerHTML = '';
+      } else {
+        listSlot.innerHTML = markup;
+        mapSlot.innerHTML = '';
+      }
+      bindChatEvents();
+    }
+
+    function addNewStaff() {
+      const idx = state.staff.length + 1;
+      const id = `staff_custom_${Date.now()}`;
+      const newPerson = {
+        id,
+        name: `신규직원${idx}`,
+        dept: '추가 배정',
+        role: 'AI 어시스턴트',
+        model: 'gpt-5-mini',
+        progress: 0,
+        status: 'idle',
+        statusText: 'Idle - 신규 추가 직원 대기 중',
+        badgeText: 'idle',
+        floor: state.floor,
+        x: 0.35 + ((idx * 0.08) % 0.35),
+        y: 0.35 + ((idx * 0.07) % 0.35),
+        vx: 0.00025,
+        vy: -0.0002,
+        retries: { modelUnavailable: 0, timeout: 0, quota: 0 },
+        messages: [
+          {
+            sender: `신규직원${idx}`,
+            role: '추가 배정 · AI 어시스턴트',
+            time: nowHHMM(),
+            text: `${state.floor}층에 추가되었습니다. 메시지를 입력해 주세요.`
+          }
+        ]
+      };
+      state.staff.push(newPerson);
+      state.selectedId = id;
+      renderAll();
+    }
+
+    function renderRosters() {
+      // 상단/캔버스 29 karyawan 표기 + 실제 인원 수 병기
+      const actualCount = state.staff.length;
+      document.getElementById('headerStaffBadge').textContent = `29 karyawan (${actualCount}명)`;
+      document.getElementById('canvasAktifBadge').innerHTML =
+        `<span class="dot"></span><span>29 karyawan aktif</span>`;
+      document.getElementById('rosterCountNote').textContent =
+        `명단 등록 ${actualCount}명 · 현재 ${state.floor}층 (${state.mode3D ? '3D' : '2D'})`;
+
+      // 하단 가로 카드
+      const bottomBar = document.getElementById('bottomRosterBar');
+      bottomBar.innerHTML = '';
+      state.staff.forEach((p) => {
+        const card = document.createElement('div');
+        card.className = `bottom-card ${p.id === state.selectedId ? 'selected' : ''}`;
+        card.addEventListener('click', () => {
+          state.selectedId = p.id;
+          state.floor = p.floor;
+          syncViewButtons();
+          renderAll();
+        });
+        const badgeCls =
+          p.status === 'error' ? 'mini-badge error' : p.status === 'busy' ? 'mini-badge busy' : 'mini-badge';
+        card.innerHTML = `
+          <div class="bottom-card-top">
+            <span class="bottom-card-name">${p.name}</span>
+            <span class="${badgeCls}">${p.badgeText}</span>
+          </div>
+          <div class="bottom-card-line">
+            <span>${p.model}</span>
+            <span>${p.progress}%</span>
+          </div>
+          <div class="bottom-card-sub">${p.dept} · ${p.role}</div>
+        `;
+        bottomBar.appendChild(card);
+      });
+
+      const addBtnBottom = document.createElement('button');
+      addBtnBottom.type = 'button';
+      addBtnBottom.className = 'add-staff-btn';
+      addBtnBottom.innerHTML = `<span style="font-size:18px;line-height:1;">+</span><span>직원</span>`;
+      addBtnBottom.addEventListener('click', addNewStaff);
+      bottomBar.appendChild(addBtnBottom);
+
+      // 좌측 세로 목록 (+ KARYAWAN 스타일)
+      const leftSidebar = document.getElementById('leftSidebarList');
+      leftSidebar.innerHTML = '';
+
+      const addBtnLeft = document.createElement('button');
+      addBtnLeft.type = 'button';
+      addBtnLeft.className = 'btn';
+      addBtnLeft.style.width = '100%';
+      addBtnLeft.style.padding = '8px';
+      addBtnLeft.textContent = '+ KARYAWAN (직원 추가)';
+      addBtnLeft.addEventListener('click', addNewStaff);
+      leftSidebar.appendChild(addBtnLeft);
+
+      state.staff.forEach((p) => {
+        const item = document.createElement('div');
+        item.className = `sidebar-staff-card ${p.id === state.selectedId ? 'selected' : ''}`;
+        item.addEventListener('click', () => {
+          state.selectedId = p.id;
+          state.floor = p.floor;
+          syncViewButtons();
+          renderAll();
+        });
+        const badgeCls =
+          p.status === 'error' ? 'mini-badge error' : p.status === 'busy' ? 'mini-badge busy' : 'mini-badge';
+        item.innerHTML = `
+          <div class="mini-avatar">${p.name.slice(0, 1)}</div>
+          <div class="sidebar-card-body">
+            <div class="sidebar-card-top">
+              <span class="sidebar-name">${p.name}</span>
+              <span class="${badgeCls}">${p.badgeText}</span>
+            </div>
+            <div class="sidebar-meta">
+              <span>${p.model}</span>
+              <span>${p.progress}%</span>
+            </div>
+            <div class="sidebar-role">${p.dept} · ${p.role}</div>
+          </div>
+        `;
+        leftSidebar.appendChild(item);
+      });
+    }
+
+    // 캔버스 렌더링
+    const canvas = document.getElementById('officeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      const rect = parent.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function project(nx, ny, nz = 0) {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const cx = w * 0.5 + state.panX;
+      const cy = h * 0.52 + state.panY;
+      const span = Math.min(w, h) * 0.44 * state.zoom;
+
+      const dx = (nx - 0.5) * 2;
+      const dy = (ny - 0.5) * 2;
+
+      if (!state.mode3D) {
+        return {
+          x: cx + dx * span * 1.15,
+          y: cy + dy * span * 0.85 - nz * 14 * state.zoom
+        };
+      }
+
+      const cosY = Math.cos(state.yaw);
+      const sinY = Math.sin(state.yaw);
+      const rx = dx * cosY - dy * sinY;
+      const ry = dx * sinY + dy * cosY;
+
+      return {
+        x: cx + (rx - ry) * 0.86 * span,
+        y: cy + (rx + ry) * 0.46 * span - nz * 16 * state.zoom
+      };
+    }
+
+    function drawPoly(pts, fill, stroke, lineWidth = 1.6) {
+      ctx.beginPath();
+      pts.forEach((pt, idx) => {
+        if (idx === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = stroke;
+      ctx.stroke();
+    }
+
+    function drawFloorPlan() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      // 외곽 사무실 바닥
+      drawPoly(
+        [
+          project(0.14, 0.16, 0),
+          project(0.86, 0.16, 0),
+          project(0.86, 0.84, 0),
+          project(0.14, 0.84, 0)
+        ],
+        '#f8f2e8',
+        '#4b3b2c',
+        2.2
+      );
+
+      // 구역 분할
+      drawPoly(
+        [project(0.17, 0.20, 0), project(0.49, 0.20, 0), project(0.49, 0.48, 0), project(0.17, 0.48, 0)],
+        '#efe3d0',
+        '#6f5c49',
+        1.5
+      );
+      drawPoly(
+        [project(0.51, 0.20, 0), project(0.83, 0.20, 0), project(0.83, 0.48, 0), project(0.51, 0.48, 0)],
+        '#e8dac5',
+        '#6f5c49',
+        1.5
+      );
+      drawPoly(
+        [project(0.17, 0.51, 0), project(0.56, 0.51, 0), project(0.56, 0.80, 0), project(0.17, 0.80, 0)],
+        '#f2e7d6',
+        '#6f5c49',
+        1.5
+      );
+      drawPoly(
+        [project(0.58, 0.51, 0), project(0.83, 0.51, 0), project(0.83, 0.80, 0), project(0.58, 0.80, 0)],
+        '#e5d7c2',
+        '#6f5c49',
+        1.5
+      );
+
+      // 책상 및 회의/서버 오브젝트
+      const deskCoords = [
+        [0.27, 0.30], [0.39, 0.30], [0.27, 0.40], [0.39, 0.40],
+        [0.61, 0.30], [0.73, 0.30], [0.61, 0.40], [0.73, 0.40],
+        [0.28, 0.62], [0.42, 0.62], [0.28, 0.72], [0.42, 0.72],
+        [0.68, 0.63], [0.74, 0.63], [0.68, 0.72], [0.74, 0.72]
+      ];
+      deskCoords.forEach(([dx, dy]) => {
+        const dp = project(dx, dy, 0);
+        const w = 22 * state.zoom;
+        const h = 11 * state.zoom;
+        ctx.fillStyle = '#c99b68';
+        ctx.strokeStyle = '#4b3b2c';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(dp.x - w / 2, dp.y - h / 2, w, h);
+        ctx.strokeRect(dp.x - w / 2, dp.y - h / 2, w, h);
+      });
+
+      // 현재 층 캐릭터 렌더링
+      const floorStaff = state.staff.filter((s) => s.floor === state.floor);
+      floorStaff.forEach((person) => {
+        const p = project(person.x, person.y, 0.22);
+        const isSel = person.id === state.selectedId;
+        const r = 8.5 * state.zoom;
+
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y + 4 * state.zoom, r * 0.9, r * 0.45, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(34, 28, 23, 0.2)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y - 3 * state.zoom, r, 0, Math.PI * 2);
+        ctx.fillStyle =
+          person.status === 'error' ? '#e57373' : isSel ? '#3a6896' : '#6f8fb3';
+        ctx.fill();
+        ctx.lineWidth = isSel ? 2.2 : 1.4;
+        ctx.strokeStyle = '#221c17';
+        ctx.stroke();
+
+        // 이름표
+        const fontSize = Math.max(10.5, Math.round(11 * state.zoom));
+        ctx.font = `800 ${fontSize}px "Malgun Gothic", sans-serif`;
+        const textW = ctx.measureText(person.name).width;
+        const boxW = textW + 10;
+        const boxH = 17;
+        const bx = p.x - boxW / 2;
+        const by = p.y - r * 2 - 19;
+
+        ctx.fillStyle = isSel ? '#221c17' : '#fffdf9';
+        ctx.strokeStyle = '#221c17';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(bx, by, boxW, boxH);
+        ctx.strokeRect(bx, by, boxW, boxH);
+
+        ctx.fillStyle = isSel ? '#ffffff' : '#221c17';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(person.name, p.x, by + boxH / 2 + 0.5);
+      });
+    }
+
+    function stepSimulation() {
+      state.staff.forEach((person) => {
+        if (person.floor !== state.floor) return;
+        const mult = person.status === 'busy' ? 1.3 : 0.7;
+        person.x += person.vx * mult;
+        person.y += person.vy * mult;
+        if (person.x < 0.21 || person.x > 0.79) person.vx *= -1;
+        if (person.y < 0.23 || person.y > 0.77) person.vy *= -1;
+      });
+    }
+
+    function syncLayoutVisibility() {
+      const mapEl = document.getElementById('mapModeContainer');
+      const listEl = document.getElementById('listModeContainer');
+      const toggleBtn = document.getElementById('toggleLayoutModeBtn');
+
+      if (state.layoutMode === 'map') {
+        mapEl.classList.remove('hidden');
+        listEl.classList.remove('visible');
+        toggleBtn.textContent = '좌측 직원 목록 보기';
+      } else {
+        mapEl.classList.add('hidden');
+        listEl.classList.add('visible');
+        toggleBtn.textContent = '3D 사무실 맵 보기';
+      }
+    }
+
+    function syncViewButtons() {
+      document.getElementById('floor1Btn').classList.toggle('active', state.floor === 1);
+      document.getElementById('floor2Btn').classList.toggle('active', state.floor === 2);
+      document.getElementById('view2dBtn').classList.toggle('active', !state.mode3D);
+      document.getElementById('view3dBtn').classList.toggle('active', state.mode3D);
+    }
+
+    function renderAll() {
+      syncLayoutVisibility();
+      syncViewButtons();
+      renderRosters();
+      renderChat();
+      resizeCanvas();
+      drawFloorPlan();
+    }
+
+    // 상단 및 맵 컨트롤 이벤트
+    document.getElementById('toggleLayoutModeBtn').addEventListener('click', () => {
+      state.layoutMode = state.layoutMode === 'map' ? 'list' : 'map';
+      renderAll();
+    });
+
+    document.getElementById('floor1Btn').addEventListener('click', () => {
+      state.floor = 1;
+      syncViewButtons();
+      renderRosters();
+      drawFloorPlan();
+    });
+
+    document.getElementById('floor2Btn').addEventListener('click', () => {
+      state.floor = 2;
+      syncViewButtons();
+      renderRosters();
+      drawFloorPlan();
+    });
+
+    document.getElementById('view2dBtn').addEventListener('click', () => {
+      state.mode3D = false;
+      syncViewButtons();
+      drawFloorPlan();
+    });
+
+    document.getElementById('view3dBtn').addEventListener('click', () => {
+      state.mode3D = true;
+      syncViewButtons();
+      drawFloorPlan();
+    });
+
+    document.getElementById('testRetryBtn').addEventListener('click', () => {
+      const sel = getSelected();
+      sel.retries.modelUnavailable = Math.min(
+        RETRY_LIMITS.modelUnavailable,
+        sel.retries.modelUnavailable + 1
+      );
+      sel.retries.timeout = Math.min(RETRY_LIMITS.timeout, sel.retries.timeout + 1);
+      sel.retries.quota = Math.min(RETRY_LIMITS.MAX_QUOTA_RETRIES, sel.retries.quota + 1);
+      state.preservedQueue.push({ staffId: sel.id, text: '시뮬레이션 보존 업무', files: [] });
+      sel.status = 'error';
+      sel.badgeText = '재시도';
+      sel.statusText = `재시도 대기 - 보존 업무 ${state.preservedQueue.length}건`;
+      renderAll();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      alert('로그아웃 처리되었습니다.');
+    });
+
+    // 캔버스 조작 (좌클릭 선택/드래그 회전, 우클릭 이동, 휠 확대/축소)
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    canvas.addEventListener('mousedown', (e) => {
+      state.isDragging = true;
+      state.dragButton = e.button;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+      state.isDragging = false;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!state.isDragging) return;
+      const dx = e.clientX - state.lastX;
+      const dy = e.clientY - state.lastY;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+
+      if (state.dragButton === 2 || !state.mode3D) {
+        state.panX += dx * 0.6;
+        state.panY += dy * 0.6;
+      } else {
+        state.yaw += dx * 0.008;
+      }
+      drawFloorPlan();
+    });
+
+    canvas.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        state.zoom = Math.max(0.6, Math.min(1.75, Number((state.zoom + delta).toFixed(2))));
+        drawFloorPlan();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      const hit = state.staff
+        .filter((s) => s.floor === state.floor)
+        .find((person) => {
+          const p = project(person.x, person.y, 0.22);
+          return Math.hypot(mx - p.x, my - (p.y - 3 * state.zoom)) <= 18 * state.zoom;
+        });
+
+      if (hit) {
+        state.selectedId = hit.id;
+        renderAll();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      drawFloorPlan();
+    });
+
+    initStaff();
+    renderAll();
+
+    setInterval(() => {
+      stepSimulation();
+      if (state.layoutMode === 'map') {
+        drawFloorPlan();
+      }
+    }, 65);
+  </script>
+</body>
+</html>
