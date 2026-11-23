@@ -18,9 +18,11 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'index.html'\n      - 'office3d.html'
+      - 'index.html'
+      - 'office3d.html'
       - 'employees.js'
-      - 'tests/office3d-entrypoint.test.mjs'\n      - 'tests/office3d-smoke.mjs'
+      - 'tests/office3d-entrypoint.test.mjs'
+      - 'tests/office3d-smoke.mjs'
       - '.github/workflows/office3d-smoke.yml'
       - 'tests/worker-auth-audit.test.mjs'
       - 'SW_AI_Office_v3_15.html'
@@ -44,7 +46,9 @@ jobs:
           node-version: 20
       - name: Install Playwright
         run: npm install --no-save --no-package-lock playwright@1.56.1
-      - name: Verify GitHub Pages entrypoint\n        run: node --test tests/office3d-entrypoint.test.mjs\n      - name: Run 3D office browser checks
+      - name: Verify GitHub Pages entrypoint
+        run: node --test tests/office3d-entrypoint.test.mjs
+      - name: Run 3D office browser checks
         run: node tests/office3d-smoke.mjs
       - name: Run Worker auth and approval audit contract tests
         run: node --test tests/worker-auth-audit.test.mjs
