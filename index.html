@@ -710,7 +710,7 @@
 
     // 사용자 제공 명단 기반 초기 직원 데이터
     const INITIAL_ROSTER = [
-      { name: '피터', dept: '대표이사실', role: '대표이사', floor: 1, status: 'idle', progress: 0, note: '전사 의사결정 대기' },
+      { name: '단테', dept: '대표이사실', role: '대표이사', floor: 1, status: 'idle', progress: 0, note: '전사 의사결정 대기' },
       { name: '알렉스', dept: '본부장실', role: '본부장', floor: 1, status: 'idle', progress: 0, note: '전사 업무 조정 및 배정 대기' },
 
       { name: '데니스', dept: '경영관리팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: '경영관리 총괄' },
@@ -719,7 +719,7 @@
       { name: '클로이', dept: '경영관리팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '성과관리' },
       { name: '루카스', dept: '경영관리팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '경영기획' },
 
-      { name: '렉스', dept: '법무팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: '법무 업무 총괄' },
+      { name: '피터', dept: '법무팀', role: '팀장', floor: 1, status: 'idle', progress: 0, note: '법무 업무 총괄' },
       { name: '앤', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '계약 검토' },
       { name: '소피아', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '송무 및 분쟁 대응' },
       { name: '줄리안', dept: '법무팀', role: '전문 직원', floor: 1, status: 'idle', progress: 0, note: '공정거래 준수' },
@@ -755,7 +755,7 @@
       layoutMode: 'map', // 'map' | 'list'
       floor: 1,
       mode3D: true,
-      selectedId: 'staff_0', // 피터
+      selectedId: 'staff_0', // 단테
       zoom: 1.0,
       panX: 0,
       panY: 0,
@@ -885,14 +885,14 @@
         throw new Error('업무 엔진이 연결되지 않았습니다. 통합 실행 화면에서 업무 엔진을 연결해 주세요.');
       }
       const employees = state.staff.map((person) => ({
-        id: person.name === '피터' ? 'COO' : String(person.id),
+        id: person.name === '단테' ? 'COO' : String(person.id),
         name: String(person.name),
         department: String(person.dept || ''),
         position: String(person.role || ''),
         instruction: String(person.note || (person.dept + ' ' + person.role) || '')
       }));
       if (!employees.some((person) => person.id === 'COO')) {
-        throw new Error('대표이사 피터(COO) 직원 정보가 없어 업무를 접수할 수 없습니다.');
+        throw new Error('대표이사 단테(COO) 직원 정보가 없어 업무를 접수할 수 없습니다.');
       }
       const pendingKey = 'swV315PendingWorkflowTask';
       let pending = null;
