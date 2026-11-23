@@ -52,18 +52,28 @@ const delays = [2000, 5000, 10000, 20000];
 let response;
 let raw = "";
 for (let attempt = 0; attempt <= delays.length; attempt++) {
-  response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  raw = await response.text();
-  if (response.ok) break;
-  if (!retryableStatuses.has(response.status) || attempt === delays.length) {
-    throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000)
+    });
+    raw = await response.text();
+    if (response.ok) break;
+    if (!retryableStatuses.has(response.status) || attempt === delays.length) {
+      throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+    }
+    console.log("Gemini temporary HTTP error " + response.status + ".");
+  } catch (error) {
+    const transient = error.name === "TimeoutError" || error.name === "AbortError" ||
+      error.cause?.code === "UND_ERR_HEADERS_TIMEOUT" || error.cause?.code === "ECONNRESET" ||
+      error.cause?.code === "ETIMEDOUT" || /fetch failed/i.test(error.message);
+    if (!transient || attempt === delays.length) throw error;
+    console.log("Gemini temporary network/timeout error; retry " + (attempt + 1) + "/" + delays.length + ".");
   }
   const waitMs = delays[attempt];
-  console.log("Gemini temporary error " + response.status + "; retry " + (attempt + 1) + "/" + delays.length + " in " + waitMs + "ms.");
+  console.log("Retrying Gemini request in " + waitMs + "ms.");
   await new Promise(resolve => setTimeout(resolve, waitMs));
 }
 const payload = JSON.parse(raw);
