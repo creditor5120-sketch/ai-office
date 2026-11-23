@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - 'SW_AI_Office_v3_15.html'
+      - 'index.html'
+      - 'legacy-floorplan-2026-11-23.html'
       - 'sw-ai-office-v7(claude).html'
       - 'tests/v7-dance-time.test.mjs'
       - 'tests/v7-dance-time-browser-smoke.mjs'
