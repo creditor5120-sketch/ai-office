@@ -23,4 +23,5 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(office, /submitSelectedTask\(record\.task,record\)/);
   assert.match(office, /clearPendingTask\(taskId\)/);
     assert.match(office, /u\.workStatus==='협업 중'/);
+  assert.match(office, /const isRepresentative=selected\?\.userData\.person\.id==='CEO'/);
 });
