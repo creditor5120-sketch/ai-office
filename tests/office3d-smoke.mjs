@@ -96,7 +96,6 @@ try {
   await page.locator('#taskInput').fill('대표 업무 라우팅 회귀 테스트');
   await page.locator('#sendTask').click();
   await page.waitForFunction(() => document.querySelectorAll('#chatHistory .chatBubble').length >= 2, { timeout: 5000 });
-  await page.waitForFunction(() => window.__smokeRoutedPayloadsReady === true, { timeout: 1000 }).catch(() => {});
   await page.waitForTimeout(200);
   if (routedPayloads.length !== 1 || routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
     throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify(routedPayloads));
