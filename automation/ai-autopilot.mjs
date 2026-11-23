@@ -65,9 +65,9 @@ const body = {
   contents: [{ role: "user", parts: [{ text: "Review current source and tests. Produce at most one safe minimal patch.\n\n" + source }] }],
   generationConfig: { temperature: 0.15, responseMimeType: "application/json" }
 };
-const models = [model, ...(process.env.GEMINI_FALLBACK_MODELS || "gemini-3.5-flash-lite").split(",").map(x => x.trim()).filter(Boolean)];
-const retryableStatuses = new Set([429, 500, 502, 503, 504]);
-const delays = [2000, 5000, 10000, 20000];
+const models = [model, ...(process.env.GEMINI_FALLBACK_MODELS || "").split(",").map(x => x.trim()).filter(Boolean)];
+const retryableStatuses = new Set([500, 502, 503, 504]);
+const delays = [5000];
 let response;
 let raw = "";
 let successful = false;
