@@ -7,4 +7,5 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(index, /http-equiv=["']refresh["'][^>]*url=\.\/office3d\.html/i);
   assert.match(index, /window\.location\.replace\(["']\.\/office3d\.html["']\)/);
   await access(new URL('../office3d.html', import.meta.url));
+  await access(new URL('../office-map.html', import.meta.url));
 });
