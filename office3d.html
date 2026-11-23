@@ -540,6 +540,11 @@ async function submitSelectedTask(value){
     updateChatBubble(pending,'AI 사용 한도 회복을 기다리는 중입니다. 기존 업무는 보존됩니다.');
     await new Promise(r=>setTimeout(r,waitMs));continue;
    }
+   if([408,425,429,500,502,503,504].includes(response.status)){
+    const retryDelay=Math.min(15000,1000*attempt);
+    updateChatBubble(pending,'일시적인 서버 오류가 발생했습니다. 새 업무를 만들지 않고 동일 업무 ID로 재시도합니다. ('+attempt+'/1200)');
+    await new Promise(r=>setTimeout(r,retryDelay));continue;
+   }
    throw new Error(data.error||'업무 처리에 실패했습니다.');
   }
   if(!completed||!data?.reply)throw new Error('업무 처리 대기 시간이 초과되었거나 완료 응답을 받지 못했습니다. 업무 ID: '+taskId);
