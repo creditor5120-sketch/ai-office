@@ -454,7 +454,7 @@ function makeStaffCard(p,detail=false){
  const meta=document.createElement('span');meta.className='staffMeta';
  const name=document.createElement('b');name.textContent=p.name;
  const team=document.createElement('small');team.textContent='소속: '+(p.department||'');
- const job=document.createElement('small');job.textContent='직무: '+(p.jobTitle||p.position||'');
+ const job=document.createElement('small');job.textContent='직무: '+(p.jobTitle||p.position||'직원');
  const status=document.createElement('small');status.textContent='상태: '+(p.workStatus||'업무 대기');status.className='staffStatus';
  meta.append(name,team,job,status);el.append(face,meta);
  el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a,true)};return el;
