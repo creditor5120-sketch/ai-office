@@ -119,19 +119,35 @@ catch { throw new Error("Gemini did not return valid JSON: " + answer.slice(0, 1
 if (typeof result.patch !== "string" || typeof result.summary !== "string") {
   throw new Error("Gemini response is missing required fields.");
 }
-const patch = result.patch.trim();
+let patch = result.patch.trim();
+const rejectedPaths = [];
+console.log("Gemini proposal: " + result.summary);
+console.log("Gemini rationale: " + (result.rationale || "not provided"));
 if (patch) {
-  const paths = [...patch.matchAll(/^diff --git a\/(.+?) b\/(.+)$/gm)].map(m => [m[1], m[2]]);
-  if (!paths.length || paths.some(([a,b]) => a !== b || !writable.includes(a))) {
-    throw new Error("Patch contains a path outside the explicit allowlist.");
+  const blocks = patch.split(/(?=^diff --git )/gm).filter(Boolean);
+  const allowedBlocks = [];
+  for (const block of blocks) {
+    const match = block.match(/^diff --git a\/(.+?) b\/(.+)$/m);
+    if (!match || match[1] !== match[2]) {
+      throw new Error("Patch contains an invalid or unsupported diff header.");
+    }
+    if (writable.includes(match[1])) allowedBlocks.push(block);
+    else rejectedPaths.push(match[1]);
   }
+  if (!allowedBlocks.length) {
+    throw new Error("Patch has no permitted files. Rejected paths: " + rejectedPaths.join(", "));
+  }
+  if (rejectedPaths.length) {
+    console.log("Ignoring out-of-scope files: " + rejectedPaths.join(", "));
+  }
+  patch = allowedBlocks.join("\n").trim();
   await fs.writeFile("ai-autopilot.patch", patch + "\n", "utf8");
 }
 await fs.writeFile("ai-autopilot-report.md",
   "# SW AI OFFICE 자동 개발 점검\n\n" +
   "- 결과: " + (patch ? "검토용 수정안 생성" : "안전한 수정안 없음") + "\n" +
   "- 요약: " + result.summary + "\n\n" +
-  "## 판단 근거\n\n" + (result.rationale || "제공되지 않음") + "\n",
+  "## 판단 근거\n\n" + (result.rationale || "제공되지 않음") + "\n\n" + (rejectedPaths.length ? "## 범위 밖 변경 제외\n\n" + rejectedPaths.join(", ") + "\n" : ""),
   "utf8");
 console.log(result.summary);
 console.log(patch ? "PATCH_READY" : "NO_PATCH");
