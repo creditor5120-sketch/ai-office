@@ -46,12 +46,26 @@ const body = {
   contents: [{ role: "user", parts: [{ text: "Review current source and tests. Produce at most one safe minimal patch.\n\n" + source }] }],
   generationConfig: { temperature: 0.15, responseMimeType: "application/json" }
 };
-const response = await fetch(
-  "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey),
-  { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }
-);
-const raw = await response.text();
-if (!response.ok) throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey);
+const retryableStatuses = new Set([429, 500, 502, 503, 504]);
+const delays = [2000, 5000, 10000, 20000];
+let response;
+let raw = "";
+for (let attempt = 0; attempt <= delays.length; attempt++) {
+  response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  raw = await response.text();
+  if (response.ok) break;
+  if (!retryableStatuses.has(response.status) || attempt === delays.length) {
+    throw new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
+  }
+  const waitMs = delays[attempt];
+  console.log("Gemini temporary error " + response.status + "; retry " + (attempt + 1) + "/" + delays.length + " in " + waitMs + "ms.");
+  await new Promise(resolve => setTimeout(resolve, waitMs));
+}
 const payload = JSON.parse(raw);
 const answer = payload.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
 let result;
