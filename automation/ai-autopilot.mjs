@@ -69,7 +69,7 @@ const body = {
 };
 const models = [model, ...(process.env.GEMINI_FALLBACK_MODELS || "").split(",").map(x => x.trim()).filter(Boolean)];
 const retryableStatuses = new Set([500, 502, 503, 504]);
-const quotaRetryPattern = /retry in ([0-9]+(?:\\.[0-9]+)?)s/i;
+const quotaRetryPattern = /retry in ([0-9]+(?:\.[0-9]+)?)s/i;
 const delays = [5000];
 let response;
 let raw = "";
@@ -97,7 +97,7 @@ for (const candidateModel of [...new Set(models)]) {
       }
       lastError = new Error("Gemini API failed (" + response.status + "): " + raw.slice(0, 1200));
       console.log("Gemini temporary HTTP error " + response.status + " on " + candidateModel + ".");
-      if (quotaRetry) {
+      if (quotaRetry && attempt < delays.length) {
         const quotaWaitMs = Math.min(120000, Math.ceil(Number(quotaRetry[1]) * 1000) + 5000);
         console.log("Gemini per-minute quota reached; waiting " + quotaWaitMs + "ms before retry.");
         await new Promise(resolve => setTimeout(resolve, quotaWaitMs));
