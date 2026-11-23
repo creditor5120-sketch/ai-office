@@ -54,11 +54,15 @@ test("representative and team lead names match the approved SW AI OFFICE organiz
   assert.match(html, /사용자는 앱코\(ABKO\)의 대표이사 '피터'/);
 });
 
-test("server live progress follows the newest-first Worker audit event order", () => {
+test("server live progress uses the chronological audit event API contract", () => {
+  const historyStart = worker.indexOf('const events = (rows.results || []).map');
+  const historyEnd = worker.indexOf('const truncated = events.length > 300', historyStart);
+  const historyBlock = worker.slice(historyStart, historyEnd);
   assert.match(worker, /ORDER BY created_at DESC, rowid DESC LIMIT 301/);
-  assert.match(html, /Date\.parse\(evs\[0\]\?\.createdAt\)/);
-  assert.match(html, /const ev=evs\.find\(x=>x\.eventType==="WORKFLOW_STAGE_STARTED"\)/);
-  assert.doesNotMatch(html, /evs\[evs\.length-1\]\.createdAt|\[\.\.\.evs\]\.reverse\(\)\.find/);
+  assert.match(historyBlock, /\}\)\.reverse\(\);/);
+  assert.match(html, /Date\\.parse\\(evs\\[evs\\.length-1\\]\\.createdAt\\)/);
+  assert.match(html, /const ev=\\[\\.\\.\\.evs\\]\\.reverse\\(\\)\\.find\\(x=>x\\.eventType==="WORKFLOW_STAGE_STARTED"\\)/);
+  assert.doesNotMatch(html, /evs\\[0\\]\\?\\.createdAt/);
 });
 
 test("the original 3D office scene and pathfinding remain in the file", () => {
