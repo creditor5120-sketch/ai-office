@@ -49,8 +49,8 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git apply --check ai-autopilot.patch
-          git apply ai-autopilot.patch
+          git apply --recount --check ai-autopilot.patch
+          git apply --recount ai-autopilot.patch
           git diff --check
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
