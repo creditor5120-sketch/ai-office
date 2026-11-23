@@ -118,6 +118,32 @@ try {
   if (routedPayloads.length !== 2 || routedPayloads[1].employeeId !== 'LE-01' || routedPayloads[1].employee !== '피터') {
     throw new Error('직원 직접 지시 경로가 유지되지 않았습니다: ' + JSON.stringify(routedPayloads));
   }
+
+  // 브라우저를 다시 열어도 기존 업무 ID로 이어서 제출되는지 확인한다.
+  const interruptedFixture = {
+    taskId: 'smoke-resume-existing-task',
+    task: '중단 업무 이어하기 브라우저 회귀 테스트',
+    employeeId: 'COO',
+    employeeName: '알렉스',
+    status: 'INTERRUPTED',
+    savedAt: new Date().toISOString()
+  };
+  await page.evaluate(record => localStorage.setItem('swAIOfficePendingTask', JSON.stringify(record)), interruptedFixture);
+  await page.reload({ waitUntil: 'commit' });
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('#loading');
+    return !panel || getComputedStyle(panel).display === 'none' || panel.textContent.includes('초기화 오류');
+  }, { timeout: 45000 });
+  await page.locator('#officeChatToken').fill('smoke-test-api-token');
+  await page.locator('#pendingTaskRecovery').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('#resumePendingTask').click();
+  await page.waitForFunction(() => [...document.querySelectorAll('#chatHistory .chatBubble')].some(el => el.textContent.includes('smoke-resume-existing-task')), { timeout: 10000 });
+  const resumedPayload = routedPayloads[2];
+  if (!resumedPayload || resumedPayload.taskId !== interruptedFixture.taskId || resumedPayload.idempotencyKey !== interruptedFixture.taskId || resumedPayload.employeeId !== 'COO') {
+    throw new Error('중단 업무 이어하기가 기존 업무 ID·멱등성 키를 재사용하지 않았습니다: ' + JSON.stringify(resumedPayload));
+  }
+  await page.evaluate(() => localStorage.removeItem('swAIOfficePendingTask'));
+
   const restoreFixture = {
     taskId: 'smoke-history-restore',
     task: '복원 테스트 업무 지시',
