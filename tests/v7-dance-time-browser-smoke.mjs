@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import fs from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const htmlPath = fileURLToPath(new URL("../sw-ai-office-v7(claude).html", import.meta.url));
