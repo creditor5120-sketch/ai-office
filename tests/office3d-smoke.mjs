@@ -68,7 +68,12 @@ try {
 
   await page.locator('#staffStrip .staffCard').first().click();
   const selectedName = (await page.locator('#chatName').innerText()).trim();
-  if (!selectedName) throw new Error('Selecting a staff card did not update the chat header');
+  if (selectedName !== '단테') throw new Error(`대표이사 첫 직원 카드 이름 오류: expected 단테, found ${selectedName || '(empty)'}`);
+  const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]');
+  await legalLeadCard.waitFor({ state: 'visible', timeout: 10000 });
+  await legalLeadCard.click();
+  const legalLeadName = (await page.locator('#chatName').innerText()).trim();
+  if (legalLeadName !== '피터') throw new Error(`법무팀장 이름 오류: expected 피터, found ${legalLeadName || '(empty)'}`);
   const restoreFixture = {
     taskId: 'smoke-history-restore',
     task: '복원 테스트 업무 지시',
@@ -165,6 +170,7 @@ try {
     staffCards: staffCount,
     visibleStaff: visibleCount,
     selectedStaff: selectedName,
+    legalTeamLead: legalLeadName,
     detailViewStaff: detailCount,
     navigationTo2D: backLink,
     twoDTitle: twoDName,
