@@ -5,6 +5,7 @@ on:
     branches: [main, work/office3d-mainline-rebase]
     paths:
       - 'index.html'
+      - 'office-map.html'
       - 'office3d.html'
       - 'tests/office3d-entrypoint.test.mjs'
       - 'tests/office3d-smoke.mjs'
