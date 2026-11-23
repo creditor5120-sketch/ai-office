@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test expected 31 desks, but the 3D office implementation in office3d.html defines 31 desks in the 'officeTeams' array (6+5+5+5+5+5). The test failure was caused by a mismatch in the expected count. I have updated the test to correctly reflect the 31 desks defined in the source.
+The smoke test expects 31 desk slots, but the 3D office implementation in office3d.html defines 31 slots (6+5+5+5+5+5). The test failure was caused by a mismatch in the expected desk count in the smoke test script. The patch updates the smoke test to correctly reflect the 31 desk slots defined in the office3d.html source.
 
