@@ -60,9 +60,9 @@ test("server live progress uses the chronological audit event API contract", () 
   const historyBlock = worker.slice(historyStart, historyEnd);
   assert.match(worker, /ORDER BY created_at DESC, rowid DESC LIMIT 301/);
   assert.match(historyBlock, /\}\)\.reverse\(\);/);
-  assert.match(html, /Date\\.parse\\(evs\\[evs\\.length-1\\]\\.createdAt\\)/);
-  assert.match(html, /const ev=\\[\\.\\.\\.evs\\]\\.reverse\\(\\)\\.find\\(x=>x\\.eventType==="WORKFLOW_STAGE_STARTED"\\)/);
-  assert.doesNotMatch(html, /evs\\[0\\]\\?\\.createdAt/);
+  assert.ok(html.includes("Date.parse(evs[evs.length-1].createdAt)"));
+  assert.ok(html.includes('const ev=[...evs].reverse().find(x=>x.eventType==="WORKFLOW_STAGE_STARTED")'));
+  assert.ok(!html.includes("evs[0]?.createdAt"));
 });
 
 test("the original 3D office scene and pathfinding remain in the file", () => {
