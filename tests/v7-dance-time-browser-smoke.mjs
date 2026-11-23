@@ -29,6 +29,9 @@ try {
 
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "load", timeout: 30000 });
   await page.waitForSelector("#gl canvas", { timeout: 30000 });
+  // Dance commands are routed through Alex, so select his chat explicitly.
+  await page.locator("#side [data-e=\"alex\"]").click();
+  await page.waitForFunction(() => document.querySelector("#hn")?.textContent === "알렉스", null, { timeout: 10000 });
   await page.locator("#inp").fill("댄스타임");
   await page.locator("#send").click();
 
