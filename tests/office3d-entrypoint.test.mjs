@@ -17,7 +17,8 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(office, /if\(\[408,425,429,500,502,503,504\]\.includes\(response\.status\)\)/);
   assert.match(office, /동일 업무 ID로 재시도합니다/);
   assert.match(office, /idempotencyKey:taskId/);
-  assert.match(office, /const PENDING_TASK_KEY='swAIOfficePendingTask'/);\n  assert.match(office, /deskCount:officeDeskSlots\\.length/);
+  assert.match(office, /const PENDING_TASK_KEY='swAIOfficePendingTask'/);
+  assert.match(office, /deskCount:officeDeskSlots\.length/);
   assert.match(office, /savePendingTask\(\{task,taskId,employeeId:p\.id,employeeName,status:'PROCESSING'/);
   assert.match(office, /const taskId=resumeRecord\?\.taskId\|\|crypto\.randomUUID\(\)/);
   assert.match(office, /savedAt:resumeRecord\?\.savedAt\|\|new Date\(\)\.toISOString\(\)/);
