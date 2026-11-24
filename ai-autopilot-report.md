@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement the representative-to-Alex routing contract and verify it with a regression test.
+- 요약: Fix the 3D office floor audit and desk count verification in the smoke test.
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office routes the request to the COO (알렉스). The current implementation in office3d.html already handles this, but the smoke test needed to be updated to verify this specific routing behavior to ensure future stability.
+The smoke test failed because the office3d.html source code defines 31 desk slots, but the test expected 31 while the audit function was not correctly reporting the count from the officeDeskSlots array. I have updated the audit function to correctly return the length of the officeDeskSlots array, ensuring the test and implementation are in sync.
 
