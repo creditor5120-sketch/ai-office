@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The loading panel was not correctly updating to '준비 완료' upon successful initialization, and the error handling was not robust enough for the 3D scene setup. This patch ensures the loading panel is updated correctly and provides better feedback.
+The loading panel was not correctly updating its text content to '준비 완료' upon successful initialization, which could cause the smoke test to timeout or report an error. This patch ensures the loading panel is updated and hidden correctly.
 
