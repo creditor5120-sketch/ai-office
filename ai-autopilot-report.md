@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The current implementation of `office3d.html` has a discrepancy between the number of desk slots (31) and the number of staff cards rendered. The `officeDeskSlots` array is populated with 31 slots, but the staff rendering loop was not correctly iterating through all of them, leading to missing staff cards in the UI. This patch ensures all 31 slots are correctly processed and rendered.
+The current implementation of `refreshStaffCards` and the initial staff card generation logic in `office3d.html` relies on `avatars.length` which includes the CEO (Dante) and COO (Alex). The loop `for(const p of directory)` correctly iterates over the 30 staff members, but the `avatars` array already contains Dante and Alex, leading to an index mismatch when assigning desk slots. By correctly calculating the slot index based on the `avatars` array length and ensuring the `avatars` array is fully populated before generating cards, we ensure all 31 slots are correctly mapped.
 
