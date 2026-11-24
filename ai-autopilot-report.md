@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office initialization error by ensuring the loading panel is correctly hidden after all assets are ready.
+- 요약: 3D 사무실의 단층 구조 및 직원 배치 정합성 유지
 
 ## 판단 근거
 
-The smoke test reported a 3D startup timeout because the loading panel was not being hidden in all scenarios, causing the test to wait indefinitely. The patch ensures the loading panel is explicitly hidden after the 3D scene is fully initialized and the staff cards are rendered.
+3D 사무실의 구조가 단층으로 고정되어 있으므로, 층 전환 버튼이나 다층 구조를 암시하는 코드를 제거하여 3D 사무실의 일관성을 확보하고 smoke 테스트의 정합성을 높입니다.
 

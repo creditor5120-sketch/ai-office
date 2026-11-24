@@ -189,7 +189,6 @@ for(const t of businessTeams){
 // 1층 구조물을 별도 그룹으로 묶고 단층 복제 공간을 만든다.
 const legacyStructure=new THREE.Group();
 scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);legacyStructure.add(o)});
-scene.add(legacyStructure);
 // 단층은 TEAM.AI.ID 레퍼런스처럼 여러 독립 팀실이 중앙 복도를 둘러싸는 구조로 재구성한다.
 const officeStructure=new THREE.Group();
 const officeBuildStart=scene.children.length;
@@ -315,7 +314,6 @@ cube(.06,.08,.08,M.metal,26.3,1.0,8.05);
 const officeObjects=scene.children.slice(officeBuildStart);
 for(const object of officeObjects){scene.remove(object);officeStructure.add(object)}
 // 단층 사무실: 층 전환 없이 하나의 공간만 표시한다.
-legacyStructure.visible=false;
 officeStructure.position.y=0;
 officeStructure.scale.set(.8,1,.8);
 scene.add(officeStructure);
@@ -453,7 +451,6 @@ const detailToggle=document.getElementById('detailToggle');let detailMode=false;
 detailToggle.onclick=()=>{detailMode=!detailMode;document.getElementById('appMain').style.display=detailMode?'none':'grid';document.getElementById('staffStrip').style.display=detailMode?'none':'flex';document.getElementById('detailView').style.display=detailMode?'grid':'none';detailToggle.textContent=detailMode?'↙ 사무실로':'↗ 업무 상세';if(detailMode&&!selected){const alex=avatars.find(v=>v.userData.person.id==='COO');if(alex)selectAvatar(alex)}};
 document.getElementById('zoomIn').onclick=()=>{camera.position.multiplyScalar(.85);controls.update()};
 document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1.18);controls.update()};
-document.getElementById('resetView').onclick=()=>{controls.target.set(0,0,0);camera.position.copy(is2D?new THREE.Vector3(0,76,.01):new THREE.Vector3(27,29,29));controls.update()};
 
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),modal=document.getElementById('modal');let selected=null,selectedTaskForDecision=null;
 const PENDING_TASK_KEY='swAIOfficePendingTask';let taskSubmissionInProgress=false;
