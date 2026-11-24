@@ -768,12 +768,32 @@ function renderTaskHistory(){
   list.appendChild(item);
  });
 }
+function evaluateRepresentativeRelease(record){
+ const deliverables=Array.isArray(record?.deliverables)?record.deliverables:[];
+ const reviews=Array.isArray(record?.finalReviewResults)?record.finalReviewResults:[];
+ const reviewById=new Map(reviews.filter(item=>item?.id).map(item=>[item.id,item]));
+ const incomplete=deliverables.filter(item=>item?.status!=='completed');
+ const unreviewed=deliverables.filter(item=>!item?.id||!reviewById.has(item.id));
+ const notApproved=deliverables.filter(item=>{
+  const review=item?.id?reviewById.get(item.id):null;
+  return review&&!['승인','approved','pass','passed'].includes(String(review.judgment||'').trim().toLowerCase());
+ });
+ const gateAllowed=record?.workflow?.reviewGate?.finalReleaseAllowed===true;
+ const blockers=[];
+ if(!gateAllowed)blockers.push('서버 최종 검수 게이트가 승인 가능으로 판정하지 않았습니다.');
+ if(!deliverables.length)blockers.push('승인할 결과물이 등록되지 않았습니다.');
+ if(incomplete.length)blockers.push('완료되지 않은 결과물: '+incomplete.map(item=>(item.title||item.name||item.id||'담당자')+' ('+(item.status||'상태 미기재')+')').join(', '));
+ if(unreviewed.length)blockers.push('최종 검수가 누락된 결과물: '+unreviewed.map(item=>item.title||item.name||item.id||'담당자').join(', '));
+ if(notApproved.length)blockers.push('최종 검수 승인 상태가 아닌 결과물: '+notApproved.map(item=>{const review=reviewById.get(item.id);return (item.title||item.name||item.id||'담당자')+' ('+(review.judgment||'판정 미기재')+')'}).join(', '));
+ return {allowed:gateAllowed&&deliverables.length>0&&!incomplete.length&&!unreviewed.length&&!notApproved.length,blockers};
+}
 function renderRepresentativeDecision(record=null){
  const hint=document.getElementById('decisionTaskHint'),approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');
- const taskId=record?.taskId||'';const decision=record?.representativeDecision||record?.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.detail||null;
+ const taskId=record?.taskId||'',decision=record?.representativeDecision||record?.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.detail||null;
+ const release=evaluateRepresentativeRelease(record);
  hint.textContent=taskId?(decision?`업무 ${taskId} · ${decision.decisionLabel||decision.decision||'결정 기록됨'} (${decision.recordedAt||record.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.createdAt||'시각 미확인'})`:`선택 업무 ID: ${taskId}`):'업무 기록을 선택하면 승인 또는 반려를 기록할 수 있습니다.';
- const allowed=!!taskId&&!decision,releaseAllowed=record?.workflow?.reviewGate?.finalReleaseAllowed===true;approve.disabled=!allowed||!releaseAllowed;reject.disabled=!allowed;
- if(taskId&&!decision&&!releaseAllowed)hint.textContent+= ' · 최종 검수 승인 조건이 확인되지 않아 대표 승인은 잠겨 있습니다. 반려 기록은 가능합니다.';
+ const allowed=!!taskId&&!decision;approve.disabled=!allowed||!release.allowed;reject.disabled=!allowed;
+ if(taskId&&!decision&&!release.allowed)hint.textContent+=' · 대표 승인 보류: '+release.blockers.join(' / ')+' 반려 기록은 가능합니다.';
 }
 async function submitRepresentativeDecision(decision){
  const record=selectedTaskForDecision,taskId=record?.taskId,token=document.getElementById('representativeAccessToken').value.trim(),apiToken=document.getElementById('officeChatToken').value.trim(),reason=document.getElementById('representativeDecisionReason').value.trim();
@@ -781,6 +801,10 @@ async function submitRepresentativeDecision(decision){
  if(!apiToken){appendChat('시스템','일반 서버 API 인증값도 입력해 주세요.');return}
  if(!token){appendChat('시스템','대표 승인 전용 인증값을 입력해 주세요.');return}
  if(decision==='REJECT'&&!reason){appendChat('시스템','반려 사유를 입력해야 합니다.');return}
+ if(decision==='APPROVE'){
+  const release=evaluateRepresentativeRelease(record);
+  if(!release.allowed){appendChat('시스템','대표 승인 보류: '+release.blockers.join(' / '));renderRepresentativeDecision(record);return}
+ }
  const confirmText=decision==='APPROVE'?'이 업무를 대표 승인으로 확정해 D1에 기록할까요? 외부 시스템 실행은 하지 않습니다.':'이 업무를 대표 반려로 확정해 D1에 기록할까요? 기존 결정은 변경할 수 없습니다.';
  if(!window.confirm(confirmText))return;
  const approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');approve.disabled=true;reject.disabled=true;
