@@ -418,7 +418,7 @@ for(const p of directory){
   const displayPerson={...p,jobTitle:p.position,name:characterNames[p.id]||p.name};
   const slotIdx=avatars.length-1;
   const [x,z]=officeDeskSlots[slotIdx]||[0,0];
-  makeAvatar(displayPerson,avatars.length,x*.8,(z+1.18)*.8)
+  makeAvatar(displayPerson,avatars.length,x*.8,(z+1.18)*.8);
 }
 // 단층 사무실에 실제 직원 아바타를 직접 배치한다.
 avatarRoot.scale.set(.8,1,.8);
