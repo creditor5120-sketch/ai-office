@@ -328,6 +328,25 @@ export default {
         }
       }
 
+      // 업무 목록·상세 이력·대표 결정 조회는 별도 대표 인증을 요구한다.
+      // 일반 API 토큰만 노출된 경우에도 서버에 저장된 업무명·결과물·감사 이력이 노출되지 않도록 한다.
+      if (["get_recent_tasks", "get_task_history", "get_representative_decision"].includes(body.action)) {
+        const expectedRepresentativeToken = String(env.REPRESENTATIVE_ACCESS_TOKEN || "").trim();
+        if (!expectedRepresentativeToken) {
+          return json({ error: "대표 전용 조회 인증값이 Worker Secret에 설정되지 않았습니다." }, 503);
+        }
+        const suppliedRepresentativeAuthorization = String(request.headers.get("X-Representative-Authorization") || "");
+        const expectedRepresentativeAuthorization = "Bearer " + expectedRepresentativeToken;
+        let representativeAuthDifference = suppliedRepresentativeAuthorization.length ^ expectedRepresentativeAuthorization.length;
+        const representativeAuthLength = Math.max(suppliedRepresentativeAuthorization.length, expectedRepresentativeAuthorization.length);
+        for (let i = 0; i < representativeAuthLength; i++) {
+          representativeAuthDifference |= (suppliedRepresentativeAuthorization.charCodeAt(i) || 0) ^ (expectedRepresentativeAuthorization.charCodeAt(i) || 0);
+        }
+        if (representativeAuthDifference !== 0) {
+          return json({ error: "대표 전용 조회 인증에 실패했습니다." }, 401);
+        }
+      }
+
       // 브라우저 로컬 기록이 없어도 서버에 저장된 최근 업무 목록을 복원한다.
       if (body.action === "get_recent_tasks") {
         if (!env.DB) return json({ error: "D1 DB 바인딩이 없어 최근 업무를 조회할 수 없습니다." }, 503);
