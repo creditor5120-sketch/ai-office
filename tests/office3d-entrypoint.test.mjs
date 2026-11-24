@@ -37,6 +37,10 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(v11, /action:\"get_representative_decision\"/);
   assert.match(v11, /srvSaveHistory\(\)/);
   assert.ok(v11.includes('<b class="px">SW AI OFFICE</b>'));
+  assert.match(v11, /const releaseAllowed=gate\.finalReleaseAllowed===true&&deliverables\.length>0&&incomplete\.length===0&&unreviewed\.length===0&&notApproved\.length===0/);
+  assert.match(v11, /최종 승인 보류 — 완료 및 검수 조건을 모두 충족하지 않았습니다/);
+  assert.match(v11, /최종 검수가 누락된 결과물/);
+  assert.match(v11, /최종 검수 승인 상태가 아닌 결과물/);
   const inlineScripts = v11.split('<script>').slice(1).map(part => part.split('</script>')[0]);
   assert.equal(inlineScripts.length, 2, 'v11 preview should contain two inline scripts');
   inlineScripts.forEach(script => new Script(script));
