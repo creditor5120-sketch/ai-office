@@ -33,6 +33,16 @@ test('server report inbox restores reports from D1 using representative-only rea
   assert.match(html, /대표 전용 토큰 \(보고 조회·승인·반려에 사용\)/);
 });
 
+test('v11 preview reserves iPad safe areas and fits the office above the market ticker', () => {
+  assert.ok(html.includes('padding-top:env(safe-area-inset-top,0px)'));
+  assert.ok(html.includes('padding-bottom:env(safe-area-inset-bottom,0px)'));
+  assert.ok(html.includes('@media (max-width:1024px) and (pointer:coarse)'));
+  assert.ok(html.includes('#stage{order:1;flex:0 1 36%'));
+  assert.ok(html.includes('#strip{order:2;flex:0 0 clamp(68px,10dvh,92px)'));
+  assert.ok(html.includes('#chat{order:3;flex:1 1 0;min-height:0'));
+  assert.ok(html.includes('.market-ticker{bottom:env(safe-area-inset-bottom,0px)}'));
+});
+
 test('v11 preview inline scripts remain syntactically valid', () => {
   const inlineScripts = html.split('<script>').slice(1).map(part => part.split('</script>')[0]);
   inlineScripts.forEach(script => new Script(script));
