@@ -9,6 +9,8 @@ on:
       - 'office3d.html'
       - 'office-v11-preview.html'
       - 'tests/market-news-ticker.test.mjs'
+      - 'worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js'
+      - 'tests/kis-market-ticker-worker.test.mjs'
       - 'tests/office3d-entrypoint.test.mjs'
       - 'tests/office3d-smoke.mjs'
       - '.github/workflows/office3d-smoke.yml'
@@ -21,6 +23,10 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'office-v11-preview.html'
+      - 'tests/market-news-ticker.test.mjs'
+      - 'worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js'
+      - 'tests/kis-market-ticker-worker.test.mjs'
       - 'index.html'
       - 'office3d.html'
       - 'employees.js'
@@ -53,6 +59,8 @@ jobs:
         run: node --test tests/office3d-entrypoint.test.mjs
       - name: Test v11 market and news ticker
         run: node --test tests/market-news-ticker.test.mjs
+      - name: Test KIS read-only market quote Worker contract
+        run: node --test tests/kis-market-ticker-worker.test.mjs
       - name: Run 3D office browser checks
         run: node tests/office3d-smoke.mjs
       - name: Run Worker auth and approval audit contract tests
