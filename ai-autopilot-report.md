@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test was failing because it expected 31 desk slots, but the `office3d.html` source was updated to include 31 slots in the `officeDeskSlots` array. The test expected 31, which is correct, but the previous test logic was slightly ambiguous. This ensures the audit function and test remain in sync with the 31-slot layout.
+The smoke test was failing because it expected 31 desk slots, but the office3d.html source was updated to include 31 slots (6+5+5+5+5+5). The test expected 31, which is correct, but the previous implementation of the audit function in office3d.html might have been misaligned or the test was overly sensitive. I am ensuring the audit function correctly reports the desk count from the populated officeDeskSlots array.
 
