@@ -24,4 +24,6 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(office, /clearPendingTask\(taskId\)/);
     assert.match(office, /u\.workStatus==='협업 중'/);
   assert.match(office, /const isRepresentative=selected\?\.userData\.person\.id==='CEO'/);
+  assert.match(office, /location\.protocol==='file:'/);
+  assert.match(office, /GitHub Pages에 배포된 SW AI OFFICE 주소/);
 });
