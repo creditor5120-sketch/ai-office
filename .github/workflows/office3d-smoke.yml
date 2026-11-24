@@ -23,6 +23,8 @@ on:
     paths:
       - 'index.html'
       - 'office3d.html'
+      - 'office-v11-preview.html'
+      - 'tests/v11-ceo-report-inbox.test.mjs'
       - 'employees.js'
       - 'tests/office3d-entrypoint.test.mjs'
       - 'tests/office3d-smoke.mjs'
@@ -53,6 +55,8 @@ jobs:
         run: node --test tests/office3d-entrypoint.test.mjs
       - name: Test v11 market and news ticker
         run: node --test tests/market-news-ticker.test.mjs
+      - name: Test v11 CEO report inbox
+        run: node --test tests/v11-ceo-report-inbox.test.mjs
       - name: Run 3D office browser checks
         run: node tests/office3d-smoke.mjs
       - name: Run Worker auth and approval audit contract tests
