@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement idempotent task recovery and resume logic in office3d.html.
+- 요약: Fix the 3D office initialization error by ensuring the loading panel is correctly hidden and the 3D scene is properly initialized.
 
 ## 판단 근거
 
-The current implementation lacks a robust mechanism to resume interrupted tasks using the existing taskId and idempotencyKey, which is critical for the 'Priority 3' requirement of idempotent retry/resume. This patch adds the necessary logic to read, save, and clear pending tasks from localStorage, ensuring that if a task is interrupted, the user can resume it without creating duplicate entries.
+The smoke test failed because the loading panel was not being hidden after initialization, and the 3D scene was not being correctly initialized. This patch ensures the loading panel is hidden and the 3D scene is correctly initialized.
 
