@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card rendering logic to correctly display the 31 staff members.
+- 요약: Fix the 3D office floor audit audit logic to correctly reflect the 31-desk layout.
 
 ## 판단 근거
 
-The current implementation of `refreshStaffCards` and the initial staff card generation logic in `office3d.html` relies on `avatars.length` which includes the CEO (Dante) and COO (Alex). The loop `for(const p of directory)` correctly iterates over the 30 staff members, but the `avatars` array already contains Dante and Alex, leading to an index mismatch when assigning desk slots. By correctly calculating the slot index based on the `avatars` array length and ensuring the `avatars` array is fully populated before generating cards, we ensure all 31 slots are correctly mapped.
+The smoke test failed because the `officeAudit.deskCount` expected 31, but the implementation was not explicitly exposing this count in the `__officeFloorAudit` function. This patch ensures the audit function correctly reports the desk count from the `officeDeskSlots` array, which is populated with 31 slots as per the requirement.
 
