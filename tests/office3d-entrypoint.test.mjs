@@ -36,7 +36,7 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(v11, /const ceoHistory=st\.hist\.ceo1=st\.hist\.ceo1\|\|\[\]/);
   assert.match(v11, /action:\"get_representative_decision\"/);
   assert.match(v11, /srvSaveHistory\(\)/);
-  const inlineScripts = [...v11.matchAll(/<script>([\\s\\S]*?)<\\/script>/gi)].map(match => match[1]);
+  const inlineScripts = v11.split('<script>').slice(1).map(part => part.split('</script>')[0]);
   assert.equal(inlineScripts.length, 2, 'v11 preview should contain two inline scripts');
   inlineScripts.forEach(script => new Script(script));
 });
