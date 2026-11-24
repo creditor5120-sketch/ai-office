@@ -313,8 +313,111 @@ export default {
 
       // 명시된 action은 조회·대표 결정 API만 허용한다. 알 수 없거나 잘못된 action이 업무 실행으로 흘러가지 않게 차단한다.
       if (Object.prototype.hasOwnProperty.call(body, "action") &&
-          !["get_representative_decision", "get_task_history", "get_recent_tasks", "representative_decision"].includes(body.action)) {
+          !["get_representative_decision", "get_task_history", "get_recent_tasks", "representative_decision", "get_market_quote"].includes(body.action)) {
         return json({ error: "지원하지 않는 API action입니다." }, 400);
+      }
+
+      // 읽기 전용 앱코 주가 조회: 주문 API는 호출하지 않고 한국투자증권 시세 API만 사용한다.
+      if (body.action === "get_market_quote") {
+        if (String(body.code || "129890").trim() !== "129890") {
+          return json({ error: "현재 티커는 앱코(129890)만 조회할 수 있습니다." }, 400);
+        }
+        const appKey = String(env.KIS_APP_KEY || "").trim();
+        const appSecret = String(env.KIS_APP_SECRET || "").trim();
+        if (!appKey || !appSecret) {
+          return json({ error: "한국투자증권 API Secret 설정이 필요합니다." }, 503);
+        }
+        if (!env.KIS_TOKEN_CACHE) {
+          return json({ error: "KIS_TOKEN_CACHE KV 바인딩 설정이 필요합니다." }, 503);
+        }
+
+        try {
+          const cacheKey = "kis:access_token:real";
+          const cachedToken = await env.KIS_TOKEN_CACHE.get(cacheKey, "json");
+          let accessToken = cachedToken && cachedToken.accessToken &&
+            Number(cachedToken.expiresAt) > Date.now() + 300000
+            ? String(cachedToken.accessToken) : "";
+
+          if (!accessToken) {
+            const tokenResponse = await fetch("https://openapi.koreainvestment.com:9443/oauth2/tokenP", {
+              method: "POST",
+              headers: { "Content-Type": "application/json; charset=UTF-8" },
+              body: JSON.stringify({
+                grant_type: "client_credentials",
+                appkey: appKey,
+                appsecret: appSecret
+              })
+            });
+            let tokenData = {};
+            try { tokenData = await tokenResponse.json(); } catch (_) {}
+            if (!tokenResponse.ok || !tokenData.access_token) {
+              return json({
+                error: "한국투자증권 접근 토큰 발급에 실패했습니다.",
+                providerStatus: tokenResponse.status,
+                providerMessage: String(tokenData.msg1 || tokenData.error_description || "").slice(0, 180)
+              }, 502);
+            }
+            accessToken = String(tokenData.access_token);
+            const expiresIn = Number(tokenData.expires_in) || 86400;
+            const cacheTtl = Math.max(60, Math.min(21600, expiresIn - 300));
+            await env.KIS_TOKEN_CACHE.put(cacheKey, JSON.stringify({
+              accessToken,
+              expiresAt: Date.now() + cacheTtl * 1000
+            }), { expirationTtl: cacheTtl });
+          }
+
+          const quoteUrl = new URL("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price");
+          quoteUrl.searchParams.set("FID_COND_MRKT_DIV_CODE", "J");
+          quoteUrl.searchParams.set("FID_INPUT_ISCD", "129890");
+          const quoteResponse = await fetch(quoteUrl.toString(), {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json; charset=UTF-8",
+              "authorization": "Bearer " + accessToken,
+              "appkey": appKey,
+              "appsecret": appSecret,
+              "tr_id": "FHKST01010100",
+              "custtype": "P"
+            }
+          });
+          let quoteData = {};
+          try { quoteData = await quoteResponse.json(); } catch (_) {}
+          if (!quoteResponse.ok || String(quoteData.rt_cd) !== "0" || !quoteData.output) {
+            return json({
+              error: "한국투자증권 앱코 시세 조회에 실패했습니다.",
+              providerStatus: quoteResponse.status,
+              providerMessage: String(quoteData.msg1 || "").slice(0, 180)
+            }, 502);
+          }
+
+          const output = quoteData.output;
+          const signCode = String(output.prdy_vrss_sign || "3");
+          const price = Number(output.stck_prpr);
+          const change = Number(output.prdy_vrss);
+          const changeRate = Number(output.prdy_ctrt);
+          const volume = Number(output.acml_vol);
+          if (![price, change, changeRate, volume].every(Number.isFinite)) {
+            return json({ error: "한국투자증권 시세 응답의 숫자 형식이 올바르지 않습니다." }, 502);
+          }
+          return json({
+            provider: "한국투자증권 Open API",
+            symbol: "129890",
+            name: "앱코",
+            market: "KRX",
+            price,
+            change: Math.abs(change),
+            changeSign: signCode,
+            changeRate: Math.abs(changeRate),
+            volume,
+            priceDate: String(output.stck_bsop_date || ""),
+            updatedAt: new Date().toISOString()
+          }, 200);
+        } catch (error) {
+          return json({
+            error: "한국투자증권 시세 연결 중 오류가 발생했습니다.",
+            detail: String(error?.message || error || "").slice(0, 180)
+          }, 502);
+        }
       }
 
       // 조회·대표 결정 API의 업무 ID도 실행 요청과 동일한 형식·길이 제한을 적용한다.
