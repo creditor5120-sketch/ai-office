@@ -212,6 +212,9 @@ try {
   await representativeHistoryItem.waitFor({ state: 'visible', timeout: 5000 });
   const representativeHistoryCount = await page.locator('#taskHistoryList .historyItem').count();
   if (representativeHistoryCount < 1) throw new Error('대표이사 화면에서 전사 업무 이력을 조회할 수 없습니다');
+  // 직원 선택은 프로필 모달을 열기 때문에 다음 직원 클릭 전에 모달을 닫아야 한다.
+  if (await page.locator('#modal').isVisible()) await page.locator('#close').click();
+  await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
   await page.locator('#detailEmployeeList .detailPerson[data-emp="COO"]').click();
   await page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' }).waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('#detailMessages').getByText('서버 원본 감사 이력').waitFor({ state: 'visible', timeout: 10000 });
