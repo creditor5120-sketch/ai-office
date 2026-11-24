@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test failed because the loading panel was not being hidden after the 3D scene was initialized, causing the test to timeout. The patch ensures the loading panel is updated to '준비 완료' and hidden, and adds a small delay to ensure the scene is ready.
+The smoke test failed because the loading panel was not being hidden after the 3D scene was initialized, and the error handling was not robust enough to handle the initialization process. This patch ensures the loading panel is hidden and the initialization is correctly handled.
 
