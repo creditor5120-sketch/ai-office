@@ -240,7 +240,7 @@ for(const team of officeTeams){
   desk(x,z);chair(x,z+1.18);officeDeskSlots.push([x,z]);
  }
 }
-while(officeDeskSlots.length < 31) { desk(-27 + (officeDeskSlots.length * 1.5), -18); officeDeskSlots.push([-27 + (officeDeskSlots.length * 1.5), -18]); }
+while(officeDeskSlots.length < 31) { const x = -27 + (officeDeskSlots.length * 1.5); desk(x, -18); officeDeskSlots.push([x, -18]); }
 // 레퍼런스처럼 벽으로 완전히 둘러싸지 않고, 구역마다 길이가 다른 낮은 벽과 유리 파티션을 배치
 officeWall(18,2.7,.2,M.wall,-17,1.35,-17.9);
 officeWall(.18,2.1,8,M.wall,-26,1.05,-13);
