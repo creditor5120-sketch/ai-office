@@ -210,6 +210,8 @@ try {
   await representativeCard.click();
   const representativeHistoryItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
   await representativeHistoryItem.waitFor({ state: 'visible', timeout: 5000 });
+  const representativeInboxHeading = await page.locator('#taskHistoryPanel h3').innerText();
+  if (!representativeInboxHeading.includes('대표이사 전사 업무 보고함')) throw new Error('대표이사 전사 업무 보고함 제목이 표시되지 않습니다');
   const representativeHistoryCount = await page.locator('#taskHistoryList .historyItem').count();
   if (representativeHistoryCount < 1) throw new Error('대표이사 화면에서 전사 업무 이력을 조회할 수 없습니다');
   // 직원 선택은 프로필 모달을 열기 때문에 다음 직원 클릭 전에 모달을 닫아야 한다.
