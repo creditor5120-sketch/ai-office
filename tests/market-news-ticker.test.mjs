@@ -24,3 +24,10 @@ test('ticker supports safe provider-fed items and pause/resume controls', () => 
   assert.match(html, /noopener noreferrer/);
   assert.match(html, /prefers-reduced-motion:reduce/);
 });
+
+test('v11 ticker polls the authenticated read-only Worker quote endpoint', () => {
+  assert.match(html, /SWMarketTickerAuth=\{getQuote:async/);
+  assert.match(html, /action:"get_market_quote"/);
+  assert.match(html, /setInterval\(refreshAppkoQuote,30000\)/);
+  assert.match(html, /한국투자증권 조회/);
+});
