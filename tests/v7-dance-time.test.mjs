@@ -78,6 +78,12 @@ test("the 3D office exposes the existing server recent-task and audit-history AP
   assert.match(worker, /if \(body\.action === "get_task_history"\)/);
 });
 
+test("server task-history UI requires and sends the representative-only credential", () => {
+  assert.match(html, /!srvCfg\.url\|\|!srvCfg\.token\|\|!srvCfg\.rep/);
+  assert.match(html, /action:"get_recent_tasks",limit:30\},\{"X-Representative-Authorization":"Bearer "\+srvCfg\.rep\}/);
+  assert.match(html, /action:"get_task_history",taskId:String\(taskId\)\},\{"X-Representative-Authorization":"Bearer "\+srvCfg\.rep\}/);
+});
+
 test("server task history renders untrusted task and event data as text, not HTML", () => {
   const start = html.indexOf("function historyRenderDetail(data)");
   const end = html.indexOf("async function historyLoadDetail", start);

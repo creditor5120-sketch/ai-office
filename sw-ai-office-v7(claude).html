@@ -2092,10 +2092,10 @@ function historyRenderList(tasks){
 }
 async function historyLoadList(){
   const list=$("#historyList"),detail=$("#historyDetail");
-  if(!srvCfg.url||!srvCfg.token){historySetMessage("서버 조회를 사용하려면 AI 연결 설정에서 Worker 주소와 접근 토큰을 먼저 저장해 주세요.");list.replaceChildren();detail.textContent="서버 연결 설정이 없어 조회하지 않았습니다.";return;}
+  if(!srvCfg.url||!srvCfg.token||!srvCfg.rep){historySetMessage("서버 업무 이력 조회에는 Worker 주소·접근 토큰·대표 전용 토큰이 모두 필요합니다. AI 연결 설정을 확인해 주세요.");list.replaceChildren();detail.textContent="대표 전용 인증 설정이 없어 조회하지 않았습니다.";return;}
   historySetMessage("서버에 저장된 최근 업무를 불러오는 중입니다.");list.replaceChildren();detail.textContent="업무를 선택하면 단계별 이력이 표시됩니다.";
   try{
-    const r=await srvPost({action:"get_recent_tasks",limit:30});
+    const r=await srvPost({action:"get_recent_tasks",limit:30},{"X-Representative-Authorization":"Bearer "+srvCfg.rep});
     if(r.status!==200)throw new Error((r.data&&r.data.error)||("최근 업무 조회 실패 (응답 "+r.status+")"));
     const tasks=Array.isArray(r.data.tasks)?r.data.tasks:[];
     historyRenderList(tasks);historySetMessage("서버 저장 업무 "+tasks.length+"건");
@@ -2134,7 +2134,7 @@ async function historyLoadDetail(taskId,button){
   document.querySelectorAll("#historyList .history-row").forEach(n=>n.classList.toggle("on",n===button));
   const box=$("#historyDetail");box.textContent="선택한 업무의 이력을 불러오는 중입니다.";
   try{
-    const r=await srvPost({action:"get_task_history",taskId:String(taskId)});
+    if(!srvCfg.rep){box.textContent="대표 전용 인증 토큰이 설정되지 않아 업무 이력을 조회할 수 없습니다.";return;}const r=await srvPost({action:"get_task_history",taskId:String(taskId)},{"X-Representative-Authorization":"Bearer "+srvCfg.rep});
     if(r.status!==200)throw new Error((r.data&&r.data.error)||("업무 이력 조회 실패 (응답 "+r.status+")"));
     historyRenderDetail(r.data);
   }catch(e){box.textContent="이력을 조회하지 못했습니다: "+(e&&e.message?e.message:String(e));}
