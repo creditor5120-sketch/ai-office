@@ -28,4 +28,11 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(office, /GitHub Pages에 배포된 SW AI OFFICE 주소/);
   assert.match(office, /대표이사 전사 업무 보고함/);
   assert.match(office, /아직 등록된 전사 업무 보고가 없습니다/);
+
+  const v11 = await readFile(new URL('../office-v11-preview.html', import.meta.url), 'utf8');
+  assert.match(v11, /location\.protocol===\"file:\"/);
+  assert.match(v11, /const SRV_HISTORY_KEY=\"swAIOfficeV11History\"/);
+  assert.match(v11, /const ceoHistory=st\.hist\.ceo1=st\.hist\.ceo1\|\|\[\]/);
+  assert.match(v11, /action:\"get_representative_decision\"/);
+  assert.match(v11, /srvSaveHistory\(\)/);
 });
