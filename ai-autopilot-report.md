@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test failed because the `officeAudit.deskCount` expected 31, but the implementation was not explicitly exposing this count in the `__officeFloorAudit` function. This patch ensures the audit function correctly reports the desk count from the `officeDeskSlots` array, which is populated with 31 slots as per the requirement.
+The smoke test failed because the `officeAudit.deskCount` expected 31, but the implementation was not explicitly exposing this count in the `__officeFloorAudit` function. This patch ensures the audit function correctly reports the desk count from the `officeDeskSlots` array, maintaining consistency with the 31-desk layout defined in the source.
 
