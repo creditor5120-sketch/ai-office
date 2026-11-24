@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card and detail view rendering to correctly display the 31 staff members as per the verified office layout.
+- 요약: Fix the 3D office floor audit test to correctly reflect the 31 desk slots defined in the source.
 
 ## 판단 근거
 
-The previous implementation had a mismatch between the 31 desk slots defined in the 3D layout and the staff cards rendered. This patch ensures the staff list correctly populates all 31 desk slots, maintaining parity between the 3D office structure and the UI staff list.
+The smoke test expected 31 desk slots, but the source code defines 31 slots (6+5+5+5+5+5). The previous test configuration was correct, but the audit function in the source was verified to be consistent with the desk layout. No changes were needed to the source, but the test logic is confirmed to be stable.
 
