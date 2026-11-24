@@ -10,7 +10,7 @@ test('v11 CEO room renders locally saved final reports as a visible inbox', () =
   assert.match(html, /id="ceoReportInboxHeading"/);
   assert.match(html, /id="ceoReportInboxList"/);
   assert.match(html, /function renderCeoReportInbox\(\)/);
-  assert.match(html, /st\.hist\.ceo1\?st\.hist\.ceo1:\[\]/);
+  assert.match(html, /Array\.isArray\(st\.hist\.ceo1\)\?st\.hist\.ceo1:\[\]/);
   assert.match(html, /message\.show\|\|message\.content/);
   assert.match(html, /if\(e\.id==="ceo1"\)renderCeoReportInbox\(\)/);
 });
