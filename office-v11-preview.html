@@ -1724,7 +1724,7 @@ function renderCeoReportInbox(){
     meta.style.cssText="font-size:10px;opacity:.65;margin-bottom:9px;overflow-wrap:anywhere";
     const body=document.createElement("pre");
     body.textContent=String(message.show||message.content||"보고 내용이 저장되지 않았습니다.");
-    body.style.cssText="white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;margin:0;padding:11px;border-radius:8px;background:rgba(245,241,233,.8);font:12px/1.65 inherit;color:#30291f";
+    body.style.cssText="white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;margin:0;padding:11px;border-radius:8px;background:rgba(245,241,233,.8);font-family:inherit;font-size:12px;line-height:1.65;color:#30291f";
     card.append(header,meta,body);
     const reasons=[...(Array.isArray(act.blockers)?act.blockers:[]),...(Array.isArray(act.gateNotes)?act.gateNotes:[])].filter(Boolean);
     if(!act.done&&reasons.length){
