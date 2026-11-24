@@ -47,6 +47,6 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
   assert.match(v11, /최종 검수가 누락된 결과물/);
   assert.match(v11, /최종 검수 승인 상태가 아닌 결과물/);
   const inlineScripts = v11.split('<script>').slice(1).map(part => part.split('</script>')[0]);
-  assert.equal(inlineScripts.length, 2, 'v11 preview should contain two inline scripts');
+  assert.equal(inlineScripts.length, 3, 'v11 preview should contain three inline scripts including the market ticker controls');
   inlineScripts.forEach(script => new Script(script));
 });
