@@ -209,6 +209,20 @@ try {
   if (!(await page.locator('#representativeApprove').isDisabled())) throw new Error('Previously recorded representative decision did not lock approval');
   const decisionHint = await page.locator('#decisionTaskHint').innerText();
   if (!decisionHint.includes('대표 승인')) throw new Error('Representative decision was not restored in the decision panel');
+  const representativeCard = page.locator('#detailEmployeeList .detailPerson[data-emp="CEO"]');
+  await representativeCard.waitFor({ state: 'visible', timeout: 10000 });
+  await representativeCard.click();
+  const representativeHistoryItem = page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' });
+  await representativeHistoryItem.waitFor({ state: 'visible', timeout: 5000 });
+  const representativeInboxHeading = await page.locator('#taskHistoryPanel h3').innerText();
+  if (!representativeInboxHeading.includes('대표이사 전사 업무 보고함')) throw new Error('대표이사 전사 업무 보고함 제목이 표시되지 않습니다');
+  const representativeHistoryCount = await page.locator('#taskHistoryList .historyItem').count();
+  if (representativeHistoryCount < 1) throw new Error('대표이사 화면에서 전사 업무 이력을 조회할 수 없습니다');
+  // 직원 선택은 프로필 모달을 열기 때문에 다음 직원 클릭 전에 모달을 닫아야 한다.
+  if (await page.locator('#modal').isVisible()) await page.locator('#close').click();
+  await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
+  await page.locator('#detailEmployeeList .detailPerson[data-emp="COO"]').click();
+  await page.locator('#taskHistoryList .historyItem').filter({ hasText: '복원 테스트 업무 지시' }).waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('#detailMessages').getByText('서버 원본 감사 이력').waitFor({ state: 'visible', timeout: 10000 });
   const refreshedChat = await page.locator('#detailMessages').innerText();
   if (!refreshedChat.includes('서버 원본 이력 확인')) throw new Error('Server audit history was not reloaded');
@@ -216,6 +230,9 @@ try {
 
   const detailCount = await page.locator('#detailEmployeeList .detailPerson').count();
   if (detailCount < 30) throw new Error(`Expected at least 30 employees in detail view, found ${detailCount}`);
+  // COO 선택도 프로필 모달을 열므로 사무실 화면으로 돌아가기 전에 닫는다.
+  if (await page.locator('#modal').isVisible()) await page.locator('#close').click();
+  await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
 
   await page.locator('#detailToggle').click();
   await page.locator('#appMain').waitFor({ state: 'visible' });
