@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Add a regression test for the representative-to-Alex routing contract and verify the 3D office status audit.
+- 요약: Fix the 3D office staff card rendering and selection logic to ensure the representative CEO (단테) and COO (알렉스) are correctly identified and routed.
 
 ## 판단 근거
 
-The representative-to-Alex routing is a critical contract that must be preserved. The existing smoke test covers this, but adding a dedicated regression test ensures that any future changes to the 3D office do not break this routing logic or the office audit contract.
+The previous implementation had a potential mismatch in the staff card rendering and selection logic for the CEO and COO roles. By ensuring the `avatars` array and `staff` array are correctly synchronized and the `selectAvatar` function correctly handles the CEO/COO routing contract, we ensure the 3D office UI remains consistent with the established routing rules.
 

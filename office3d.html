@@ -414,7 +414,7 @@ const characterNames={
  'IT-01':'테오','IT-02':'아바','IT-03':'레오','IT-04':'조이','IT-05':'토니'
 };
 for(const p of directory){
-  const displayPerson={...p,jobTitle:p.name,name:characterNames[p.id]||p.name};
+  const displayPerson={...p,jobTitle:p.position,name:characterNames[p.id]||p.name};
   const slotIdx=avatars.length-1;
   const [x,z]=officeDeskSlots[slotIdx]||[0,0];
   makeAvatar(displayPerson,avatars.length,x*.8,(z+1.18)*.8)
