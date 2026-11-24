@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the missing 'activeCount' element ID in the 3D office UI to ensure staff count displays correctly.
+- 요약: Fix the 3D office desk count regression and ensure the office audit function accurately reflects the 31-desk layout.
 
 ## 판단 근거
 
-The 3D office UI references 'activeCount' in the HTML, but the script logic for updating this element was missing, causing the staff count to remain as '-' in the UI. This patch ensures the count is correctly populated upon initialization.
+The smoke test failed because the office audit function reported 30 desks while the source code explicitly defines 31 desk slots. The patch updates the audit function to correctly report the desk count based on the `officeDeskSlots` array length, which is the source of truth for the layout.
 
