@@ -135,7 +135,7 @@ let guardRejection = "";
 // A proposed patch must never replace the expected value 31 with a guessed count.
 const patchLines = patch.split("\n");
 const weakensDeskCountInvariant = patchLines.some(line =>
-  (line.startsWith("+") && /officeAudit\.deskCount\s*!==\s*(?!31\\b)\\d+/.test(line)) ||
+  (line.startsWith("+") && /officeAudit\.deskCount\s*!==\s*(?!31\b)\d+/.test(line)) ||
   (line.startsWith("-") && /officeAudit\.deskCount\s*!==\s*31\\b/.test(line))
 );
 if (weakensDeskCountInvariant) {
