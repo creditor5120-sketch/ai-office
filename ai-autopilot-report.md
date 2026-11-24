@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card rendering and selection logic to ensure the CEO (단테) is correctly identified and routed to the COO (알렉스) in the 3D office.
+- 요약: Fix the missing 'activeCount' element ID in the 3D office UI to ensure staff count displays correctly.
 
 ## 판단 근거
 
-The 3D office initialization logic for staff cards and avatar selection had a slight mismatch in ID mapping for the CEO. By ensuring the CEO's ID is correctly mapped to the COO (알렉스) during avatar creation and selection, we maintain the routing contract established in the smoke tests.
+The 3D office UI references 'activeCount' in the HTML, but the script logic for updating this element was missing, causing the staff count to remain as '-' in the UI. This patch ensures the count is correctly populated upon initialization.
 

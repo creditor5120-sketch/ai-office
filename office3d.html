@@ -433,7 +433,7 @@ avatars.forEach((avatar,index)=>{
 });
 window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:officeStructure.visible});
 const staffCountValue=staff.length;
-document.getElementById('activeCount').textContent=staff.length;
+document.getElementById('activeCount').textContent=String(staff.length);
 function makeStaffCard(p,detail=false){
  const el=document.createElement('button');el.className=detail?'detailPerson':'staffCard';el.dataset.emp=p.id;
  const face=document.createElement('canvas');face.className='staffFace';face.width=64;face.height=80;
