@@ -54,7 +54,7 @@ try {
   // Verify the office is a single continuous floor: no floor selector or duplicate upper-floor scene.
   if (await page.locator('#floor1, #floor2').count() !== 0) throw new Error('단층 사무실에 층 전환 버튼이 남아 있습니다');
   const officeAudit = await page.evaluate(() => window.__officeFloorAudit?.());
-  if (!officeAudit || officeAudit.floorCount !== 1 || officeAudit.activeFloor !== 1 || officeAudit.visibleOffice !== true) {
+  if (!officeAudit || officeAudit.floorCount !== 1 || officeAudit.activeFloor !== 1 || officeAudit.visibleOffice !== true || officeAudit.teamCount !== 6 || officeAudit.deskCount !== 31) {
     throw new Error('단층 사무실 상태 감사 정보가 올바르지 않습니다: ' + JSON.stringify(officeAudit));
   }
   if (officeAudit.teamCount !== 6 || officeAudit.deskCount !== 31) throw new Error('6개 팀 또는 31개 작업석 구성이 누락되었습니다: ' + JSON.stringify(officeAudit));

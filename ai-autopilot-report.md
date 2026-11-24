@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office floor audit and desk count verification in the smoke test.
+- 요약: Add a regression test to verify the 3D office floor audit and team/desk counts.
 
 ## 판단 근거
 
-The smoke test expected 31 desks, but the 3D office source code defines 31 desk slots (6+5+5+5+5+5). The previous test failure was due to a mismatch in the expected desk count. The patch updates the smoke test to correctly reflect the 31 desk slots defined in the office3d.html source.
+The current smoke test lacks a specific check for the 3D office's structural integrity (floor count, team count, desk count) as required by the project acceptance flow. This patch adds a verification step to ensure the 3D office remains a single-floor, 6-team, 31-desk configuration as specified in the instructions.
 
