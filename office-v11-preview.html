@@ -246,6 +246,11 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
     </div>
     <div class="cb" id="ceoNoticeBox" style="display:none;text-align:center;">
       <div class="sub2" style="font-size:13px;line-height:1.5;">👑 <b>단테 대표님 전용 보고 수신함</b>입니다.<br/>직원들의 업무 보고가 이곳으로 모입니다. 업무 지시는 본부장 <b>알렉스</b>나 각 담당자에게 전달해 주세요.</div>
+      <section id="ceoReportInbox" aria-label="대표 업무 보고 목록" style="margin:16px auto 0;max-width:760px;text-align:left;">
+        <div id="ceoReportInboxHeading" style="font-size:14px;font-weight:700;margin:0 0 10px;">최근 업무 보고</div>
+        <div id="ceoReportInboxList" aria-live="polite" style="display:grid;gap:10px;"></div>
+        <div style="margin-top:8px;font-size:11px;opacity:.65;">이 브라우저에 저장된 보고를 표시합니다. 대표 결정은 서버에 기록됩니다.</div>
+      </section>
     </div>
   </section>
   <div id="strip"></div>
@@ -1689,6 +1694,67 @@ function openRobotSmalltalk(){
   drawChat();
   inp.focus();
 }
+function renderCeoReportInbox(){
+  const heading=$("#ceoReportInboxHeading"),list=$("#ceoReportInboxList");
+  if(!heading||!list)return;
+  const reports=(Array.isArray(st.hist.ceo1)?st.hist.ceo1:[]).filter(message=>message&&message.act&&message.act.taskId);
+  heading.textContent="받은 업무 보고 "+reports.length+"건";
+  list.replaceChildren();
+  if(!reports.length){
+    const empty=document.createElement("div");
+    empty.textContent="아직 도착한 업무 보고가 없습니다. 알렉스 본부장에게 업무를 지시하면 최종 보고가 이곳에 표시됩니다.";
+    empty.style.cssText="padding:22px 16px;border:1px dashed #b9ad98;border-radius:10px;text-align:center;font-size:12px;line-height:1.6;opacity:.78;background:rgba(255,255,255,.45)";
+    list.appendChild(empty);
+    return;
+  }
+  reports.slice().reverse().forEach((message,index)=>{
+    const act=message.act,card=document.createElement("article");
+    card.style.cssText="border:1px solid rgba(112,91,66,.28);border-radius:12px;background:rgba(255,255,255,.78);padding:13px;box-shadow:0 2px 8px rgba(40,30,20,.05)";
+    const header=document.createElement("div");
+    header.style.cssText="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:8px";
+    const title=document.createElement("strong");
+    title.textContent="업무 보고 "+(reports.length-index);
+    title.style.cssText="font-size:13px;color:#4b392b";
+    const status=document.createElement("span");
+    status.textContent=act.done|| (act.releaseAllowed?"최종 검수 완료 · 대표 승인 대기":"최종 승인 보류");
+    status.style.cssText="font-size:11px;padding:4px 8px;border-radius:20px;background:"+(act.done?"#e5f2e7":act.releaseAllowed?"#e8f0fb":"#fff0df")+";color:#4b392b";
+    header.append(title,status);
+    const meta=document.createElement("div");
+    meta.textContent="업무번호 "+String(act.taskId)+" · "+String(message.t||"접수 시각 미기록");
+    meta.style.cssText="font-size:10px;opacity:.65;margin-bottom:9px;overflow-wrap:anywhere";
+    const body=document.createElement("pre");
+    body.textContent=String(message.show||message.content||"보고 내용이 저장되지 않았습니다.");
+    body.style.cssText="white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;margin:0;padding:11px;border-radius:8px;background:rgba(245,241,233,.8);font:12px/1.65 inherit;color:#30291f";
+    card.append(header,meta,body);
+    const reasons=[...(Array.isArray(act.blockers)?act.blockers:[]),...(Array.isArray(act.gateNotes)?act.gateNotes:[])].filter(Boolean);
+    if(!act.done&&reasons.length){
+      const note=document.createElement("div");
+      note.style.cssText="margin-top:9px;padding:9px;border-left:3px solid #c58c45;background:#fff7e9;font-size:11px;line-height:1.55";
+      note.textContent="승인 보류 사유: "+reasons.join(" / ");
+      card.appendChild(note);
+    }
+    const actions=document.createElement("div");
+    actions.style.cssText="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px";
+    if(act.done){
+      const done=document.createElement("span");done.textContent=act.done;done.style.cssText="font-size:11px;color:#42634a";actions.appendChild(done);
+    }else{
+      const reject=document.createElement("button");
+      reject.type="button";reject.textContent="반려";reject.className="btn";
+      reject.onclick=()=>srvDecide(act,"REJECT");
+      actions.appendChild(reject);
+      if(act.releaseAllowed){
+        const approve=document.createElement("button");
+        approve.type="button";approve.textContent="대표 승인";approve.className="btn pri ready";
+        approve.onclick=()=>srvDecide(act,"APPROVE");
+        actions.appendChild(approve);
+      }else{
+        const pending=document.createElement("span");pending.textContent="검수 조건이 충족될 때까지 승인할 수 없습니다.";pending.style.cssText="align-self:center;font-size:11px;opacity:.7";actions.appendChild(pending);
+      }
+    }
+    card.appendChild(actions);
+    list.appendChild(card);
+  });
+}
 function drawChat(){
   if(st.robotChat){
     const h=st.hist.robot=st.hist.robot||[];
@@ -1720,6 +1786,7 @@ function drawChat(){
     msgs.appendChild(d);
   }
   h.forEach(m=>{bubble(m.role,m.show,m.t);if(m.act)approvalBar(m.act);});
+  if(e.id==="ceo1")renderCeoReportInbox();
   srvLiveDraw();
   inp.placeholder=e.name+"에게 지시하거나 메시지를 입력하세요…";$("#send").disabled=!!st.busy[e.id];
 }
