@@ -13,6 +13,12 @@
 
 ※ REST 30초 간격 조회는 거래소 실시간 WebSocket 스트리밍과 동일하지 않습니다. 화면에는 조회 시각을 함께 표시합니다. WebSocket은 별도 상시 연결 구조가 필요하므로 후속 단계입니다.
 
+## 운영 Worker 소스 대조 (배포 전 필수)
+
+현재 저장소의 Worker 파일 경로는 `worker/SW_AI_OFFICE_Worker_v51_22_completion_audit.js`이지만 파일 첫 줄의 버전 표기는 v51.26입니다. 별도 배포 점검 문서에는 과거 운영 배포 후보 v51.21이 기재되어 있습니다. 따라서 현재 Cloudflare에 실제 배포된 소스와 저장소 파일의 버전·수정 내용을 먼저 대조해야 합니다.
+
+**이 PR의 Worker 파일을 Cloudflare 운영 Worker에 통째로 덮어쓰지 마세요.** 실제 운영 소스에 사용자 편집분과 이후 수정사항이 있는지 확인한 뒤, 이 PR의 읽기 전용 시세 조회 부분만 안전하게 반영해야 합니다. 이 PR은 Cloudflare 운영 Worker를 배포하거나 변경하지 않습니다.
+
 ## Cloudflare 설정 (운영 배포 전 필수)
 
 Cloudflare 대시보드에서 기존 `ai-office-api` Worker에 아래 설정을 추가합니다.
