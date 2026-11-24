@@ -22,6 +22,17 @@ test('CEO report cards preserve the existing server approval and rejection actio
   assert.match(html, /승인 보류 사유:/);
 });
 
+test('server report inbox restores reports from D1 using representative-only read authentication', () => {
+  assert.match(html, /id="ceoReportRefresh"/);
+  assert.match(html, /id="ceoReportInboxSource"/);
+  assert.match(html, /async function srvRestoreCeoReportInbox\(\)/);
+  assert.match(html, /action:"get_recent_tasks",limit:30\},srvReadAuth\(\)/);
+  assert.ok(html.includes('action:"get_task_history",taskId:String(task.taskId||"")},srvReadAuth()'));
+  assert.ok(html.includes('function srvReadAuth(){return {"X-Representative-Authorization":"Bearer "+srvCfg.rep};}'));
+  assert.match(html, /서버 저장 · 업무번호/);
+  assert.match(html, /대표 전용 토큰 \(보고 조회·승인·반려에 사용\)/);
+});
+
 test('v11 preview inline scripts remain syntactically valid', () => {
   const inlineScripts = html.split('<script>').slice(1).map(part => part.split('</script>')[0]);
   inlineScripts.forEach(script => new Script(script));

@@ -81,12 +81,12 @@ class FakeD1 {
 
 const ACCESS = 'test-general-access-secret';
 const REPRESENTATIVE = 'test-representative-secret';
-async function call(body, { access = ACCESS, representative = REPRESENTATIVE, db = new FakeD1(), rawBody = null, extraHeaders = {} } = {}) {
+async function call(body, { access = ACCESS, representative = REPRESENTATIVE, representativeSecret = REPRESENTATIVE, db = new FakeD1(), rawBody = null, extraHeaders = {} } = {}) {
   const headers = { 'Content-Type': 'application/json', ...extraHeaders };
   if (access !== null) headers.Authorization = 'Bearer ' + access;
   if (representative !== null) headers['X-Representative-Authorization'] = 'Bearer ' + representative;
   const request = new Request('https://worker.test/', { method: 'POST', headers, body: rawBody === null ? JSON.stringify(body) : rawBody });
-  const env = { OFFICE_ACCESS_TOKEN: ACCESS, REPRESENTATIVE_ACCESS_TOKEN: REPRESENTATIVE, DB: db };
+  const env = { OFFICE_ACCESS_TOKEN: ACCESS, REPRESENTATIVE_ACCESS_TOKEN: representativeSecret, DB: db };
   const response = await worker.fetch(request, env);
   return { status: response.status, body: await response.json(), db };
 }
@@ -99,6 +99,20 @@ test('rejects missing and incorrect general API credentials', async () => {
 test('requires the separate representative credential', async () => {
   assert.equal((await call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' }, { representative: null })).status, 401);
   assert.equal((await call({ action: 'representative_decision', taskId: 'test-task-001', decision: 'APPROVE' }, { representative: 'wrong' })).status, 401);
+});
+
+test('requires representative credentials for recent-task, task-history, and decision reads', async () => {
+  const reads = [
+    { action: 'get_recent_tasks', limit: 20 },
+    { action: 'get_task_history', taskId: 'test-task-001' },
+    { action: 'get_representative_decision', taskId: 'test-task-001' }
+  ];
+  for (const payload of reads) {
+    assert.equal((await call(payload, { representative: null })).status, 401, payload.action + ' must reject missing representative credentials');
+    assert.equal((await call(payload, { representative: 'wrong' })).status, 401, payload.action + ' must reject incorrect representative credentials');
+    assert.equal((await call(payload)).status, 200, payload.action + ' must remain available to the representative');
+    assert.equal((await call(payload, { representativeSecret: '' })).status, 503, payload.action + ' must fail closed when the secret is not configured');
+  }
 });
 
 test('requires a reason for rejection and a completed task', async () => {

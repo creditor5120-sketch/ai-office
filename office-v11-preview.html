@@ -247,9 +247,12 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
     <div class="cb" id="ceoNoticeBox" style="display:none;text-align:center;">
       <div class="sub2" style="font-size:13px;line-height:1.5;">👑 <b>단테 대표님 전용 보고 수신함</b>입니다.<br/>직원들의 업무 보고가 이곳으로 모입니다. 업무 지시는 본부장 <b>알렉스</b>나 각 담당자에게 전달해 주세요.</div>
       <section id="ceoReportInbox" aria-label="대표 업무 보고 목록" style="margin:16px auto 0;max-width:760px;text-align:left;">
-        <div id="ceoReportInboxHeading" style="font-size:14px;font-weight:700;margin:0 0 10px;">최근 업무 보고</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;">
+          <div id="ceoReportInboxHeading" style="font-size:14px;font-weight:700;">최근 업무 보고</div>
+          <button type="button" class="btn" id="ceoReportRefresh" style="padding:6px 10px;font-size:11px;">서버 보고 새로고침</button>
+        </div>
         <div id="ceoReportInboxList" aria-live="polite" style="display:grid;gap:10px;"></div>
-        <div style="margin-top:8px;font-size:11px;opacity:.65;">이 브라우저에 저장된 보고를 표시합니다. 대표 결정은 서버에 기록됩니다.</div>
+        <div id="ceoReportInboxSource" style="margin-top:8px;font-size:11px;opacity:.65;">서버에 저장된 업무 보고를 불러옵니다. 대표 전용 인증이 필요합니다.</div>
       </section>
     </div>
   </section>
@@ -304,9 +307,9 @@ body[data-view=chat] .main{grid-template-columns:250px 1fr}
     <label style="flex-direction:row;align-items:center;gap:8px;"><input type="checkbox" id="srvOn" style="width:auto;padding:0;"> 업무 지시(알렉스)를 서버(Worker)로 처리</label>
     <label id="srvUrlRow">Worker 주소<input type="text" id="srvUrl" placeholder="https://...workers.dev/" /></label>
     <label id="srvTokRow">접근 토큰 (브라우저 로컬 저장)<input type="password" id="srvToken" /></label>
-    <label id="srvRepRow">대표 승인 전용 토큰 (승인·반려할 때 사용)<input type="password" id="srvRep" /></label>
+    <label id="srvRepRow">대표 전용 토큰 (보고 조회·승인·반려에 사용)<input type="password" id="srvRep" /></label>
     <div class="sub2" style="font-size:12px;line-height:1.45;">
-      • 서버 모드: 알렉스에게 내리는 업무 지시는 Worker가 처리하고 이력이 서버에 저장됩니다. 직원 1:1 대화는 위 API Key로 계속 처리합니다.<br/>
+      • 서버 모드: 알렉스 업무 지시와 결과 이력은 Worker에 저장됩니다. 대표 전용 토큰은 다른 기기에서 보고·승인 이력을 조회할 때도 필요합니다. 직원 1:1 대화는 위 API Key로 계속 처리합니다.<br/>
       • Claude 환경(<code>claude.ai</code>)에서는 내장 샘플 API를 우선 사용합니다.<br/>
       • 외부 브라우저에서는 Gemini/OpenAI 키를 넣으면 실제 LLM이 응답하며, 키가 없어도 내장 업무비서 엔진이 실무형 초안을 생성합니다.
     </div>
@@ -1755,6 +1758,68 @@ function renderCeoReportInbox(){
     list.appendChild(card);
   });
 }
+async function srvRestoreCeoReportInbox(){
+  const source=$("#ceoReportInboxSource"),refresh=$("#ceoReportRefresh");
+  if(!srvCfg.url||!srvCfg.token||!srvCfg.rep){
+    if(source)source.textContent="기기 간 보고 동기화를 사용하려면 AI 연결 설정에 Worker 주소·접근 토큰·대표 전용 토큰을 저장해 주세요. 현재 표시되는 보고는 이 브라우저에 저장된 기록입니다.";
+    return;
+  }
+  if(refresh)refresh.disabled=true;
+  if(source)source.textContent="서버에 저장된 최근 업무와 최종 보고를 불러오는 중입니다…";
+  try{
+    const recent=await srvPost({action:"get_recent_tasks",limit:30},srvReadAuth());
+    if(recent.status!==200)throw new Error(recent.data.error||("최근 업무 조회 실패 ("+recent.status+")"));
+    const tasks=Array.isArray(recent.data.tasks)?recent.data.tasks:[];
+    const histories=[];
+    let cursor=0;
+    const worker=async()=>{
+      while(cursor<tasks.length){
+        const task=tasks[cursor++];
+        try{
+          const detail=await srvPost({action:"get_task_history",taskId:String(task.taskId||"")},srvReadAuth());
+          if(detail.status!==200||!detail.data||!detail.data.result)return;
+          const result=detail.data.result;
+          if(typeof result.reply!=="string"||!result.reply.trim())return;
+          const gate=(result.workflow&&result.workflow.reviewGate)||{};
+          const deliverables=Array.isArray(result.deliverables)?result.deliverables:[];
+          const reviews=Array.isArray(result.finalReviewResults)?result.finalReviewResults:[];
+          const reviewById=new Map(reviews.map(item=>[item.id,item]));
+          const incomplete=deliverables.filter(item=>item.status!=="completed");
+          const unreviewed=deliverables.filter(item=>!reviewById.has(item.id));
+          const notApproved=deliverables.filter(item=>{const review=reviewById.get(item.id);return review&&!["승인","approved","pass","passed"].includes(String(review.judgment||"").trim().toLowerCase());});
+          const releaseAllowed=gate.finalReleaseAllowed===true&&deliverables.length>0&&incomplete.length===0&&unreviewed.length===0&&notApproved.length===0;
+          const blockers=[];
+          if(gate.finalReleaseAllowed!==true)blockers.push("서버 최종 검수 게이트가 승인 가능으로 판정하지 않았습니다.");
+          if(incomplete.length)blockers.push("완료되지 않은 결과물: "+incomplete.map(item=>(item.name||item.id||"담당자")+" ("+(item.status||"상태 미기재")+")").join(", "));
+          if(unreviewed.length)blockers.push("최종 검수가 누락된 결과물: "+unreviewed.map(item=>item.name||item.id||"담당자").join(", "));
+          if(notApproved.length)blockers.push("최종 검수 승인 상태가 아닌 결과물: "+notApproved.map(item=>{const review=reviewById.get(item.id);return (item.name||item.id||"담당자")+" ("+(review.judgment||"판정 미기재")+")";}).join(", "));
+          const gateNotes=[gate.reason,gate.summary,gate.finalReleaseReason,gate.blockingReason,gate.blockingReasons,gate.verificationNeeded,gate.requiredChecks,gate.pendingChecks,gate.unresolvedIssues].flatMap(value=>Array.isArray(value)?value:[value]).filter(value=>typeof value==="string"&&value.trim());
+          const taskInfo=detail.data.task||task;
+          const reportText="📋 단테 대표님 보고 (서버 저장 · 업무번호 "+taskInfo.taskId+")\n직원별 결과물은 각 직원 카드를 눌러 확인하세요.\n\n"+result.reply;
+          histories.push({
+            role:"assistant",content:reportText,show:reportText,
+            t:taskInfo.completedAt||taskInfo.updatedAt||taskInfo.createdAt||"",
+            act:{taskId:taskInfo.taskId,releaseAllowed,blockers,gateNotes}
+          });
+        }catch(error){/* 개별 업무 조회 실패는 다른 보고 복원을 막지 않습니다. */}
+      }
+    };
+    await Promise.all(Array.from({length:Math.min(4,tasks.length)},()=>worker()));
+    const byTask=new Map();
+    (Array.isArray(st.hist.ceo1)?st.hist.ceo1:[]).filter(message=>message&&message.act&&message.act.taskId).forEach(message=>byTask.set(String(message.act.taskId),message));
+    histories.forEach(message=>byTask.set(String(message.act.taskId),message));
+    st.hist.ceo1=Array.from(byTask.values()).sort((a,b)=>Date.parse(a.t||0)-Date.parse(b.t||0));
+    srvSaveHistory();
+    await srvRestoreDecisionHistory();
+    if(st.sel==="ceo1")drawChat();
+    if(source)source.textContent="서버 업무 "+tasks.length+"건 확인 · 최종 보고 "+histories.length+"건 복원 · 다른 기기에서도 동일한 서버 기록을 조회합니다.";
+  }catch(error){
+    if(source)source.textContent="서버 보고를 불러오지 못했습니다: "+String(error&&error.message||error)+" · 브라우저에 저장된 기존 보고는 유지됩니다.";
+  }finally{
+    if(refresh)refresh.disabled=false;
+  }
+}
+$("#ceoReportRefresh").onclick=()=>srvRestoreCeoReportInbox();
 function drawChat(){
   if(st.robotChat){
     const h=st.hist.robot=st.hist.robot||[];
@@ -2154,6 +2219,7 @@ async function srvPost(payload,extra){
   let data=null;try{data=await res.json();}catch(e){}
   return {status:res.status,data:data||{}};
 }
+function srvReadAuth(){return {"X-Representative-Authorization":"Bearer "+srvCfg.rep};}
 let srvLastStage="";
 const srvLive={on:false,start:0,stage:"",calls:0,fails:0,lastEvt:0,lastResp:0,note:""};
 function srvFmt(ms){const x=Math.max(0,Math.round(ms/1000));return x>=60?Math.floor(x/60)+"분 "+(x%60)+"초":x+"초";}
@@ -2173,8 +2239,9 @@ function srvLiveDraw(){
   d.textContent=srvLiveText();
 }
 async function srvApplyProgress(taskId){
+  if(!srvCfg.rep)return;
   try{
-    const r=await srvPost({action:"get_task_history",taskId:taskId});
+    const r=await srvPost({action:"get_task_history",taskId:taskId},srvReadAuth());
     if(r.status!==200||!r.data.events||!r.data.events.length)return;
     const evs=r.data.events;
     srvLive.calls=evs.filter(x=>x.eventType==="AI_CALL_COMPLETED").length;
@@ -2295,14 +2362,14 @@ async function srvDecide(act,dec){
   drawChat();msgs.scrollTop=msgs.scrollHeight;
 }
 async function srvRestoreDecisionHistory(){
-  if(!srvCfg.token)return;
+  if(!srvCfg.token||!srvCfg.rep)return;
   const reports=st.hist.ceo1||[];
   let changed=false;
   for(const message of reports){
     const act=message&&message.act;
     if(!act||!act.taskId||act.done)continue;
     try{
-      const r=await srvPost({action:"get_representative_decision",taskId:act.taskId});
+      const r=await srvPost({action:"get_representative_decision",taskId:act.taskId},srvReadAuth());
       const d=r.data||{};
       if(r.status===200&&d.decision){
         act.done="✔ "+(d.decisionLabel||"대표 결정")+" 기록 완료 · "+(d.recordedAt?new Date(d.recordedAt).toLocaleString("ko-KR"):"")+(d.duplicate?" (이미 기록된 결정)":"");
@@ -2444,7 +2511,7 @@ function boot3dSafe(){
 boot3dSafe();
 window.addEventListener("load",function(){setTimeout(boot3dSafe,250);});
 try{if(srvCfg.on&&srvCfg.url&&srvCfg.token&&srvPendingGet())setTimeout(()=>runDirectiveServer("이어서",null,true),1500);}catch(e){}
-try{if(srvCfg.on&&srvCfg.url&&srvCfg.token)setTimeout(()=>srvRestoreDecisionHistory(),3000);}catch(e){}
+try{if(srvCfg.on&&srvCfg.url&&srvCfg.token&&srvCfg.rep)setTimeout(()=>srvRestoreCeoReportInbox(),3000);}catch(e){}
 try{if(window.claude&&claude.use)claude.use("sample").then(s=>{sampleFn=s;updateEngineBadge();}).catch(()=>{});}catch(e){}
 </script>
 <div id="safariDiag"><button type="button" class="x" onclick="this.parentElement.style.display='none'">닫기</button><b>Safari 진단 로그</b><div id="safariDiagBody"></div></div>
