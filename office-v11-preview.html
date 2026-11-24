@@ -2379,6 +2379,7 @@ window.addEventListener("load",function(){setTimeout(boot3dSafe,250);});
 try{if(srvCfg.on&&srvCfg.url&&srvCfg.token&&srvPendingGet())setTimeout(()=>runDirectiveServer("이어서",null,true),1500);}catch(e){}
 try{if(srvCfg.on&&srvCfg.url&&srvCfg.token)setTimeout(()=>srvRestoreDecisionHistory(),3000);}catch(e){}
 try{if(window.claude&&claude.use)claude.use("sample").then(s=>{sampleFn=s;updateEngineBadge();}).catch(()=>{});}catch(e){}
+window.SWMarketTickerAuth={getQuote:async()=>{if(!srvCfg.on||!srvCfg.token)return null;return await srvPost({action:"get_market_quote",code:"129890"});}};
 </script>
 <div id="safariDiag"><button type="button" class="x" onclick="this.parentElement.style.display='none'">닫기</button><b>Safari 진단 로그</b><div id="safariDiagBody"></div></div>
 <script>
@@ -2438,6 +2439,37 @@ try{if(window.claude&&claude.use)claude.use("sample").then(s=>{sampleFn=s;update
     return true;
   }
   window.SWMarketTicker={setItems};
+  async function refreshAppkoQuote(){
+    const auth=window.SWMarketTickerAuth;
+    if(!auth||typeof auth.getQuote!=="function"){
+      if(status)status.textContent="서버 연동 설정 대기";
+      return;
+    }
+    try{
+      const response=await auth.getQuote();
+      if(!response)return;
+      const data=response.data||{};
+      if(response.status!==200||!Number.isFinite(Number(data.price))){
+        if(status)status.textContent=response.status===503?"한국투자증권 API 설정 필요":"시세 조회 실패 · 재시도 대기";
+        return;
+      }
+      const signMap={"1":"▲","2":"▼","3":"","4":"▲","5":"▼","6":"▲","7":"▼"};
+      const sign=signMap[String(data.changeSign)]??"";
+      const changeText=String(data.changeSign)==="3"?"보합":sign+Math.abs(Number(data.change)).toLocaleString("ko-KR")+"원 ("+sign+Math.abs(Number(data.changeRate)).toFixed(2)+"%)";
+      const items=[
+        {label:"앱코 129890",text:Number(data.price).toLocaleString("ko-KR")+"원 · "+changeText+" · 거래량 "+Number(data.volume).toLocaleString("ko-KR")+"주"},
+        {label:"코스피·코스닥",text:"지수 공급원 연결 대기 중"},
+        {label:"주요 뉴스",text:"뉴스 공급원 연결 대기 중"},
+        {label:"공시",text:"DART 공급원 연결 대기 중"}
+      ];
+      const updated=new Date(data.updatedAt||Date.now()).toLocaleTimeString("ko-KR");
+      setItems(items,{status:"한국투자증권 조회 · "+updated});
+    }catch(error){
+      if(status)status.textContent="시세 서버 연결 오류 · 재시도 대기";
+    }
+  }
+  refreshAppkoQuote();
+  setInterval(refreshAppkoQuote,30000);
   window.dispatchEvent(new CustomEvent("sw-market-ticker-ready"));
 })();
 </script>
