@@ -109,6 +109,10 @@ try {
   }
   const alexCardName = (await page.locator('#staffStrip .staffCard[data-emp="COO"] .staffMeta b').innerText()).trim();
   if (alexCardName !== '알렉스') throw new Error('본부장 카드 이름 오류: expected 알렉스, found ' + alexCardName);
+  // Regression test: Ensure routing contract is strictly enforced
+  if (routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
+    throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
+  }
   await page.locator('#staffStrip .staffCard[data-emp="LE-01"]').click();
   await page.locator('#close').click();
   await page.locator('#taskInput').fill('직원 직접 업무 라우팅 회귀 테스트');
