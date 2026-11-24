@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card rendering and detail view synchronization.
+- 요약: Fix the 3D office floor audit logic to correctly reflect the 31 desk slots.
 
 ## 판단 근거
 
-The 3D office staff cards and detail view were not correctly reflecting the active status of the staff members due to a missing call to refresh the staff cards after the initial setup. This patch ensures that the staff cards and detail view are correctly populated and synchronized with the employee states upon initialization.
+The smoke test failed because the `officeAudit.deskCount` expected 31, but the implementation was not explicitly verifying the count against the `officeDeskSlots` array. This patch ensures the audit function correctly reports the number of desks based on the actual populated slots, maintaining consistency with the 3D layout.
 
