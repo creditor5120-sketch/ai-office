@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the regression test to correctly identify the 3D office floor count and desk count in the single-floor layout.
+- 요약: Fix the 3D office initialization error by ensuring the loading panel is correctly hidden after all assets are ready.
 
 ## 판단 근거
 
-The previous smoke test expected a multi-floor structure (floorCount: 2) and a different desk count. The current implementation is a single-floor office with 31 desk slots. Updating the test to match the actual implementation ensures the smoke test passes while maintaining the integrity of the 3D office layout.
+The smoke test reported a 3D startup timeout because the loading panel was not being hidden in all scenarios, causing the test to wait indefinitely. The patch ensures the loading panel is explicitly hidden after the 3D scene is fully initialized and the staff cards are rendered.
 
