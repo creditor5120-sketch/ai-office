@@ -415,11 +415,11 @@ const characterNames={
 };
 for(const p of directory){
   const displayPerson={...p,jobTitle:p.position,name:characterNames[p.id]||p.name};
-  const slotIdx=avatars.length-1;
+  const slotIdx=avatars.length-2;
   const [x,z]=officeDeskSlots[slotIdx]||[0,0];
   makeAvatar(displayPerson,avatars.length,x*.8,(z+1.18)*.8)
 }
-// 단층 사무실에 실제 직원 아바타를 직접 배치한다. 복제 캐릭터와 층 전환은 사용하지 않는다.
+// 단층 사무실에 실제 직원 아바타를 직접 배치한다.
 avatarRoot.scale.set(.8,1,.8);
 avatars.forEach((avatar,index)=>{
  let x,z;
