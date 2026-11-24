@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test failed because the loading panel was not being hidden after initialization, and the 3D scene was not being correctly initialized. This patch ensures the loading panel is hidden and the 3D scene is properly initialized.
+The smoke test failed because the loading panel was not being hidden after the 3D scene was initialized, and the error handling was not robust enough to handle the initialization process. The patch ensures the loading panel is hidden and the initialization is correctly handled.
 
