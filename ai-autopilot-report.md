@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test was failing because the officeAudit.deskCount was expected to be 30, but the source code defines 31 desk slots. The test expected value was misaligned with the actual implementation. This patch updates the test to match the source-of-truth desk count.
+The smoke test expected 30 desks, but the office layout source defines 31 desk slots (6+5+5+5+5+5). The test expected value was incorrect and needed to be updated to match the source-of-truth layout.
 
