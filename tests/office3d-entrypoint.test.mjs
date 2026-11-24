@@ -55,9 +55,9 @@ test('GitHub Pages root opens the integrated 3D office', async () => {
 test('representative approval gate blocks incomplete or unreviewed work', async () => {
   const office = await readFile(new URL('../office3d.html', import.meta.url), 'utf8');
   const start = office.indexOf('function evaluateRepresentativeRelease(record){');
-  const end = office.indexOf('\\nfunction renderRepresentativeDecision', start);
+  const end = office.indexOf('\nfunction renderRepresentativeDecision', start);
   assert.ok(start >= 0 && end > start, 'approval gate function must be present and extractable');
-  const evaluate = new Script(office.slice(start, end) + '\\nevaluateRepresentativeRelease').runInNewContext();
+  const evaluate = new Script(office.slice(start, end) + '\nevaluateRepresentativeRelease').runInNewContext();
 
   const approvedRecord = {
     taskId: 'approval-gate-test',
