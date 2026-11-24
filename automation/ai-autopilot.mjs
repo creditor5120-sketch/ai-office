@@ -136,7 +136,7 @@ let guardRejection = "";
 const patchLines = patch.split("\n");
 const weakensDeskCountInvariant = patchLines.some(line =>
   (line.startsWith("+") && /officeAudit\.deskCount\s*!==\s*(?!31\b)\d+/.test(line)) ||
-  (line.startsWith("-") && /officeAudit\.deskCount\s*!==\s*31\\b/.test(line))
+  (line.startsWith("-") && /officeAudit\.deskCount\s*!==\s*31\b/.test(line))
 );
 if (weakensDeskCountInvariant) {
   guardRejection = "자동 안전검증에서 수정안을 거부했습니다: 검증된 31개 책상 기준을 변경하거나 제거하려는 수정안입니다.";
