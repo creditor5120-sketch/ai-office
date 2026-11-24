@@ -226,6 +226,9 @@ try {
 
   const detailCount = await page.locator('#detailEmployeeList .detailPerson').count();
   if (detailCount < 30) throw new Error(`Expected at least 30 employees in detail view, found ${detailCount}`);
+  // COO 선택도 프로필 모달을 열므로 사무실 화면으로 돌아가기 전에 닫는다.
+  if (await page.locator('#modal').isVisible()) await page.locator('#close').click();
+  await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
 
   await page.locator('#detailToggle').click();
   await page.locator('#appMain').waitFor({ state: 'visible' });
