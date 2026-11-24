@@ -70,6 +70,17 @@ try {
   let representativeHeaderSeen = false;
   await page.route('https://ai-office-api.creditor5120.workers.dev/**', async route => {
     const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': 'http://127.0.0.1:4174',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Representative-Authorization'
+        }
+      });
+      return;
+    }
     const payload = request.postDataJSON();
     if (request.headers()['x-representative-authorization'] !== 'Bearer smoke-representative-token') {
       throw new Error('서버 조회 요청에 대표 전용 인증 헤더가 없습니다: ' + payload.action);
