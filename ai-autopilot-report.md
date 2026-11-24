@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test expected 30 desks, but the office3d.html source defines 31 desk slots. Updating the test to match the source of truth ensures the regression test is accurate.
+The smoke test expected 30 desks, but the office3d.html source defines 31 desk slots (6+5+5+5+5+5). The test expected value was incorrect and needed to be updated to match the source-of-truth layout.
 
