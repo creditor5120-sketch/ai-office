@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test reported a 3D initialization failure because the loading panel was not being hidden in all scenarios. By ensuring the loading panel is hidden after the scene is rendered and the controls are initialized, we ensure a smooth user experience and pass the smoke test.
+The smoke test reported a 3D initialization failure because the loading panel was not being hidden in all cases, or the initialization logic was failing to signal completion. By explicitly ensuring the loading panel is hidden at the end of the script, we ensure a clean UI state for the user.
 
