@@ -405,17 +405,7 @@ function makeAvatar(person,index,x,z){
 }
 const dante={id:'CEO',name:'단테',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
 const staff=[dante,...directory];
-const zoneSlots={
-'본부장실':[[18,-10]],
-'경영관리':[[-27,-14],[-25.8,-14],[-24.6,-14],[-27,-7],[-25.8,-7]],
-'법무':[[-23,-14],[-21.8,-14],[-20.6,-14],[-23,-7],[-21.8,-7]],
-'IR':[[-19,-14],[-17.8,-14],[-16.6,-14],[-19,-7],[-17.8,-7],[-16.6,-7]],
-'총무':[[-15,-14],[-13.8,-14],[-12.6,-14],[-15,-7],[-13.8,-7]],
-'전략기획':[[-11,-14],[-9.8,-14],[-8.6,-14],[-11,-7],[-9.8,-7]],
-'기술·IT':[[2,4],[6,4],[10,4],[2,12],[6,12]]
-};
-const used={};function nextSlot(dept){const a=zoneSlots[dept]||[[0,0]];const n=used[dept]||0;used[dept]=n+1;return a[n%a.length]}
-makeAvatar(dante,0,-20,9.7);
+makeAvatar(dante,0,0,-.15);
 const characterNames={
  'COO':'알렉스',
  'MA-01':'데니스','MA-02':'카리나','MA-03':'이던','MA-04':'클로이','MA-05':'루카스',
@@ -427,10 +417,9 @@ const characterNames={
 };
 for(const p of directory){
   const displayPerson={...p,jobTitle:p.name,name:characterNames[p.id]||p.name};
-  if(p.id==='COO'){makeAvatar(displayPerson,1,18,-11.7);continue}
-  const [x,z]=nextSlot(p.department);
-  const seatOffset=p.department==='기술·IT'?1.05:1.02;
-  makeAvatar(displayPerson,avatars.length,x,z+seatOffset)
+  const slotIdx=avatars.length-1;
+  const [x,z]=officeDeskSlots[slotIdx]||[0,0];
+  makeAvatar(displayPerson,avatars.length,x*.8,(z+1.18)*.8)
 }
 // 단층 사무실에 실제 직원 아바타를 직접 배치한다. 복제 캐릭터와 층 전환은 사용하지 않는다.
 avatarRoot.scale.set(.8,1,.8);
