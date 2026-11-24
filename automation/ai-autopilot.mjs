@@ -130,6 +130,21 @@ if (typeof result.patch !== "string" || typeof result.summary !== "string") {
   throw new Error("Gemini response is missing required fields.");
 }
 let patch = result.patch.trim();
+let guardRejection = "";
+// Protect the verified 31-desk layout invariant from AI-generated test weakening.
+// A proposed patch must never replace the expected value 31 with a guessed count.
+const patchLines = patch.split("\n");
+const weakensDeskCountInvariant = patchLines.some(line =>
+  (line.startsWith("+") && /officeAudit\.deskCount\s*!==\s*(?!31\\b)\\d+/.test(line)) ||
+  (line.startsWith("-") && /officeAudit\.deskCount\s*!==\s*31\\b/.test(line))
+);
+if (weakensDeskCountInvariant) {
+  guardRejection = "자동 안전검증에서 수정안을 거부했습니다: 검증된 31개 책상 기준을 변경하거나 제거하려는 수정안입니다.";
+  patch = "";
+  result.summary = "검증된 책상 수(31개) 회귀 기준을 변경하려는 수정안을 자동 거부했습니다.";
+  result.rationale = (result.rationale || "") + "\n\n" + guardRejection;
+  console.log(guardRejection);
+}
 const rejectedPaths = [];
 console.log("Gemini proposal: " + result.summary);
 console.log("Gemini rationale: " + (result.rationale || "not provided"));
