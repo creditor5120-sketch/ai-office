@@ -27,7 +27,7 @@ test('server report inbox restores reports from D1 using representative-only rea
   assert.match(html, /id="ceoReportInboxSource"/);
   assert.match(html, /async function srvRestoreCeoReportInbox\(\)/);
   assert.match(html, /action:"get_recent_tasks",limit:30\},srvReadAuth\(\)/);
-  assert.match(html, /action:"get_task_history",taskId:String\(task\.taskId\|\|"\")\},srvReadAuth\(\)/);
+  assert.ok(html.includes('action:"get_task_history",taskId:String(task.taskId||"")},srvReadAuth()'));
   assert.match(html, /function srvReadAuth\(\)\{return \{"X-Representative-Authorization":"Bearer "\+srvCfg\.rep\}\}/);
   assert.match(html, /서버 저장 · 업무번호/);
   assert.match(html, /대표 전용 토큰 \(보고 조회·승인·반려에 사용\)/);
