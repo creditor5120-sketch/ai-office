@@ -61,9 +61,9 @@ try {
   await page.waitForTimeout(500);
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-single-floor.png' });
   const staffCount = await page.locator('#staffStrip .staffCard').count();
-  if (staffCount < 30) throw new Error(`Expected at least 30 staff cards, found ${staffCount}`);
+  if (staffCount < 31) throw new Error(`Expected at least 31 staff cards, found ${staffCount}`);
   const visibleCount = Number((await page.locator('#activeCount').innerText()).trim());
-  if (visibleCount < 30) throw new Error(`Expected at least 30 rendered staff, found ${visibleCount}`);
+  if (visibleCount < 31) throw new Error(`Expected at least 31 rendered staff, found ${visibleCount}`);
 
   await page.locator('#staffStrip .staffCard').first().click();
   const selectedName = (await page.locator('#chatName').innerText()).trim();
@@ -228,7 +228,7 @@ try {
   if (!refreshedChat.includes('서버 대표 승인')) throw new Error('Server representative decision was not reloaded');
 
   const detailCount = await page.locator('#detailEmployeeList .detailPerson').count();
-  if (detailCount < 30) throw new Error(`Expected at least 30 employees in detail view, found ${detailCount}`);
+  if (detailCount < 31) throw new Error(`Expected at least 31 employees in detail view, found ${detailCount}`);
   // COO 선택도 프로필 모달을 열므로 사무실 화면으로 돌아가기 전에 닫는다.
   if (await page.locator('#modal').isVisible()) await page.locator('#close').click();
   await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });

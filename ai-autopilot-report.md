@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test expected 30 desks, but the office layout source defines 31 desk slots (6+5+5+5+5+5). The test expected value was incorrect and needed to be updated to match the source-of-truth layout.
+The smoke test expected 30 desks, but the office3d.html source defines 31 desk slots (6+5+5+5+5+5). The test was failing because it incorrectly asserted a count of 30. Updating the test to match the source-of-truth layout ensures the smoke test passes while maintaining the integrity of the 3D office structure.
 
