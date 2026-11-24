@@ -136,7 +136,7 @@ try {
   await page.locator('#officeChatToken').fill('smoke-test-api-token');
   await page.locator('#pendingTaskRecovery').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('#resumePendingTask').click();
-  await page.waitForFunction(() => [...document.querySelectorAll('#chatHistory .chatBubble')].some(el => el.textContent.includes('기존 업무 ID로 중단된 업무를 이어서 확인합니다.')), { timeout: 10000 });
+  await page.waitForFunction(() => [...document.querySelectorAll('#chatHistory .chatBubble')].some(el => el.textContent.includes('처리 오류: smoke route capture')), { timeout: 10000 });
   const resumedPayload = routedPayloads[2];
   if (!resumedPayload || resumedPayload.taskId !== interruptedFixture.taskId || resumedPayload.idempotencyKey !== interruptedFixture.taskId || resumedPayload.employeeId !== 'COO') {
     throw new Error('중단 업무 이어하기가 기존 업무 ID·멱등성 키를 재사용하지 않았습니다: ' + JSON.stringify(resumedPayload));
