@@ -1,0 +1,2355 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SW AI Office">
+<meta name="theme-color" content="#8a5b3a">
+<link id="appleIcon" rel="apple-touch-icon" sizes="180x180">
+<link id="appManifest" rel="manifest">
+<title>SW AI Office</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Quicksand:wght@500;700&display=swap">
+<style>
+:root{--hd:#8a5b3a;--hd2:#5b3a22;--bg:#efe7d4;--stage:#e2d7bd;--panel:#fbf4e3;--card:#fbf1da;--line:#cdb98f;--ink:#3a2c1c;--mute:#8a7a62;--ai:#fdf8ea;--me:#efdcb8;--ok:#2f9e44;--warn:#e08a00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1814;--stage:#2a241c;--panel:#272019;--card:#2e261d;--line:#4a3e2e;--ink:#efe3cc;--mute:#a8967a;--ai:#2f271e;--me:#4a3a22}}
+:root[data-theme="dark"]{--bg:#1c1814;--stage:#2a241c;--panel:#272019;--card:#2e261d;--line:#4a3e2e;--ink:#efe3cc;--mute:#a8967a;--ai:#2f271e;--me:#4a3a22}
+*{box-sizing:border-box}
+html{height:100%;height:100dvh;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;height:100dvh;margin:0;background:var(--bg);color:var(--ink);font-family:"Quicksand","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;font-weight:500;overflow:hidden}
+.px{font-family:"Silkscreen","Courier New",monospace;letter-spacing:.5px}
+.app{height:100%;display:flex;flex-direction:column;min-height:0}
+header{background:var(--hd);color:#fff;display:flex;align-items:center;gap:14px;padding:10px 14px;flex:none}
+.logo{background:var(--hd2);border:2px solid #a77a55;padding:10px 14px;font-size:13px}
+.ttl{display:flex;flex-direction:column;line-height:1.2}.ttl b{font-size:15px}.ttl span{font-size:12px;opacity:.85}
+.sp{flex:1}
+.hi{display:flex;align-items:center;gap:6px;font-size:14px;opacity:.95}
+.ib{background:none;border:0;color:#fff;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.ib:hover{background:rgba(255,255,255,.15)}
+.lo{border:1px solid #fff;background:#fff;color:var(--hd2);padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+.main{flex:1;min-height:0;display:grid;gap:14px;padding:14px;grid-template-columns:1fr 400px;grid-template-rows:minmax(0,1fr) auto}
+#stage{grid-column:1;grid-row:1;position:relative;overflow:hidden;background:var(--stage);border:2px solid var(--line)}
+#gl{position:absolute;inset:0}
+#gl canvas{display:block;touch-action:none;cursor:grab}
+#chat{grid-column:2;grid-row:1}
+#strip{grid-column:1/-1;grid-row:2;display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
+#side{display:none;flex-direction:column;gap:10px;overflow-y:auto}
+body[data-view=chat] .main{grid-template-columns:300px 1fr;grid-template-rows:minmax(0,1fr)}
+body[data-view=chat] #stage,body[data-view=chat] #strip{display:none}
+body[data-view=chat] #side{display:flex;grid-column:1;grid-row:1}
+body[data-view=chat] #chat{grid-column:2;grid-row:1}
+.pix{display:inline-block;font-size:44px;width:1em;height:1em;position:relative;background:linear-gradient(var(--h) 0 34%,var(--s) 34% 72%,var(--t) 72%);image-rendering:pixelated}
+.pix.gl::after{content:"";position:absolute;left:.14em;top:.4em;width:.62em;height:.18em;border:.035em solid #2b2723;background:linear-gradient(90deg,transparent 45%,#2b2723 45% 55%,transparent 55%)}
+.pix::before{content:"";position:absolute;left:.2em;top:.46em;width:.14em;height:.12em;background:#1b2340;box-shadow:.4em 0 0 #1b2340}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.nl{position:absolute;left:0;top:0;background:#2a2f3f;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:auto;cursor:pointer;will-change:transform}
+.nl.on{background:var(--hd);outline:2px solid #f0b43c;z-index:3}
+.rbt-bubble{position:absolute;left:0;top:0;background:#ffffff;color:#1e293b;border:2px solid #38bdf8;border-radius:16px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:auto;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.22);will-change:transform;z-index:4}
+.rbt-bubble::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border-width:6px 6px 0 6px;border-style:solid;border-color:#38bdf8 transparent transparent transparent}
+.fl{position:absolute;left:0;top:0;background:#fff;color:#3a2c1c;border-radius:99px;padding:3px 14px;font-size:12px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap;display:none;will-change:transform}
+.hint{position:absolute;left:12px;top:12px;background:var(--panel);border:2px solid var(--line);padding:6px 12px;font-size:13px;display:flex;gap:8px;align-items:center;z-index:6;pointer-events:none}
+.hint i{width:11px;height:11px;border-radius:50%;background:var(--ok);display:inline-block}
+.tips{position:absolute;left:12px;bottom:12px;display:flex;gap:8px;z-index:6;flex-wrap:wrap;pointer-events:none;max-width:60%}
+.tip{background:var(--panel);border:2px solid var(--line);padding:7px 11px;font-size:12px}
+.tg{position:absolute;right:12px;bottom:12px;display:flex;gap:10px;z-index:6}
+.seg{display:flex;border:2px solid var(--line);background:var(--panel)}
+.seg button{border:0;background:none;color:var(--ink);padding:12px 16px;font:inherit;font-size:15px;cursor:pointer}
+.seg button.on{background:var(--hd);color:#fff}
+.joy{position:absolute;left:14px;bottom:14px;z-index:7;width:108px;height:108px;border-radius:50%;border:2px solid var(--line);background:var(--panel);opacity:.88;display:none;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.joy.show{display:grid}
+.joy-knob{width:46px;height:46px;border-radius:50%;background:var(--hd);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:none;will-change:transform}
+#flow{position:fixed;inset:0;pointer-events:none;z-index:40;display:none}
+#flow svg{position:absolute;inset:0;width:100%;height:100%}
+#fp{fill:none;stroke:#f0b43c;stroke-width:1.5}
+.fd{fill:#fff;stroke:rgba(60,40,20,.55);stroke-width:1.2;filter:drop-shadow(0 0 2px rgba(255,255,255,.95))}
+#chat{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:2px solid var(--line)}
+.ch{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line);flex:none}
+.ch .pix{font-size:46px}
+.ch b{font-size:20px}
+.badge{margin-left:10px;background:#efdcb8;color:#6a4a22;border-radius:99px;padding:3px 12px;font-size:12px;font-weight:700;white-space:nowrap}
+.sub2{color:var(--mute);font-size:15px}
+.msgs{flex:1;min-height:0;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.b{max-width:88%;padding:14px 18px;border-radius:22px;white-space:pre-wrap;word-break:break-word;font-size:16px;line-height:1.55;border:1px solid var(--line)}
+.b.me{align-self:flex-end;background:var(--me)}
+.b.ai{align-self:flex-start;background:var(--ai)}
+.b time{display:block;margin-top:6px;font-size:12px;color:var(--mute)}
+.cb{border-top:2px solid var(--line);padding:14px 18px;flex:none}
+.cb label{font-size:13px}
+textarea{display:block;width:100%;height:88px;margin:8px 0;resize:none;border:2px solid var(--line);background:var(--ai);color:var(--ink);padding:12px;font:inherit;font-size:16px}
+.row{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:13px}
+.row .sp{flex:1}
+.btn{border:2px solid var(--hd);background:var(--panel);color:var(--hd2);padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}
+.cb .row{display:flex;align-items:stretch;gap:8px}
+.cb .row .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;white-space:nowrap;padding:9px 6px;font-size:12.5px;line-height:1.2}
+.btn.pri{background:var(--hd);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.card{flex:0 0 250px;text-align:left;background:var(--card);border:2px solid var(--line);padding:12px;display:flex;gap:12px;color:var(--ink);font:inherit;cursor:pointer}
+.card.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.card .pix{font-size:54px;flex:none}
+.ci{flex:1;min-width:0;font-size:13px}
+.ci .t{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
+.st{font-size:11px;border:1px solid var(--mute);padding:1px 7px;color:var(--mute)}
+.st.busy{border-color:var(--warn);color:var(--warn)}
+.st.rest{border-color:var(--ok);color:var(--ok)}
+.ci .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mute)}
+.bar{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px}
+.bar i{height:4px;background:var(--line)}.bar i.f{background:#2a9d8f}
+#side .card{flex:none}
+.add{border:2px dashed var(--line);background:none;color:var(--ink);padding:16px;font-size:13px;cursor:pointer}
+#modal,.ai-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:60}
+#modal[hidden],.ai-modal[hidden]{display:none}
+.mb{width:min(460px,92vw);max-height:92vh;overflow:auto;background:var(--panel);border:2px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:10px}
+.mb label{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.mb input,.mb select{border:2px solid var(--line);background:var(--ai);color:var(--ink);padding:9px;font:inherit}
+.mb textarea{height:80px;margin:0}
+.empty{margin:auto;text-align:center;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:15px}
+header{padding:6px 12px;gap:12px}
+.logo{padding:8px 12px;font-size:12px}
+.bi{opacity:.85;flex:none}
+.ib.act{background:rgba(0,0,0,.22);border-radius:4px}
+.lo{display:flex;align-items:center;gap:8px;border-radius:0}
+.main{gap:12px;padding:11px;grid-template-columns:1fr 372px}
+body[data-view=chat] .main{grid-template-columns:250px 1fr}
+#strip,#side{position:relative}
+.card{flex:0 0 176px;padding:8px 9px;gap:8px;border-width:2px}
+.card .pix{font-size:46px}
+.avcol{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.bwbtn{display:inline-block;padding:3px 5px;font-family:"Silkscreen","Courier New",monospace;font-size:9px;font-weight:700;line-height:1.1;border:1.5px solid var(--hd);background:var(--panel);color:var(--hd2);cursor:pointer;white-space:nowrap}
+.bwbtn.on{background:var(--hd);color:#fff}
+.card.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.ci{display:flex;flex-direction:column;gap:1px;font-size:11px;line-height:1.3}
+.ci .t{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.ci .m{display:flex;justify-content:space-between;color:var(--mute)}
+.ci .l{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mute)}
+.ci .s{color:var(--ok)}.ci .s.w{color:var(--warn)}
+.ci .bar{margin-top:4px}
+.st::before{content:"";display:inline-block;width:7px;height:7px;background:currentColor;margin-right:4px;opacity:.7}
+.tips{max-width:68%}
+.tip{display:flex;align-items:center;gap:7px;font-size:12px;padding:7px 10px}
+.tg{gap:8px}
+.seg{padding:4px;gap:2px}
+.seg button{padding:6px 14px;font-family:"Silkscreen","Courier New",monospace;font-size:13px;color:var(--hd2)}
+.seg button.on{background:var(--hd);color:#fff}
+#rs{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;font-weight:700}
+.btn.pri{background:var(--panel);color:var(--hd2);font-family:"Silkscreen","Courier New",monospace}
+.btn.pri.ready{background:var(--hd);color:#fff}
+.eng-tag{font-size:12px;padding:2px 8px;border:1px solid rgba(255,255,255,.35);border-radius:99px;cursor:pointer;background:rgba(255,255,255,.1)}
+
+@media (max-width:1024px){
+ .main{grid-template-columns:1fr 330px;gap:10px;padding:10px}
+ .tips{max-width:56%}
+ .tip{font-size:11px;padding:5px 8px}
+ .ch{padding:10px 14px;gap:10px}
+ .ch b{font-size:17px}
+ .msgs{padding:12px 14px}
+ .cb{padding:10px 14px}
+ textarea{height:68px;font-size:15px}
+}
+@media (max-width:820px){
+ body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+ .app{height:auto;min-height:100dvh}
+ header{padding:6px 10px;gap:8px;flex-wrap:wrap}
+ .logo{padding:6px 10px;font-size:11px}
+ .ttl b{font-size:13px}.ttl span{font-size:11px}
+ .ib{width:34px;height:34px}
+ .lo{padding:6px 10px;font-size:12px}
+ .main{display:flex;flex-direction:column;gap:10px;padding:8px;overflow:visible}
+ #stage{height:44dvh;min-height:270px;flex:none}
+ #strip{order:2;padding-bottom:6px;flex:none;-webkit-overflow-scrolling:touch}
+ #chat{order:3;min-height:54dvh;flex:1}
+ body[data-view=chat] #side{display:none}
+ body[data-view=chat] #strip{display:flex;order:1}
+ body[data-view=chat] #chat{order:2;min-height:74dvh}
+ .hi,.tips,#flow{display:none}
+ .tg{right:8px;bottom:8px;gap:6px}
+ .seg button{padding:5px 10px;font-size:12px}
+ .hint{left:8px;top:8px;font-size:11px;padding:4px 9px}
+}
+@media (max-width:480px){
+ header{padding-top:max(6px,env(safe-area-inset-top,0px))}
+ .ttl span,.bi{display:none}
+ #stage{height:38dvh;min-height:230px}
+ #strip{gap:8px;padding-bottom:2px}
+ .card{flex:0 0 148px;padding:6px 8px;gap:6px}
+ .card .pix{font-size:36px}
+ .ch{padding:8px 12px;gap:10px}
+ .ch .pix{font-size:36px}
+ .ch b{font-size:16px}
+ .sub2{font-size:12px}
+ .msgs{padding:10px 12px;gap:10px}
+ .b{max-width:94%;font-size:14px;padding:10px 13px}
+ .cb{padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px))}
+ .cb label{display:none}
+ textarea{height:50px;margin:0 0 6px;padding:9px 10px;font-size:16px}
+ .btn{padding:8px 10px;font-size:12px}
+ .cb .row{gap:6px}
+ .cb .row .btn{padding:9px 4px;font-size:11.5px}
+ .joy{width:88px;height:88px;left:10px;bottom:10px}
+ .joy-knob{width:38px;height:38px}
+}
+#safariDiag{position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;background:rgba(25,20,15,.92);color:#fff;border:1px solid #d4a373;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.45;display:none;max-height:36dvh;overflow:auto}
+#safariDiag b{color:#ffd166}#safariDiag .x{float:right;background:#5b3a22;color:#fff;border:0;border-radius:6px;padding:2px 8px;cursor:pointer}
+</style>
+</head>
+<body data-view="office">
+<div class="app">
+<header>
+  <div class="logo px">SW.AI</div>
+  <svg class="bi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="6" y="3" width="12" height="18"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
+  <div class="ttl"><b class="px">sw ai office</b><span>AI Virtual Office</span></div>
+  <div class="sp"></div>
+  <div class="hi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2.2.7 3.5 2.6 3.5 5.5"/></svg><span id="cnt"></span></div>
+  <div class="hi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg><span id="engLabel" class="eng-tag" title="AI 연결 설정">online · AI연결</span></div>
+  <button class="ib" id="vt"></button>
+  <button class="ib" title="밝게/어둡게" id="gear"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <button class="ib" title="AI 연결 설정" id="aiCfgBtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</header>
+<div class="main">
+  <div id="stage">
+    <div id="gl"></div><div id="labels"></div>
+    <div class="hint px"><i></i><span id="act"></span></div>
+    <div class="joy" id="joy"><div class="joy-knob" id="joyKnob"></div></div>
+    <div class="tg">
+      <div class="seg"><button id="m2">2D</button><button id="m3" class="on">3D</button></div>
+      <div class="seg"><button id="rs">초기화</button></div>
+    </div>
+  </div>
+  <aside id="side"></aside>
+  <section id="chat">
+    <div class="ch"><span id="av-head"></span><div><div><b id="hn"></b><span class="badge" id="hb"></span></div><div class="sub2" id="hs"></div></div></div>
+    <div class="msgs" id="msgs"></div>
+    <div class="cb" id="chatBox">
+      <label class="px">메시지</label>
+      <textarea id="inp" placeholder="메시지를 입력하세요"></textarea>
+      <span id="hint" hidden></span><div class="row"><input type="file" id="file" accept=".txt,.md,.csv,.json" hidden><button class="btn" id="fb">＋ 파일</button><button class="btn pri" id="send">전송 →</button></div>
+    </div>
+    <div class="cb" id="ceoNoticeBox" style="display:none;text-align:center;">
+      <div class="sub2" style="font-size:13px;line-height:1.5;">👑 <b>단테 대표님 전용 보고 수신함</b>입니다.<br/>직원들의 업무 보고가 이곳으로 모입니다. 업무 지시는 본부장 <b>알렉스</b>나 각 담당자에게 전달해 주세요.</div>
+    </div>
+  </section>
+  <div id="strip"></div>
+</div>
+</div>
+
+<!-- Add Employee Modal -->
+<div id="modal" hidden><div class="mb"><b class="px">＋ 직원 추가</b><label>이름<input id="mn" maxlength="8"></label><label>부서<select id="mr"></select></label><label>직책<input id="mrole" maxlength="16" placeholder="예: 계약 검토 담당"></label><label>업무 지침<textarea id="mi" placeholder="이 직원이 맡을 일과 말투를 적어 주세요"></textarea></label><div class="sub2" id="mm"></div><div class="row"><span class="sp"></span><button class="btn" id="mc">취소</button><button class="btn pri" id="ms">추가</button></div></div></div>
+
+<!-- AI Connection Modal -->
+<div id="aiModal" class="ai-modal" hidden>
+  <div class="mb">
+    <b class="px">🤖 AI 엔진 연결 설정</b>
+    <label>AI 연결 방식
+      <select id="aiProvider">
+        <option value="auto">자동 (Claude 환경 → API 키 있으면 LLM → 내장 업무비서)</option>
+        <option value="gemini">Google Gemini API 직접 호출</option>
+        <option value="openai">OpenAI API 직접 호출</option>
+        <option value="local">내장 업무비서 엔진 (API 키 불필요)</option>
+      </select>
+    </label>
+    <label id="aiKeyRow">API Key (브라우저 로컬 저장)
+      <input type="password" id="aiKey" placeholder="AIza... 또는 sk-..." />
+    </label>
+    <label id="aiModelRow">모델명
+      <input type="text" id="aiModel" value="gemini-3.5-flash-lite" />
+      <span id="geminiPresetRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+        <button type="button" class="btn" data-gmodel="gemini-3.5-flash-lite" style="padding:4px 8px;font-size:11px;">gemini-3.5-flash-lite (기본 권장)</button>
+        <button type="button" class="btn" data-gmodel="gemini-2.5-flash" style="padding:4px 8px;font-size:11px;">gemini-2.5-flash</button>
+      </span>
+    </label>
+    <label style="flex-direction:row;align-items:center;gap:8px;"><input type="checkbox" id="srvOn" style="width:auto;padding:0;"> 업무 지시(알렉스)를 서버(Worker)로 처리</label>
+    <label id="srvUrlRow">Worker 주소<input type="text" id="srvUrl" placeholder="https://...workers.dev/" /></label>
+    <label id="srvTokRow">접근 토큰 (브라우저 로컬 저장)<input type="password" id="srvToken" /></label>
+    <label id="srvRepRow">대표 승인 전용 토큰 (승인·반려할 때 사용)<input type="password" id="srvRep" /></label>
+    <div class="sub2" style="font-size:12px;line-height:1.45;">
+      • 서버 모드: 알렉스에게 내리는 업무 지시는 Worker가 처리하고 이력이 서버에 저장됩니다. 직원 1:1 대화는 위 API Key로 계속 처리합니다.<br/>
+      • Claude 환경(<code>claude.ai</code>)에서는 내장 샘플 API를 우선 사용합니다.<br/>
+      • 외부 브라우저에서는 Gemini/OpenAI 키를 넣으면 실제 LLM이 응답하며, 키가 없어도 내장 업무비서 엔진이 실무형 초안을 생성합니다.
+    </div>
+    <div class="row"><span class="sp"></span><button class="btn" id="aiCancel">닫기</button><button class="btn pri ready" id="aiSave">저장</button></div>
+  </div>
+</div>
+
+<div id="flow"><svg><path id="fp"/><circle class="fd" r="3.5"/><circle class="fd" r="3.5"/><circle class="fd" r="3.5"/><circle class="fd" r="3.5"/></svg></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js';s.onerror=function(){var g=document.getElementById('gl');if(g&&!window.THREE)g.innerHTML='<div style=\'padding:18px;font-size:14px;line-height:1.6\'><b>3D 라이브러리(Three.js) 로드 실패</b><br>아이패드 사파리에서 외부 CDN 접속이 차단되었거나 네트워크가 불안정합니다.<br>와이파이/네트워크를 확인하거나, 로컬 웹서버(예: <code>python3 -m http.server</code> 또는 <code>npx serve</code>)로 열어 주세요.</div>';};document.head.appendChild(s);})()"></script>
+<script>
+const COMMON = "당신은 코스닥 상장사 앱코(ABKO) 경영관리부 소속 AI 담당자입니다. 사용자는 앱코(ABKO)의 대표이사 '단테'입니다. 사용자를 부를 때는 항상 '단테 대표님'으로 호칭하세요. 규칙: 한국어로, 쉬운 말로 간결하게 답합니다. 사실에 근거해서만 답하고, 모르거나 확실하지 않으면 추측하지 말고 “확인되지 않음”이라고 분명히 말합니다. 법령 조문·수치·날짜는 확신이 없으면 지어내지 말고 원문 확인이 필요하다고 안내합니다. 인터넷 검색과 관련 사이트 조사가 가능할 때는 실제 검색·조사 결과를 바탕으로 동향과 관련 사이트·참고 출처를 정리하고, 확인되지 않은 사실이나 수치는 임의로 지어내지 않습니다. 답은 핵심 결론을 먼저 쓰고 근거를 뒤에 붙입니다. ";
+function mk(d){return Object.assign({},d,{sys:COMMON+"당신은 "+d.badge+" "+d.name+"입니다. "+d.duty});}
+const EMP=[
+ ["alex","알렉스","본부장","hq","#6b3d1e","#f0c7a3","#8fb4dc","전체 업무를 분석해 담당 팀과 직원에게 배정할 방안을 정리하고, 대표 보고용 요약과 의사결정 선택지의 장단점을 정리합니다.",1,""],
+ ["ceo1","단테","대표이사","ceo","#1b1b1f","#f4cfae","#1f3a5f","최종 의사결정권자로서 보고받은 내용에 판단 기준과 보완 지시를 합니다. 핵심 결론과 승인 여부를 먼저 말하고 필요한 보완점을 짧게 제시합니다.",1,""],
+ ["jenny","제니","경영관리팀장","shared","#1b1b1f","#f4cfae","#1f3a5f","경영관리 업무(예산, 경영 지표, 사내 보고)를 정리하고 팀원 결과물을 검수합니다.",0,"bob"],
+ ["karina","카리나","경영관리 담당","shared","#1b1b1f","#f4cfae","#eeeeee","경영 지표와 막대 그래프 보고 자료의 구성, 월간·분기 실적 정리를 돕습니다. 수치는 사용자가 준 것만 사용합니다.",0,"long"],
+ ["ethan","이던","경영관리 담당","shared","#3a2a1e","#f0c7a3","#8a8d93","예산 편성·집행 계산, 원가·손익 표 정리를 돕습니다. 계산 과정과 가정을 함께 적습니다.",0,""],
+ ["aiden","에이든","총무팀장","shared","#8a8d93","#f4cfae","#6a7a4a","주주총회·이사회 준비 절차와 서류, 정관·사내 규정, 등기·인감·문서 관리를 돕습니다.",0,""],
+ ["laura","로라","총무 담당","shared","#6b3d1e","#f0c7a3","#a0705a","사무 비품·재고 목록 관리와 구매·보충 체크리스트를 정리합니다.",0,"ponytail"],
+ ["brian","브라이언","총무 담당","shared","#1b1b1f","#d9a577","#7a8a9a","사무실 시설·장비 점검, 수리·유지보수 요청 정리를 돕습니다.",0,""],
+ ["eric","에릭","전략기획팀장","shared","#4b4b4f","#dfb089","#cdc7bb","중장기 전략, 투자·신사업 검토, 시장 동향 정리와 보고서 구성을 돕습니다.",0,"fluffy"],
+ ["nora","노라","전략기획 담당","shared","#6b3d1e","#f4cfae","#5a3a6a","회의 기록과 아이디어 정리, 논점을 문서로 옮기는 일을 돕습니다.",0,"long"],
+ ["jason","제이슨","전략기획 담당","shared","#1b1b1f","#f0c7a3","#6a8a9a","중장기 로드맵과 일정 계획 초안, 과제 우선순위 정리를 돕습니다.",1,""],
+ ["peter","피터","법무팀장","legal","#1b1b1f","#f4cfae","#3a3d44","계약서 검토(위험 조항, 수정 제안), 법률 쟁점 정리, 내용증명·공문 초안, 상법·자본시장법 등 한국 법령 기준 설명을 돕습니다. 최종 법률 판단은 담당자와 외부 변호사가 한다는 점을 필요할 때만 짧게 덧붙입니다.",0,""],
+ ["ann","앤","법무 담당","legal","#3a2a1e","#f4cfae","#26272b","법령·판례 조사와 쟁점 정리, 법률 검토 메모를 돕습니다. 확인되지 않은 조문·판례는 원문 확인이 필요하다고 안내합니다.",1,"bun"],
+ ["sophia","소피아","법무 담당","legal","#8a5a33","#f4cfae","#7a7d85","계약서 검토(위험 조항, 수정 제안)와 계약 조건 비교표 작성을 돕습니다.",0,"long"],
+ ["ryan","라이언","IR팀장","ir","#1b1b1f","#f4cfae","#2b3a5c","공시 문안 검토, 투자자 문의 답변 초안, 실적 설명 자료 구성, 공정공시·미공개중요정보 관리 유의점을 안내합니다. 회사 수치는 사용자가 준 것만 사용합니다.",0,""],
+ ["suji","수지","IR 담당","ir","#1b1b1f","#f4cfae","#2a3f6e","주주·투자자 문의 답변 초안과 IR 발표 자료 구성을 돕습니다. 확인되지 않은 수치는 쓰지 않습니다.",0,"long"],
+ ["kevin","케빈","IR 담당","ir","#1b1b1f","#f0c7a3","#5a6b8c","주가·차트 흐름과 시장 지표 설명 자료를 정리합니다. 주가 전망이나 예측은 하지 않습니다.",1,""],
+ ["teo","테오","IT·기술팀장","it","#6b3d1e","#f0c7a3","#2a2d34","IT·기술 관련 질문과 시스템 운영 점검 항목을 정리합니다.",1,""],
+ ["ava","아바","IT·기술 담당","it","#1b1b1f","#f4cfae","#3a4a6a","코드·스크립트 검토와 개발 요청 정리, 자동화 아이디어를 돕습니다.",0,"hponytail"],
+ ["joy","조이","IT·기술 담당","it","#1b1b1f","#f4cfae","#2a6a8a","정보보안 점검 항목, 접근 권한 관리, 개인정보 유출 방지 체크리스트를 정리합니다.",1,"bob"],
+].map(a=>mk({id:a[0],name:a[1],badge:a[2],room:a[3],hair:a[4],skin:a[5],shirt:a[6],duty:a[7],gl:a[8],hs:a[9]}));
+let CUSTOM=[];try{CUSTOM=JSON.parse((function(){try{return localStorage.getItem("sw_custom");}catch(e){return null;}})()||"[]");}catch(e){}
+CUSTOM.forEach(d=>EMP.push(mk(d)));
+
+const RM=[
+ {id:"shared",n:"사업본부",x:0,z:0,w:30,d:20,c:0xd5cfc2,rows:[{z:6.5,g:[3,2]},{z:14.5,g:[1,3,2]}]},
+ {id:"it",n:"IT·기술팀",x:30,z:0,w:22,d:20,c:0xcfd3d9,rows:[{z:14.5,g:[2,3]}]},
+ {id:"legal",n:"법무팀",x:52,z:0,w:20,d:20,c:0xd9d2c3,rows:[{z:6.5,g:[3,1]},{z:14.5,g:[2,2]}]},
+ {id:"hq",n:"본부장실",x:72,z:0,w:12,d:20,c:0xb69b75,solo:8},
+ {id:"ceo",n:"대표실",x:84,z:0,w:14,d:20,c:0x967c64,solo:7},
+ {id:"hall",n:"복도",x:0,z:20,w:98,d:5,c:0xc2c4ca,nolabel:1},
+ {id:"ir",n:"IR팀",x:0,z:25,w:22,d:22,c:0xd8cbc6,rows:[{z:7,g:[3,2]},{z:16,g:[2,3]}]},
+ {id:"meet",n:"회의실",x:22,z:25,w:22,d:22,c:0xd8ceb8},
+ {id:"cafe",n:"카페테리아",x:44,z:25,w:22,d:22,c:0x8c939e},
+ {id:"recv",n:"접견실",x:66,z:25,w:12,d:22,c:0xcad4cb},
+ {id:"lobby",n:"로비",x:78,z:25,w:20,d:22,c:0xcfd1d8}
+];
+
+function slotsOf(r){
+  const o=[];r.pd=[];
+  if(r.solo){o.push({x:r.x+r.w/2,z:r.z+r.solo,s:1});return o;}
+  (r.rows||[]).forEach(row=>{
+    const W=row.g.reduce((a,n)=>a+n*2.4,0)+(row.g.length-1)*3;let x=r.x+(r.w-W)/2;
+    row.g.forEach(n=>{
+      const pz=r.z+row.z;
+      if(n===1)o.push({x:x+1.2,z:pz-.7,s:1});
+      else{r.pd.push({x:x+n*1.2,z:pz,n:n});for(let i=0;i<n;i++)o.push({x:x+(i+.5)*2.4,z:pz-.7,s:1});for(let i=0;i<n;i++)o.push({x:x+(i+.5)*2.4,z:pz+.7,s:-1});}
+      x+=n*2.4+3;
+    });
+  });
+  return o;
+}
+RM.forEach(r=>{r.sl=slotsOf(r);r.nd=r.sl.length;});
+
+const DOORS=[["shared","it",30,10],["it","legal",52,10],["legal","hq",72,10],["hq","ceo",84,10],
+["ir","meet",22,36],["meet","cafe",44,36],["cafe","recv",66,36],["recv","lobby",78,36],
+["shared","hall",15,20],["it","hall",41,20],["legal","hall",62,20],["hq","hall",78,20],["ceo","hall",91,20],
+["ir","hall",11,25],["meet","hall",33,25],["cafe","hall",55,25],["recv","hall",72,25],["lobby","hall",81.5,25]];
+
+const SPOTS=[
+  ["cafe",50,32,"coffee"],["cafe",60,32,"coffee"],["cafe",55,42,"coffee"],["cafe",62.5,32.5,"pool"],
+  ["lobby",84,33,"music"],["lobby",92,36,"music"],["lobby",88,42,"music"],
+  ["meet",27,32,"music"],["meet",39,40,"coffee"]
+];
+
+const rmOf=id=>RM.find(r=>r.id===id);
+function roomAt(x,z){return RM.find(r=>x>=r.x&&x<r.x+r.w&&z>=r.z&&z<r.z+r.d)||RM[0];}
+
+function buildGridNav(){
+  const gx0=0.5, gz0=0.5, step=1.0, cols=97, rows=46;
+  const blocked=Array.from({length:rows},()=>new Uint8Array(cols));
+  const idx=(c,r)=>r*cols+c;
+  const xy=(c,r)=>[gx0+c*step, gz0+r*step];
+  const cell=([x,z])=>[Math.max(0,Math.min(cols-1,Math.round((x-gx0)/step))), Math.max(0,Math.min(rows-1,Math.round((z-gz0)/step)))];
+
+  const doorOpen=(x,z)=>DOORS.some(d=>Math.abs(x-d[2])<=1.65 && Math.abs(z-d[3])<=1.35);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const [x,z]=xy(c,r);
+      const onWall = (Math.abs(z-0)<0.65 || Math.abs(z-20)<0.65 || Math.abs(z-25)<0.65 || Math.abs(z-47)<0.65 ||
+                      (z<20 && (Math.abs(x-30)<0.65 || Math.abs(x-52)<0.65 || Math.abs(x-72)<0.65 || Math.abs(x-84)<0.65)) ||
+                      (z>25 && (Math.abs(x-22)<0.65 || Math.abs(x-44)<0.65 || Math.abs(x-66)<0.65 || Math.abs(x-78)<0.65)));
+      if(onWall && !doorOpen(x,z)) blocked[r][c]=1;
+    }
+  }
+
+  const blockBox=(x0,x1,z0,z1,pad=0.65)=>{
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const [x,z]=xy(c,r);
+        if(x>=x0-pad && x<=x1+pad && z>=z0-pad && z<=z1+pad) blocked[r][c]=1;
+      }
+    }
+  };
+
+  RM.forEach(room=>{
+    room.sl.forEach(p=>{
+      if(room.id!=="ceo"){
+        blockBox(p.x-1.25, p.x+1.25, p.z-0.8, p.z+0.8, 0.35);
+        const cz=p.z-p.s*1.2;
+        blockBox(p.x-0.65, p.x+0.65, Math.min(p.z,cz)-0.55, Math.max(p.z,cz)+0.55, 0.25);
+      }
+    });
+    (room.pd||[]).forEach(p=>{
+      blockBox(p.x-p.n*1.2, p.x+p.n*1.2, p.z-0.35, p.z+0.35, 0.3);
+    });
+    const X=room.x, Z=room.z;
+    if(room.id==="shared"){
+      blockBox(X+0.5, X+4.0, Z+0.8, Z+2.0, 0.4);
+      blockBox(X+room.w-5.8, X+room.w-4.2, Z+1.0, Z+2.2, 0.4);
+      blockBox(X+room.w-1.8, X+room.w-0.6, Z+0.8, Z+2.0, 0.4);
+      blockBox(X+0.1, X+1.2, Z+8.3, Z+11.7, 0.4);
+      blockBox(X+1.0, X+2.2, Z+17.9, Z+19.1, 0.4);
+      blockBox(X+room.w-2.2, X+room.w-1.0, Z+17.9, Z+19.1, 0.4);
+    }else if(room.id==="it"){
+      const st0=(room.w-8.6)/2;
+      [st0+1.4,st0+7.2].forEach(bx=>{
+        blockBox(X+bx-1.45, X+bx+1.45, Z+2.5, Z+7.9, 0.45);
+      });
+      blockBox(X+0.6, X+3.0, Z+0.8, Z+2.0, 0.4);
+      blockBox(X+room.w-2.6, X+room.w-1.4, Z+17.9, Z+19.1, 0.4);
+      blockBox(X+room.w-1.8, X+room.w-0.6, Z+10.9, Z+12.1, 0.4);
+    }else if(room.id==="legal"){
+      blockBox(X+room.w-1.2, X+room.w-0.1, Z+12.3, Z+17.7, 0.4);
+      blockBox(X+room.w-1.2, X+room.w-0.1, Z+1.8, Z+6.2, 0.4);
+      blockBox(X+0.6, X+3.1, Z+0.8, Z+2.0, 0.4);
+      blockBox(X+room.w-3.2, X+room.w-1.8, Z+1.0, Z+2.2, 0.4);
+    }else if(room.id==="hq"){
+      const cx=X+room.w/2;
+      blockBox(cx-2.95, cx-1.25, Z+12.3, Z+16.7, 0.45);
+      blockBox(cx+1.25, cx+2.95, Z+12.3, Z+16.7, 0.45);
+      blockBox(cx-0.5, cx+0.5, Z+13.3, Z+15.7, 0.45);
+      blockBox(X+room.w-1.2, X+room.w-0.1, Z+1.8, Z+6.2, 0.4);
+    }else if(room.id==="ceo"){
+      const cx=X+room.w/2;
+      blockBox(cx-2.3, cx+2.3, Z+5.5, Z+8.1, 0.5);
+      blockBox(cx-2.95, cx-1.25, Z+12.3, Z+16.7, 0.45);
+      blockBox(cx+1.25, cx+2.95, Z+12.3, Z+16.7, 0.45);
+      blockBox(cx-0.5, cx+0.5, Z+13.3, Z+15.7, 0.45);
+      blockBox(X+room.w-1.2, X+room.w-0.1, Z+2.2, Z+6.8, 0.4);
+      blockBox(X+1.8, X+3.4, Z+2.0, Z+3.6, 0.55);
+    }else if(room.id==="ir"){
+      blockBox(X+room.w-1.8, X+room.w-0.6, Z+0.8, Z+2.0, 0.4);
+      blockBox(X+0.6, X+1.8, Z+0.8, Z+2.0, 0.4);
+    }else if(room.id==="meet"){
+      const cx=X+room.w/2, cz=Z+room.d/2;
+      blockBox(cx-2.1, cx+2.1, cz-7.3, cz+7.3, 0.5);
+      blockBox(cx-3.2, cx+3.2, Z+19.9, Z+21.1, 0.4);
+    }else if(room.id==="cafe"){
+      blockBox(X+4.2, X+8.6, Z+0.6, Z+1.8, 0.45);
+      blockBox(X+0.4, X+2.0, Z+0.7, Z+2.1, 0.45);
+      blockBox(X+2.7, X+3.9, Z+0.6, Z+1.8, 0.45);
+      blockBox(X+5.7, X+8.3, Z+7.7, Z+10.3, 0.45);
+      blockBox(X+12.7, X+15.3, Z+7.7, Z+10.3, 0.45);
+      blockBox(X+5.7, X+8.3, Z+15.2, Z+17.8, 0.45);
+      blockBox(X+15.4, X+20.2, Z+4.0, Z+7.0, 0.55);
+      blockBox(X+13.6, X+19.4, Z+18.6, Z+20.4, 0.45);
+    }else if(room.id==="recv"){
+      const cx=X+room.w/2;
+      blockBox(cx-3.6, cx+3.6, Z+6.1, Z+7.9, 0.45);
+      blockBox(cx-1.6, cx+1.6, Z+10.2, Z+11.8, 0.45);
+      blockBox(cx-3.6, cx+3.6, Z+14.1, Z+15.9, 0.45);
+    }else if(room.id==="lobby"){
+      blockBox(X+10.3, X+18.7, Z+4.8, Z+7.2, 0.55);
+      blockBox(X+1.8, X+8.2, Z+14.1, Z+15.9, 0.45);
+      blockBox(X+3.4, X+6.6, Z+17.8, Z+19.2, 0.45);
+      blockBox(X+10.8, X+17.2, Z+18.6, Z+20.4, 0.45);
+      blockBox(X+8.6, X+11.4, Z+11.4, Z+12.6, 0.45);
+    }
+  });
+
+  const nearestWalkable=(sc,sr)=>{
+    if(!blocked[sr][sc])return [sc,sr];
+    for(let rad=1;rad<=6;rad++){
+      let best=null, bestD=1e9;
+      for(let dr=-rad;dr<=rad;dr++){
+        for(let dc=-rad;dc<=rad;dc++){
+          const nc=sc+dc, nr=sr+dr;
+          if(nc<0||nc>=cols||nr<0||nr>=rows)continue;
+          if(!blocked[nr][nc]){
+            const d=dc*dc+dr*dr;
+            if(d<bestD){bestD=d;best=[nc,nr];}
+          }
+        }
+      }
+      if(best)return best;
+    }
+    return [sc,sr];
+  };
+
+  return function findPath(startXY, endXY){
+    if(!startXY||!endXY)return endXY?[endXY]:[];
+    let [sc,sr]=cell(startXY);
+    let [ec,er]=cell(endXY);
+    [sc,sr]=nearestWalkable(sc,sr);
+    [ec,er]=nearestWalkable(ec,er);
+    if(sc===ec&&sr===er)return [endXY];
+
+    const N=cols*rows;
+    const gScore=new Float32Array(N).fill(1e9);
+    const fScore=new Float32Array(N).fill(1e9);
+    const cameFrom=new Int32Array(N).fill(-1);
+    const closed=new Uint8Array(N);
+    const open=[];
+    const sIdx=idx(sc,sr), eIdx=idx(ec,er);
+    gScore[sIdx]=0;
+    fScore[sIdx]=Math.hypot(ec-sc,er-sr);
+    open.push(sIdx);
+
+    const dirs=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[-1,1,1.414],[1,-1,1.414],[-1,-1,1.414]];
+    while(open.length){
+      let bestI=0;
+      for(let i=1;i<open.length;i++)if(fScore[open[i]]<fScore[open[bestI]])bestI=i;
+      const cur=open.splice(bestI,1)[0];
+      if(cur===eIdx){
+        const raw=[];
+        let p=cur;
+        while(p!==-1){
+          const pc=p%cols, pr=Math.floor(p/cols);
+          raw.push(xy(pc,pr));
+          p=cameFrom[p];
+        }
+        raw.reverse();
+        if(raw.length>0)raw[raw.length-1]=endXY;
+        const out=[];
+        for(let i=0;i<raw.length;i++){
+          if(i===0||i===raw.length-1){out.push(raw[i]);continue;}
+          const prevP=out[out.length-1], nxtP=raw[i+1];
+          const dx1=raw[i][0]-prevP[0], dz1=raw[i][1]-prevP[1];
+          const dx2=nxtP[0]-raw[i][0], dz2=nxtP[1]-raw[i][1];
+          if(Math.abs(dx1*dz2-dz1*dx2)>0.08)out.push(raw[i]);
+        }
+        return out.length?out:[endXY];
+      }
+      closed[cur]=1;
+      const cc=cur%cols, cr=Math.floor(cur/cols);
+      for(const [dc,dr,cost] of dirs){
+        const nc=cc+dc, nr=cr+dr;
+        if(nc<0||nc>=cols||nr<0||nr>=rows)continue;
+        const ni=idx(nc,nr);
+        if(closed[ni]||blocked[nr][nc])continue;
+        if(dc!==0&&dr!==0&&(blocked[cr][nc]||blocked[nr][cc]))continue;
+        const tent=gScore[cur]+cost;
+        if(tent<gScore[ni]){
+          cameFrom[ni]=cur;
+          gScore[ni]=tent;
+          fScore[ni]=tent+Math.hypot(ec-nc,er-nr);
+          if(!open.includes(ni))open.push(ni);
+        }
+      }
+    }
+    return [endXY];
+  };
+}
+let navFindPath=null;
+function routePts(from,to,startXY,endXY){
+  if(!navFindPath && window.THREE)navFindPath=buildGridNav();
+  if(navFindPath)return navFindPath(startXY,endXY);
+  return endXY?[endXY]:[];
+}
+
+const usedSlotIdxByRoom={};
+function seat(e){
+  const r=rmOf(e.room);
+  if(!r.sl||!r.sl.length){
+    e.hx=r.x+r.w/2;e.hz=r.z+8;e.hr=0;
+    return;
+  }
+  const used=usedSlotIdxByRoom[e.room]||(usedSlotIdxByRoom[e.room]=new Set());
+  const avail=[];
+  for(let k=0;k<r.sl.length;k++)if(!used.has(k))avail.push(k);
+  let pickIdx=0;
+  if(avail.length){
+    let h=0;
+    for(let i=0;i<e.id.length;i++)h=(h*31+e.id.charCodeAt(i))>>>0;
+    pickIdx=avail[h%avail.length];
+    used.add(pickIdx);
+  }else{
+    const same=EMP.filter(o=>o.room===e.room);
+    const pos=same.indexOf(e);
+    pickIdx=(pos>=0?pos:0)%r.sl.length;
+  }
+  const p=r.sl[pickIdx];
+  e.hx=p.x;e.hz=p.z-1.1*p.s;e.hr=p.s>0?0:Math.PI;
+}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const T=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+"."+String(d.getMinutes()).padStart(2,"0");};
+const pix=e=>'<span class="pix'+(e.id==="eric"?" gl":"")+'" style="--h:'+e.hair+';--s:'+e.skin+';--t:'+e.shirt+'"></span>';
+
+const aiCfg={provider:"auto",apiKey:"",model:"gemini-3.5-flash-lite"};
+try{const savedAi=JSON.parse((function(){try{return localStorage.getItem("sw_ai_cfg");}catch(e){return null;}})()||"null");if(savedAi){Object.assign(aiCfg,savedAi);if(aiCfg.model==="gemini-2.5-flash-lite"||aiCfg.model==="gemini-3.8-flash")aiCfg.model="gemini-3.5-flash-lite";}}catch(e){}
+
+const ROBOT_QUOTES=["welcome","안녕하세요","반가워요","sw ai office"];
+const st={sel:"alex",mode:"3d",view:"office",busy:{},study:{},hist:{},file:null,phase:{},wfOn:true,wfRun:false,robotChat:false,robotPhrase:"",robotUntil:0};
+const E=id=>EMP.find(e=>e.id===id);
+const msgs=$("#msgs"),inp=$("#inp"),stage=$("#stage");
+let renderer,scene,camera,fpvCam,V,rc,ring,root,sampleFn=null,gl3=null,robotBubbleEl=null;
+const fpv={yaw:Math.PI,pitch:-0.05,keys:{},joy:{x:0,y:0}};
+const activeCam=()=>st.mode==='fpv'&&fpvCam?fpvCam:camera;
+const chars=[],signs=[],flabels=[],cam={az:.785,el:.62,s:37,tx:49,tz:23.5};
+const cOf=id=>chars.find(c=>c.e.id===id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const FONT="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif";
+
+/* ---------- 3D helpers ---------- */
+const mats={};const mat=c=>mats[c]||(mats[c]=new THREE.MeshLambertMaterial({color:c}));
+let glass,grid,robotArm=null,RB=null,LM=null,LEDM=[],WBM=null,MNM=null,MON=null,WCH=null;
+const LIVE=[];let PROMO=null,lastPromo=0;
+function B(w,h,d,col,x,y,z,p){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),typeof col==="object"?col:mat(col));m.position.set(x,y,z);(p||root).add(m);return m;}
+function ball(x,y,z,r,col){const m=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat(col));m.position.set(x,y,z);root.add(m);}
+function cyl(rt,rb,h,col,x,y,z){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,16),typeof col==="object"?col:mat(col));m.position.set(x,y,z);root.add(m);return m;}
+function tex(w,h,fn){const c=document.createElement("canvas");c.width=w;c.height=h;fn(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;}
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();x.fill();}
+
+function signTex(t){
+  return tex(576,128,(x,w,h)=>{
+    x.fillStyle="#ffffff";
+    rr(x,4,8,w-8,h-16,22);
+    x.strokeStyle="#cbd5e1";
+    x.lineWidth=3;
+    x.stroke();
+    x.fillStyle="#2f5bff";
+    x.fillRect(24,28,10,h-56);
+    x.fillStyle="#1d2b6b";
+    x.font="bold 46px "+FONT;
+    x.textAlign="center";
+    x.textBaseline="middle";
+    x.fillText(t,w/2+12,h/2+2);
+  });
+}
+
+function wall(ax,c,a,b,gaps,gl){
+  const m=ax==="x";
+  const seg=(s0,e0,y0,y1,col)=>{const L=e0-s0;if(L<.01)return;B(m?L:.4,y1-y0,m?.4:L,col,m?(s0+e0)/2:c,(y0+y1)/2,m?c:(s0+e0)/2);};
+  let cur=a;
+  if(!gl){gaps.forEach(g=>{seg(cur,g-1.6,0,3.4,0xbcc2cf);seg(g-1.6,g+1.6,2.4,3.4,0xbcc2cf);cur=g+1.6;});seg(cur,b,0,3.4,0xbcc2cf);return;}
+  gaps.forEach(g=>{seg(cur,g-1.6,0,.9,0xaab0bf);seg(cur,g-1.6,.9,2.8,glass);cur=g+1.6;});
+  seg(cur,b,0,.9,0xaab0bf);seg(cur,b,.9,2.8,glass);
+}
+function live(w,h,fn){const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d"),t=new THREE.CanvasTexture(c);fn(x,w,h,0);t.needsUpdate=true;LIVE.push({x:x,w:w,h:h,fn:fn,t:t});return new THREE.MeshBasicMaterial({map:t});}
+function ledm(){if(!LEDM.length)for(let i=0;i<6;i++)LEDM.push(new THREE.MeshBasicMaterial({color:0x4cff7a}));return LEDM;}
+function liveTick(tm){
+  LIVE.forEach(o=>{o.fn(o.x,o.w,o.h,tm);o.t.needsUpdate=true;});
+  LEDM.forEach((m,i)=>m.color.setHex(Math.sin(tm*5+i*2.1)>-.2?(i%3?0x4cff7a:0x60a5fa):0x1c2a22));
+}
+function mon(i){
+  if(!MON)MON=[
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#f4f7fb";x.fillRect(0,0,w,h);x.fillStyle="#16a34a";x.fillRect(0,0,w,14);const r=Math.floor(t*2)%7;x.fillStyle="#bbf7d0";x.fillRect(0,18+r*11,w,10);x.strokeStyle="#cbd5e1";x.lineWidth=1;for(let k=0;k<8;k++){x.beginPath();x.moveTo(0,18+k*11);x.lineTo(w,18+k*11);x.stroke();}for(let c=1;c<5;c++){x.beginPath();x.moveTo(c*32,14);x.lineTo(c*32,h);x.stroke();}x.fillStyle="#334155";for(let k=0;k<7;k++)for(let c=0;c<4;c++)if((k*3+c*5+Math.floor(t))%3)x.fillRect(4+c*32,21+k*11,20,3);}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#0f172a";x.fillRect(0,0,w,h);x.strokeStyle="#1e293b";for(let k=1;k<5;k++){x.beginPath();x.moveTo(0,k*20);x.lineTo(w,k*20);x.stroke();}for(let k=0;k<10;k++){const up=Math.sin(t*1.2+k*.9)>0;const ch=12+Math.abs(Math.sin(t+k*1.3))*32;const cy=50+Math.cos(t*.8+k*.7)*18;x.fillStyle=up?"#22c55e":"#ef4444";x.fillRect(10+k*15,cy-ch/2,8,ch);x.fillRect(13+k*15,cy-ch/2-6,2,ch+12);}}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#1e1e2e";x.fillRect(0,0,w,h);x.fillStyle="#181825";x.fillRect(0,0,26,h);const n=Math.floor(t*3)%13,C=["#f38ba8","#a6e3a1","#89b4fa","#f9e2af","#cba6f7"];for(let k=0;k<Math.min(n+3,12);k++){x.fillStyle=C[k%5];x.fillRect(34+(k%3)*10,8+k*7,22+((k*37)%65),4);}if(Math.floor(t*2)%2){x.fillStyle="#fff";x.fillRect(34+(n%3)*10+26,8+Math.min(n,11)*7,4,6);}}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#f8fafc";x.fillRect(0,0,w,h);x.fillStyle="#1e293b";x.fillRect(0,0,w,12);["#3b82f6","#34d399","#f59e0b","#ef4444"].forEach((c,k)=>{const bh=16+Math.abs(Math.sin(t*1.3+k*1.1))*52;x.fillStyle=c;x.fillRect(10+k*22,90-bh,15,bh);});x.fillStyle="#6366f1";x.beginPath();x.moveTo(128,56);x.arc(128,56,24,0,Math.PI*1.3);x.closePath();x.fill();x.fillStyle="#f43f5e";x.beginPath();x.moveTo(128,56);x.arc(128,56,24,Math.PI*1.3,Math.PI*2);x.closePath();x.fill();}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#eef2f7";x.fillRect(0,0,w,h);x.fillStyle="#334155";x.fillRect(0,0,34,h);x.fillStyle="#64748b";for(let j=0;j<5;j++)x.fillRect(6,12+j*16,22,5);const n=Math.floor(t*.8)%4;for(let k=0;k<=n;k++){x.fillStyle=k%2?"#3b82f6":"#ffffff";const bw=58+(k*19)%38,bx=k%2?w-bw-6:40;x.fillRect(bx,10+k*21,bw,15);}}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#fffdf7";x.fillRect(0,0,w,h);x.fillStyle="#b91c1c";x.fillRect(0,0,w,14);for(let k=0;k<9;k++){x.fillStyle=k===2||k===6?"#fecaca":"#cbd5e1";x.fillRect(12,22+k*8,136-(k*17)%44,5);}x.fillStyle="#ef4444";x.fillRect(12,22+((Math.floor(t*2)%4)*2)*8,42,5);}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#ffffff";x.fillRect(0,0,w,h);x.fillStyle="#e2e8f0";x.fillRect(0,0,w,14);x.fillStyle="#0284c7";x.fillRect(8,20,w-16,24);x.fillStyle="#f1f5f9";x.fillRect(8,50,68,42);x.fillRect(84,50,68,42);x.fillStyle="#94a3b8";const off=Math.floor(t)%2;x.fillRect(14,56+off*6,52,5);x.fillRect(90,56,52,5);x.fillRect(14,70,40,4);x.fillRect(90,70,44,4);}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#f8fafc";x.fillRect(0,0,w,h);x.fillStyle="#7c3aed";x.fillRect(0,0,w,12);const C=["#3b82f6","#10b981","#f59e0b","#ec4899","#6366f1"];for(let k=0;k<5;k++){x.fillStyle="#e2e8f0";x.fillRect(8,20+k*15,144,10);const sx=12+((k*23+Math.floor(t*8))%50);x.fillStyle=C[k];x.fillRect(sx,21+k*15,52,8);}}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#090d0a";x.fillRect(0,0,w,h);x.fillStyle="#22c55e";for(let k=0;k<8;k++){const len=36+((k*29+Math.floor(t*3)*7)%90);x.fillStyle=k%4===3?"#facc15":"#22c55e";x.fillRect(8,10+k*11,len,4);}if(Math.floor(t*3)%2){x.fillStyle="#4ade80";x.fillRect(8,88,8,6);}}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#262626";x.fillRect(0,0,w,h);x.fillStyle="#ffffff";x.fillRect(28,12,104,76);x.fillStyle="#f472b6";x.beginPath();x.arc(60,44,14,0,6.3);x.fill();x.fillStyle="#38bdf8";x.fillRect(84,28,36,28);["#ef4444","#f59e0b","#10b981","#3b82f6"].forEach((c,k)=>{x.fillStyle=c;x.fillRect(6,16+k*18,12,12);});}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#334155";x.fillRect(0,0,w,h);x.fillStyle="#ffffff";x.fillRect(22,8,116,84);x.fillStyle="#94a3b8";for(let k=0;k<6;k++)x.fillRect(32,18+k*9,94-(k%3)*18,4);x.strokeStyle="#2563eb";x.lineWidth=2;x.strokeRect(86,66,40,18);x.fillStyle="#ef4444";x.beginPath();x.arc(54,75,8,0,6.3);x.fill();}),
+   live(160,100,(x,w,h,t)=>{x.fillStyle="#111827";x.fillRect(0,0,w,h);const active=Math.floor(t)%4;[[8,8,"#3b82f6"],[84,8,"#ec4899"],[8,54,"#10b981"],[84,54,"#f59e0b"]].forEach(([px,py,col],idx)=>{x.fillStyle="#1f2937";x.fillRect(px,py,68,38);if(idx===active){x.strokeStyle="#22c55e";x.lineWidth=2;x.strokeRect(px,py,68,38);}x.fillStyle=col;x.beginPath();x.arc(px+34,py+19,10,0,6.3);x.fill();});})
+  ];
+  return MON[((i%12)+12)%12];
+}
+function wchart(i){
+  if(!WCH)WCH=[
+   live(512,256,(x,w,h,t)=>{x.fillStyle="#0f1b2d";x.fillRect(0,0,w,h);for(let k=0;k<9;k++){const bh=30+Math.abs(Math.sin(t*1.1+k*.8))*140;x.fillStyle=k%2?"#3b82f6":"#60a5fa";x.fillRect(28+k*52,h-16-bh,32,bh);}x.strokeStyle="#34d399";x.lineWidth=4;x.beginPath();for(let k=0;k<9;k++){const y=h-70-Math.abs(Math.sin(t*.7+k*.6))*100;if(k)x.lineTo(44+k*52,y);else x.moveTo(44,y);}x.stroke();}),
+   live(512,256,(x,w,h,t)=>{x.fillStyle="#111827";x.fillRect(0,0,w,h);x.strokeStyle="#1f2a3d";x.lineWidth=1;for(let k=1;k<6;k++){x.beginPath();x.moveTo(0,k*42);x.lineTo(w,k*42);x.stroke();}x.lineWidth=3;x.strokeStyle="#f59e0b";x.beginPath();for(let k=0;k<=64;k++){const y=130+Math.sin(k*.2+t*1.5)*50+Math.sin(k*.55+t*.8)*22;if(k)x.lineTo(k*8,y);else x.moveTo(0,y);}x.stroke();for(let k=0;k<16;k++){const y=130+Math.sin(k*.8+t*1.5)*50;x.fillStyle=k%3?"#22c55e":"#ef4444";x.fillRect(16+k*30,y-14,10,28);}}),
+   live(512,256,(x,w,h,t)=>{x.fillStyle="#0b1220";x.fillRect(0,0,w,h);const N=[[70,60],[70,130],[70,200],[200,40],[200,100],[200,160],[200,220],[340,70],[340,140],[340,200],[450,128]];x.lineWidth=1.2;N.forEach((a,i2)=>N.forEach((b,j)=>{if(b[0]-a[0]>0&&b[0]-a[0]<150){x.strokeStyle="rgba(96,165,250,"+(.15+.35*Math.abs(Math.sin(t*2+i2+j)))+")";x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke();}}));N.forEach((a,i2)=>{x.fillStyle=Math.sin(t*3+i2)>0?"#34d399":"#3b82f6";x.beginPath();x.arc(a[0],a[1],9,0,6.3);x.fill();});x.fillStyle="#9fb4d9";x.font="bold 20px monospace";x.fillText("AI MODEL  "+Math.floor(70+Math.abs(Math.sin(t))*29)+"%",14,24);}),
+   live(512,256,(x,w,h,t)=>{x.fillStyle="#0c1117";x.fillRect(0,0,w,h);x.font="bold 18px monospace";const L=["> loading model weights ...","> tokenizing batch #"+(1200+Math.floor(t*3)),"> inference 42ms  gpu 87%","> agent[legal] task queued","> agent[ir] summary done","> embedding index synced","> eval accuracy 0.9"+(1+Math.floor(t)%9)];const n=Math.floor(t*2)%(L.length+3);for(let k=0;k<Math.min(n,L.length);k++){x.fillStyle=k%3?"#34d399":"#60a5fa";x.fillText(L[k],14,34+k*28);}x.fillStyle="#34d399";x.fillRect(14,34+Math.min(n,L.length)*28-12,10,16);}),
+   live(512,256,(x,w,h,t)=>{
+     x.fillStyle="#16181d";x.fillRect(0,0,w,h);
+     const cx=w/2,cy=h/2+6;
+     const hubs=[[cx,cy,11,"#a882ff","SW Core"],[cx-125,cy-42,8,"#7aa2f7","IR"],[cx+120,cy-38,8,"#7aa2f7","Legal"],[cx-95,cy+56,7.5,"#73daca","Docs"],[cx+105,cy+52,7.5,"#bb9af7","AI Agent"]];
+     const sats=[[cx-185,cy-75,4],[cx-175,cy+10,4.5],[cx-65,cy-78,4],[cx-20,cy-68,5],[cx+48,cy-74,4.5],[cx+182,cy-72,4],[cx+190,cy+14,4.5],[cx-155,cy+84,4],[cx-35,cy+82,4.5],[cx+45,cy+80,4],[cx+168,cy+82,4.5],[cx+10,cy+35,5]];
+     const all=hubs.map(n=>[n[0]+Math.sin(t*1.2+n[0])*2.5,n[1]+Math.cos(t*1.1+n[1])*2.5,n[2],n[3],n[4]]).concat(sats.map((n,idx)=>[n[0]+Math.cos(t*1.4+idx)*3,n[1]+Math.sin(t*1.3+idx)*3,n[2],"#8b92a8",""]));
+     const edges=[[0,1],[0,2],[0,3],[0,4],[0,8],[0,9],[0,16],[1,5],[1,6],[1,7],[1,8],[2,9],[2,10],[2,11],[3,6],[3,12],[3,13],[4,11],[4,14],[4,15],[4,16],[7,8],[8,9],[13,14]];
+     x.lineWidth=1.3;
+     edges.forEach(([a,b],ei)=>{
+       const p=all[a],q=all[b];
+       x.strokeStyle=ei<6?"rgba(168,130,255,0.48)":"rgba(148,163,184,0.28)";
+       x.beginPath();x.moveTo(p[0],p[1]);x.lineTo(q[0],q[1]);x.stroke();
+     });
+     all.forEach((n,idx)=>{
+       if(idx<5){
+         x.fillStyle="rgba(168,130,255,0.18)";
+         x.beginPath();x.arc(n[0],n[1],n[2]+6+Math.sin(t*2+idx)*1.5,0,Math.PI*2);x.fill();
+       }
+       x.fillStyle=n[3];
+       x.beginPath();x.arc(n[0],n[1],n[2],0,Math.PI*2);x.fill();
+       if(n[4]){x.fillStyle="#cbd5e1";x.font="bold 12px sans-serif";x.textAlign="center";x.fillText(n[4],n[0],n[1]+n[2]+13);}
+     });
+     x.fillStyle="#9aa5ce";x.font="bold 13px monospace";x.textAlign="left";x.fillText("OBSIDIAN GRAPH VIEW",14,20);
+   }),
+   live(512,256,(x,w,h,t)=>{
+     x.fillStyle="#111827";x.fillRect(0,0,w,h);
+     const cx=w/2,cy=h/2+8,r=60+Math.sin(t*1.5)*2;
+     const sets=[
+       {x:cx-42,y:cy-16,c:"rgba(59,130,246,0.45)",s:"#60a5fa",lbl:"전략·기획",lx:cx-115,ly:cy-48},
+       {x:cx+42,y:cy-16,c:"rgba(16,185,129,0.45)",s:"#34d399",lbl:"경영·재무",lx:cx+115,ly:cy-48},
+       {x:cx,y:cy+38,c:"rgba(245,158,11,0.45)",s:"#fbbf24",lbl:"신사업·IR",lx:cx,ly:cy+110}
+     ];
+     sets.forEach(v=>{
+       x.fillStyle=v.c;x.beginPath();x.arc(v.x,v.y,r,0,Math.PI*2);x.fill();
+       x.strokeStyle=v.s;x.lineWidth=2.5;x.beginPath();x.arc(v.x,v.y,r,0,Math.PI*2);x.stroke();
+     });
+     x.fillStyle="#ffffff";x.font="bold 14px "+FONT;x.textAlign="center";x.textBaseline="middle";
+     x.fillText("핵심시너지",cx,cy+4);
+     sets.forEach(v=>{x.fillStyle=v.s;x.font="bold 14px "+FONT;x.fillText(v.lbl,v.lx,v.ly);});
+   }),
+   live(512,256,(x,w,h,t)=>{
+     x.fillStyle="#111827";x.fillRect(0,0,w,h);
+     x.fillStyle="#93c5fd";x.font="bold 14px "+FONT;x.textAlign="left";x.fillText("SW AI OFFICE 조직도",16,22);
+     const drawNode=(nx,ny,nw,nh,bg,bd,t1,t2)=>{
+       x.fillStyle=bg;x.fillRect(nx-nw/2,ny-nh/2,nw,nh);
+       x.strokeStyle=bd;x.lineWidth=2;x.strokeRect(nx-nw/2,ny-nh/2,nw,nh);
+       x.fillStyle="#ffffff";x.font="bold 13px "+FONT;x.textAlign="center";x.textBaseline="middle";
+       x.fillText(t1,nx,t2?ny-7:ny);
+       if(t2){x.fillStyle="#cbd5e1";x.font="11px "+FONT;x.fillText(t2,nx,ny+9);}
+     };
+     const teams=[[52,196,"경영관리","제니·카리나·이던","#10b981"],[136,196,"총무","에이든·로라·브라이언","#f59e0b"],[220,196,"전략기획","에릭·노라·제이슨","#06b6d4"],[304,196,"법무","피터·앤·소피아","#ef4444"],[388,196,"IR","라이언·수지·케빈","#8b5cf6"],[468,196,"IT·기술","테오·아바·조이","#3b82f6"]];
+     x.strokeStyle="#475569";x.lineWidth=2;
+     x.beginPath();x.moveTo(256,64);x.lineTo(256,144);x.moveTo(52,144);x.lineTo(468,144);
+     teams.forEach(([tx])=>{x.moveTo(tx,144);x.lineTo(tx,172);});
+     x.stroke();
+     const p=(t*0.6)%1;
+     const pulseIdx=Math.floor(t*0.6)%teams.length;
+     x.fillStyle="#facc15";x.beginPath();x.arc(256,64+p*80,3.5,0,Math.PI*2);x.fill();
+     drawNode(256,44,126,34,"#1e3a5f","#60a5fa","단테 (대표이사)","");
+     drawNode(256,104,126,36,"#2a4aa0","#93c5fd","알렉스","본부장");
+     teams.forEach(([tx,ty,nm,mb,col],idx)=>{
+       drawNode(tx,ty,76,46,"#1e293b",idx===pulseIdx?"#facc15":col,nm,mb.split("·")[0]);
+     });
+   })
+  ];
+  return WCH[((i%7)+7)%7];
+}
+
+/* ---------- 로비 홍보 영상 (캔버스 애니메이션, 반복 재생) ---------- */
+function promoMat(){const c=document.createElement("canvas");c.width=500;c.height=300;const x=c.getContext("2d"),t=new THREE.CanvasTexture(c);t.anisotropy=4;PROMO={x:x,w:500,h:300,t:t};promoDraw(x,500,300,0);t.needsUpdate=true;return new THREE.MeshBasicMaterial({map:t});}
+function promoDraw(x,w,h,tm){
+  const D=[4.5,5,5.5,5,4],TT=D.reduce((a,b)=>a+b,0),t=tm%TT;
+  let si=0,s0=0;while(si<D.length-1&&t>=s0+D[si]){s0+=D[si];si++;}
+  const ls=t-s0,al=Math.max(0,Math.min(1,ls/.5,(D[si]-ls)/.5));
+  const ease=u=>1-Math.pow(1-Math.min(1,Math.max(0,u)),3);
+  const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,"#0f172a");g.addColorStop(1,["#312e81","#134e4a","#1e3a8a","#4c1d95","#312e81"][si]);
+  x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,w,h);
+  for(let i=0;i<26;i++){const px=(i*97+tm*12*(1+i%3*.4))%w,py=((i*53)%h+Math.sin(tm+i)*8+h)%h;x.fillStyle="rgba(255,255,255,"+(.08+.07*(i%3))+")";x.fillRect(px,py,3+i%3,3+i%3);}
+  x.globalAlpha=al;x.textAlign="center";x.textBaseline="alphabetic";
+  if(si===0||si===4){
+    const sc=.75+.25*ease(ls/.9);
+    x.save();x.translate(w/2,h/2-6);x.scale(sc,sc);
+    const gl=x.createRadialGradient(0,0,10,0,0,150+Math.sin(tm*3)*10);gl.addColorStop(0,"rgba(129,140,248,.45)");gl.addColorStop(1,"rgba(129,140,248,0)");x.fillStyle=gl;x.fillRect(-250,-150,500,300);
+    x.fillStyle="#fff";x.font="bold 64px "+FONT;x.fillText("sw ai office",0,8);
+    x.fillStyle="#818cf8";x.fillRect(-110*ease(ls/1.2),22,220*ease(ls/1.2),4);
+    x.fillStyle="#c7d2fe";x.font="bold 22px "+FONT;x.fillText(si===0?"AI 동료와 함께 일하는 가상 사무실":"함께 일하는 AI 동료",0,60);
+    x.restore();
+  }else if(si===1){
+    x.fillStyle="#c7d2fe";x.font="bold 24px "+FONT;x.fillText("함께 일하는 AI 직원",w/2,52);
+    x.fillStyle="#fff";x.font="bold 80px "+FONT;x.fillText(Math.round(EMP.length*ease(ls/1.6))+"명",w/2,138);
+    const n=Math.min(10,EMP.length);
+    for(let i=0;i<n;i++){
+      const e=EMP[i],ax=40+i*((w-80)/(n-1))-11,by=Math.abs(Math.sin(tm*5+i*.7))*9,ay=196-by,k=ease((ls-.3-i*.12)/.4);
+      x.globalAlpha=al*k;
+      x.fillStyle=e.shirt;x.fillRect(ax,ay+24,22,24);
+      x.fillStyle=e.skin;x.fillRect(ax,ay,22,22);
+      x.fillStyle=e.hair;x.fillRect(ax-1,ay-4,24,8);
+      x.fillStyle="#1b2340";x.fillRect(ax+5,ay+10,3,3);x.fillRect(ax+14,ay+10,3,3);
+      x.fillStyle="#3b4a6b";x.fillRect(ax+1,ay+48,8,10);x.fillRect(ax+13,ay+48,8,10);
+    }
+    x.globalAlpha=al;
+  }else if(si===2){
+    x.fillStyle="#c7d2fe";x.font="bold 24px "+FONT;x.fillText("체계적인 업무 흐름",w/2,52);
+    const L=["대표","본부장","팀장","팀원"],nx=[70,190,310,430],cy=140;
+    x.strokeStyle="rgba(199,210,254,.5)";x.lineWidth=3;x.beginPath();x.moveTo(nx[0],cy);x.lineTo(nx[3],cy);x.stroke();
+    const p=(ls*.45)%1,dx=nx[0]+(nx[3]-nx[0])*p;
+    x.fillStyle="#fff";x.beginPath();x.arc(dx,cy,7,0,6.3);x.fill();
+    L.forEach((s,i)=>{
+      const on=dx>=nx[i]-30,k=ease((ls-i*.25)/.4);
+      x.globalAlpha=al*k;x.fillStyle=on?"#6366f1":"#1e293b";rr(x,nx[i]-42,cy-24,84,48,10);
+      x.strokeStyle=on?"#a5b4fc":"#475569";x.lineWidth=2;x.strokeRect(nx[i]-42,cy-24,84,48);
+      x.fillStyle="#fff";x.font="bold 20px "+FONT;x.fillText(s,nx[i],cy+7);
+    });
+    x.globalAlpha=al;x.fillStyle="#e0e7ff";x.font="bold 20px "+FONT;x.fillText("지시 → 배분 → 검수 → 보고",w/2,228);
+  }else{
+    const T=["빠르게","정확하게","안전하게"],S=["업무 자동 배분","팀장 검수·보고","대표 승인 후 실행"],I=["⚡","✔","🔒"];
+    x.fillStyle="#c7d2fe";x.font="bold 24px "+FONT;x.fillText("sw ai office가 일하는 방식",w/2,50);
+    for(let i=0;i<3;i++){
+      const k=ease((ls-.2-i*.35)/.6),cx0=w/2+(i-1)*150,cy0=170+(1-k)*40;
+      x.globalAlpha=al*k;x.fillStyle="rgba(255,255,255,.12)";rr(x,cx0-65,cy0-80,130,150,14);
+      x.fillStyle="#fff";x.font="40px "+FONT;x.fillText(I[i],cx0,cy0-28);
+      x.font="bold 22px "+FONT;x.fillText(T[i],cx0,cy0+14);
+      x.fillStyle="#c7d2fe";x.font="15px "+FONT;x.fillText(S[i],cx0,cy0+42);
+    }
+    x.globalAlpha=al;
+  }
+  x.globalAlpha=1;x.fillStyle="rgba(255,255,255,.18)";x.fillRect(20,h-14,w-40,4);x.fillStyle="#818cf8";x.fillRect(20,h-14,(w-40)*t/TT,4);
+}
+function wbm(){if(!WBM)WBM=new THREE.MeshBasicMaterial({map:tex(256,128,(x,w,h)=>{x.fillStyle="#f8fafc";x.fillRect(0,0,w,h);const C=["#fde68a","#bfdbfe","#fecaca","#bbf7d0"];for(let k=0;k<8;k++){const cx=12+(k%4)*60,cy=12+Math.floor(k/4)*54;x.fillStyle=C[k%4];x.fillRect(cx,cy,48,42);x.fillStyle="#64748b";x.fillRect(cx+6,cy+12,34,3);x.fillRect(cx+6,cy+20,26,3);}})});return WBM;}
+function menuM(){if(!MNM)MNM=new THREE.MeshBasicMaterial({map:tex(256,128,(x,w,h)=>{x.fillStyle="#1f3b2d";x.fillRect(0,0,w,h);x.fillStyle="#f1efe8";x.font="bold 28px "+FONT;x.textAlign="center";x.fillText("MENU",w/2,38);x.font="22px "+FONT;["Americano","Latte","Tea"].forEach((t,k)=>x.fillText(t,w/2,72+k*26));})});return MNM;}
+function lampM(){if(!LM)LM=new THREE.MeshBasicMaterial({color:0xffe9a0,side:THREE.DoubleSide});return LM;}
+function wb(x,y,z,w,h,ry,m){const g=new THREE.Group();B(w+.3,h+.3,.08,0x20242c,0,0,0,g);const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);p.position.z=.05;g.add(p);g.position.set(x,y,z);g.rotation.y=ry;root.add(g);}
+function wclock(x,z){const m=new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,.1,20),mat(0xffffff));m.rotation.x=Math.PI/2;m.position.set(x,2.5,z+.05);root.add(m);B(.06,.5,.04,0x222222,x,2.65,z+.12);B(.4,.06,.04,0x222222,x+.15,2.5,z+.12);}
+
+function monitor(x,z,s,ox,w,vi){
+  const dir=s>0?-1:1;
+  B(w+.1,.62,.08,0x1f242d,x+ox,1.32,z+s*.35);
+  const p=new THREE.Mesh(new THREE.PlaneGeometry(w-.06,.52),mon(vi));p.position.set(x+ox,1.32,z+s*.35+dir*.045);p.rotation.y=s>0?Math.PI:0;root.add(p);
+  B(.05,.03,.03,0x38bdf8,x+ox,1.65,z+s*.35+dir*.04);
+  B(.16,.04,.16,0x3a3f48,x+ox,.96,z+s*.35);
+  B(.08,.34,.08,0x3a3f48,x+ox,1.12,z+s*.35-dir*.04);
+}
+let _deskSeq=0;
+function desk(x,z,s){
+  const idx=_deskSeq++;
+  const h=((Math.round(x*7+z*3))%7+7)%7,dual=idx%3===0;
+  B(2.3,.1,1.3,0xc9a169,x,.8,z);
+  B(2.32,.03,1.32,0x8b5e34,x,.74,z);
+  B(.08,.75,1.2,0xe6e8ec,x-1.1,.4,z);B(.08,.75,1.2,0xe6e8ec,x+1.1,.4,z);
+  B(2.2,.5,.06,0xe6e8ec,x,.55,z+s*.6);
+  B(.9,.04,.35,0xe3e5e8,x,.87,z-s*.25);B(.2,.04,.14,0xe3e5e8,x+.8,.87,z-s*.2);
+  if(dual){monitor(x,z,s,-.52,.9,idx*2);monitor(x,z,s,.52,.9,idx*2+5);}else monitor(x,z,s,0,.95,idx*3+1);
+  if(h%2===1&&!dual){B(.1,.5,.1,0x666666,x-1,1.05,z+s*.3);B(.36,.26,.36,lampM(),x-1,1.4,z+s*.3);}
+  if(h===4)B(.9,.03,.6,0xc8ccd2,x+.55,.87,z-s*.05);
+  if(h===2||h===6)B(.18,.22,.18,0xc0392b,x+.9,.93,z-s*.4);
+  if(h===0)B(.55,.01,.75,0xffffff,x-.6,.86,z-s*.1);
+
+  const cz=z-s*1.2, backZ=z-s*1.68;
+  B(.98,.13,.98,0x2b2d33,x,.56,cz);
+  B(.08,.36,.52,0x2b2d33,x-.52,.74,cz-s*.05);
+  B(.08,.36,.52,0x2b2d33,x+.52,.74,cz-s*.05);
+  B(.1,.04,.58,0x1e2026,x-.52,.93,cz-s*.05);
+  B(.1,.04,.58,0x1e2026,x+.52,.93,cz-s*.05);
+  B(.92,.82,.13,0x4b5563,x,1.02,backZ);
+  B(.46,.18,.1,0x374151,x,1.52,backZ-s*.04);
+  B(.14,.42,.14,0x3a3f48,x,.31,cz);
+  const base=new THREE.Group();base.position.set(x,0,cz);
+  for(let k=0;k<5;k++){
+    const lg=new THREE.Group();lg.rotation.y=k*Math.PI*2/5;
+    B(.07,.05,.44,0x475569,0,.11,.22,lg);
+    const wh=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.045,12),mat(0x18181b));
+    wh.rotation.z=Math.PI/2;wh.position.set(0,.055,.43);lg.add(wh);
+    base.add(lg);
+  }
+  root.add(base);
+}
+
+function floorTex(c,wood,w,d){
+  const hx="#"+new THREE.Color(c).getHexString();
+  const t=tex(128,128,(x,W,H)=>{
+    x.fillStyle=hx;x.fillRect(0,0,W,H);
+    if(wood){x.strokeStyle="rgba(60,35,10,.35)";x.lineWidth=2;for(let i=0;i<8;i++){x.beginPath();x.moveTo(0,i*16);x.lineTo(W,i*16);x.stroke();}x.lineWidth=1;for(let i=0;i<8;i++){const o=(i%2)*32;for(let j=0;j<3;j++){x.beginPath();x.moveTo(o+j*64,i*16);x.lineTo(o+j*64,i*16+16);x.stroke();}}}
+    else{x.fillStyle="rgba(255,255,255,.10)";x.fillRect(0,0,64,64);x.fillRect(64,64,64,64);x.strokeStyle="rgba(95,100,112,.36)";x.lineWidth=2;x.strokeRect(0,0,W,H);x.beginPath();x.moveTo(64,0);x.lineTo(64,H);x.moveTo(0,64);x.lineTo(W,64);x.stroke();}
+  });
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(w/4,d/4);return t;
+}
+function logoTex(){
+  const c=document.createElement("canvas");c.width=640;c.height=160;
+  const dr=()=>{
+    const x=c.getContext("2d"),w=640,h=160;
+    x.clearRect(0,0,w,h);
+    x.fillStyle="#ffffff";
+    x.fillRect(4,4,w-8,h-8);
+    x.strokeStyle="#475569";
+    x.lineWidth=6;
+    x.strokeRect(7,7,w-14,h-14);
+    x.fillStyle="#111111";
+    x.font="bold 68px 'Silkscreen','Courier New',monospace";
+    x.textAlign="center";
+    x.textBaseline="middle";
+    x.fillText("sw ai office",w/2,h/2-12);
+    x.font="bold 26px 'Quicksand',sans-serif";
+    x.fillStyle="#1e293b";
+    x.fillText("AI Virtual Office",w/2,h-34);
+  };
+  dr();const t=new THREE.CanvasTexture(c);t.anisotropy=4;
+  if(document.fonts&&document.fonts.load)document.fonts.load("bold 20px Silkscreen").then(()=>{dr();t.needsUpdate=true;}).catch(()=>{});
+  return t;
+}
+function plant(x,z){cyl(.5,.38,.55,0x8e8e94,x,.28,z);ball(x,1.05,z,.62,0x2f7d3e);ball(x+.3,1.45,z+.1,.45,0x3f8d4e);ball(x-.3,1.35,z-.15,.42,0x2a6f38);}
+function flamp(x,z){cyl(.4,.45,.1,0x444444,x,.05,z);cyl(.05,.05,2.5,0x555555,x,1.3,z);const m=new THREE.Mesh(new THREE.CylinderGeometry(.45,.7,.75,16,1,true),lampM());m.position.set(x,2.75,z);root.add(m);}
+function sofa(x,z,w,col,fl){const k=fl?1:-1;B(w,.5,1.7,col,x,.3,z);B(w,1,.35,col,x,.8,z+k*.7);B(.4,.85,1.7,col,x-w/2+.2,.5,z);B(.4,.85,1.7,col,x+w/2-.2,.5,z);}
+function sofaV(x,z,len,col,face){const g=new THREE.Group();B(1.7,.5,len,col,0,.3,0,g);B(.35,1,len,col,-face*.7,.8,0,g);B(1.7,.85,.4,col,0,.5,-len/2+.2,g);B(1.7,.85,.4,col,0,.5,len/2-.2,g);g.position.set(x,0,z);root.add(g);}
+function rtable(x,z){cyl(1.1,1.1,.1,0xf1efe8,x,.95,z);cyl(.15,.15,.95,0x777777,x,.48,z);for(let i=0;i<4;i++){const a=i*1.5708+.4;cyl(.38,.38,.55,0x2a9d8f,x+Math.cos(a)*1.9,.28,z+Math.sin(a)*1.9);}}
+function cooler(x,z){B(.8,1.1,.8,0xe9ecef,x,.55,z);cyl(.3,.3,.7,0x7fc4ff,x,1.45,z);}
+function cab(x,z){B(1,1.5,.8,0xb8bcc2,x,.75,z);B(.7,.04,.02,0x666666,x,1.1,z+.41);}
+function drawer(x,z){B(.85,.95,.75,0x9e7b56,x,.48,z);B(.55,.04,.02,0x333333,x,.74,z+.39);B(.55,.04,.02,0x333333,x,.44,z+.39);B(.55,.04,.02,0x333333,x,.16,z+.39);}
+function printer(x,z){B(1.3,.7,1,0xdde0e4,x,.35,z);B(1.1,.1,.8,0x8b919c,x,.75,z);}
+function shelf(x,z,len,dir){const CL=[0xc0392b,0x2980b9,0x27ae60,0xf1c40f,0x8e44ad];B(.8,2.6,len,0x7a5a3a,x,1.3,z);for(let k=0;k<3;k++)B(.1,.45,len-.4,CL[(k+Math.round(z))%5],x+dir*.45,.5+k*.8,z);}
+function chair(x,z,ry){const g=new THREE.Group();B(.95,.12,.95,0x2b2d33,0,.55,0,g);B(.9,.85,.12,0x2b2d33,0,1.05,-.5,g);B(.08,.4,.6,0x2b2d33,-.5,.8,-.05,g);B(.08,.4,.6,0x2b2d33,.5,.8,-.05,g);B(.12,.4,.12,0x555a63,0,.3,0,g);B(1.1,.06,.14,0x555a63,0,.08,0,g);B(.14,.06,1.1,0x555a63,0,.08,0,g);g.position.set(x,0,z);g.rotation.y=ry;root.add(g);}
+function laptop(x,z,ry){const g=new THREE.Group();B(.9,.03,.6,0xc8ccd2,0,0,0,g);B(.9,.5,.03,0x2b2d33,0,.28,.27,g);const p=new THREE.Mesh(new THREE.PlaneGeometry(.8,.42),mon(5));p.position.set(0,.28,.245);p.rotation.y=Math.PI;g.add(p);g.position.set(x,.99,z);g.rotation.y=ry;root.add(g);}
+function mtable(r,L){
+  const cx=r.x+r.w/2,cz=r.z+r.d/2;
+  B(3.6,.15,L,0xc9a169,cx,.9,cz);B(2.6,.85,.3,0x8a6a40,cx,.43,cz-L/2+2);B(2.6,.85,.3,0x8a6a40,cx,.43,cz+L/2-2);
+  for(let i=0;i<5;i++){const z=cz-5.2+i*2.6;chair(cx-2.7,z,Math.PI/2);chair(cx+2.7,z,-Math.PI/2);laptop(cx-1,z,Math.PI/2);laptop(cx+1,z,-Math.PI/2);}
+}
+function rack(x,z,ry){
+  const g=new THREE.Group();B(1.4,3,1.2,0x20242c,0,1.5,0,g);
+  for(let i=0;i<6;i++){B(1.2,.3,.05,0x2c313a,0,.45+i*.45,.62,g);const m=ledm()[(i+Math.round(x*3))%6];const l=new THREE.Mesh(new THREE.BoxGeometry(.14,.1,.04),m);l.position.set(-.4,.45+i*.45,.66);g.add(l);const l2=l.clone();l2.position.x=-.15;g.add(l2);}
+  g.position.set(x,0,z);g.rotation.y=ry;root.add(g);
+}
+function robot(X,Z){
+  const g=new THREE.Group();
+  B(.8,.45,.6,0xdfe3ea,0,.22,0,g);B(1,.85,.7,0xf4f6fa,0,.9,0,g);B(.5,.3,.05,0x4fd1ff,0,.95,.38,g);
+  B(.9,.7,.7,0xf4f6fa,0,1.65,0,g);B(.7,.32,.05,0x1b2a4a,0,1.7,.37,g);B(.12,.12,.06,0x4fd1ff,-.15,1.7,.41,g);B(.12,.12,.06,0x4fd1ff,.15,1.7,.41,g);
+  B(.07,.3,.07,0x888888,0,2.1,0,g);B(.2,.2,.2,0xff5a5a,0,2.35,0,g);B(.2,.7,.2,0xdfe3ea,-.65,.9,0,g);
+  const arm=new THREE.Group();arm.position.set(.65,1.25,0);B(.2,.7,.2,0xdfe3ea,0,-.35,0,arm);g.add(arm);robotArm=arm;
+  g.scale.setScalar(.9);g.position.set(X+14.5,0,Z+9);
+  g.traverse(o=>{o.userData.isRobot=true;});
+  root.add(g);
+  RB={g:g,i:0,wait:2,pts:[[X+14.5,Z+9],[X+13,Z+12.5],[X+16,Z+15],[X+11,Z+16],[X+4,Z+11.5],[X+8.5,Z+9.5]]};
+  if(!robotBubbleEl){
+    robotBubbleEl=document.createElement("div");
+    robotBubbleEl.className="rbt-bubble";
+    robotBubbleEl.title="로봇과 스몰토크";
+    robotBubbleEl.addEventListener("click",ev=>{ev.stopPropagation();openRobotSmalltalk();});
+    $("#labels").appendChild(robotBubbleEl);
+  }
+  st.robotPhrase=ROBOT_QUOTES[Math.floor(Math.random()*ROBOT_QUOTES.length)];
+  st.robotUntil=performance.now()/1000+4;
+}
+function roam(dt,t){
+  if(!RB)return;const g=RB.g;
+  if(robotArm)robotArm.rotation.z=RB.wait>0?2.3+Math.sin(t*5)*.35:.2;
+  if(t>=st.robotUntil){
+    if(st.robotPhrase){
+      st.robotPhrase="";
+      st.robotUntil=t+2.2+Math.random()*2.5;
+    }else{
+      st.robotPhrase=ROBOT_QUOTES[Math.floor(Math.random()*ROBOT_QUOTES.length)];
+      st.robotUntil=t+3.2;
+    }
+  }
+  if(RB.wait>0){RB.wait-=dt;g.position.y=0;return;}
+  const p=RB.pts[RB.i],dx=p[0]-g.position.x,dz=p[1]-g.position.z,d=Math.hypot(dx,dz),s=1.5*dt;
+  if(d<=s){g.position.x=p[0];g.position.z=p[1];RB.wait=2+Math.random()*3;RB.i=(RB.i+1+Math.floor(Math.random()*2))%RB.pts.length;}
+  else{g.position.x+=dx/d*s;g.position.z+=dz/d*s;g.rotation.y=Math.atan2(dx,dz);g.position.y=Math.abs(Math.sin(t*8))*.08;}
+}
+function updateRobotBubble(t){
+  if(!robotBubbleEl||!RB||!RB.g){if(robotBubbleEl)robotBubbleEl.style.display="none";return;}
+  if(t>=st.robotUntil||!st.robotPhrase){robotBubbleEl.style.display="none";return;}
+  const w=gl3.clientWidth,h=gl3.clientHeight,ac=activeCam();
+  V.set(RB.g.position.x,RB.g.position.y+2.55,RB.g.position.z).project(ac);
+  if(V.z>1){robotBubbleEl.style.display="none";return;}
+  robotBubbleEl.style.display="block";
+  robotBubbleEl.textContent="🤖 "+st.robotPhrase;
+  robotBubbleEl.style.transform="translate("+((V.x*.5+.5)*w)+"px,"+((-V.y*.5+.5)*h)+"px) translate(-50%,-100%)";
+}
+function furn(r){
+  const cx=r.x+r.w/2,X=r.x,Z=r.z,nz=Z+.26;
+  r.sl.forEach(p=>{if(r.id!=="ceo")desk(p.x,p.z,p.s);});
+  (r.pd||[]).forEach(p=>B(p.n*2.4+.2,.8,.08,0x5fa8a8,p.x,1.25,p.z));
+  const f={
+    shared:()=>{cab(X+1.2,Z+1.4);cab(X+3.2,Z+1.4);printer(X+r.w-5,Z+1.6);cooler(X+r.w-1.2,Z+1.4);shelf(X+.6,Z+10,3,1);
+      wb(X+11.5,1.9,nz,4.5,2,0,wchart(0));wb(X+18,1.9,nz,5.5,2,0,wbm());wb(X+24.5,1.9,nz,3.8,2,0,wchart(5));
+      plant(X+1.6,Z+18.5);plant(X+r.w-1.6,Z+18.5);flamp(X+2.2,Z+14);flamp(X+r.w-2,Z+16.5);},
+    it:()=>{
+      const st0=(r.w-8.6)/2;
+      [st0+1.4,st0+7.2].forEach(bx=>{
+        rack(X+bx-.7,Z+3.2,0);
+        rack(X+bx+.7,Z+7.2,0);
+      });
+      cab(X+1.2,Z+1.4);drawer(X+2.4,Z+1.4);
+      wb(X+.26,1.9,Z+4.5,3.8,2.1,Math.PI/2,wchart(2));wb(X+.26,1.9,Z+15.5,3.8,2.1,Math.PI/2,wchart(3));wb(X+r.w-5.5,1.9,nz,4.4,2.2,0,wchart(4));
+      printer(X+r.w-2,Z+18.5);plant(X+r.w-1.6,Z+16);flamp(X+1.8,Z+18.8);cooler(X+r.w-1.2,Z+11.5);},
+    legal:()=>{shelf(X+r.w-.6,Z+15,5,-1);shelf(X+r.w-.6,Z+4,4,-1);cab(X+1.2,Z+1.4);drawer(X+2.5,Z+1.4);printer(X+r.w-2.5,Z+1.6);wb(X+14.5,1.9,nz,4.5,2,0,wbm());wclock(X+18.2,nz);plant(X+1.6,Z+18.5);flamp(X+2,Z+11);cooler(X+4,Z+1.2);},
+    hq:()=>{B(7,.04,5,0x9aa9b8,cx,.03,Z+14.5);shelf(X+r.w-.6,Z+4,4,-1);cab(X+1.2,Z+1.4);drawer(X+2.4,Z+1.4);sofaV(cx-2.1,Z+14.5,4.4,0x8c6a4a,1);sofaV(cx+2.1,Z+14.5,4.4,0x8c6a4a,-1);B(1,.4,2.4,0xc9a169,cx,.35,Z+14.5);plant(X+1.6,Z+1.8);plant(X+1.6,Z+18.5);wb(X+9.5,1.9,nz,3.8,2.1,0,wchart(6));flamp(X+r.w-1.8,Z+17);},
+    ceo:()=>{shelf(X+r.w-.6,Z+4.5,4.2,-1);cab(X+1.2,Z+1.4);drawer(X+2.5,Z+1.4);B(4.4,.15,2,0x6b4a2b,cx,.85,Z+7);B(.15,.8,1.8,0x5b3a22,cx-2,.45,Z+7);B(.15,.8,1.8,0x5b3a22,cx+2,.45,Z+7);monitor(cx,Z+7,1,0,1.4,3);chair(cx,Z+5.8,0);
+      (()=>{
+        const tg=new THREE.Group();
+        const ped=new THREE.Mesh(new THREE.CylinderGeometry(0.95,1.08,0.18,24),mat(0x1f242d));
+        ped.position.y=0.09;tg.add(ped);
+        [-0.30,0.30].forEach(lx=>{
+          B(0.32,0.88,0.34,0x7ec4df,lx,0.92,0,tg);
+          B(0.38,0.52,0.42,0x14171d,lx,0.42,0.02,tg);
+          B(0.34,0.22,0.38,0x233859,lx,0.72,0.02,tg);
+          B(0.40,0.16,0.52,0x14171d,lx,0.18,0.06,tg);
+        });
+        B(0.76,0.34,0.44,0x14171d,0,1.42,0,tg);
+        B(0.70,0.24,0.40,0x6db6d4,0,1.66,0,tg);
+        B(1.02,0.52,0.52,0x14171d,0,1.98,0.02,tg);
+        const vL=new THREE.Mesh(new THREE.BoxGeometry(0.54,0.13,0.58),mat(0xd92b2b));
+        vL.position.set(-0.22,1.94,0.04);vL.rotation.z=-0.46;tg.add(vL);
+        const vR=new THREE.Mesh(new THREE.BoxGeometry(0.54,0.13,0.58),mat(0xd92b2b));
+        vR.position.set(0.22,1.94,0.04);vR.rotation.z=0.46;tg.add(vR);
+        [-0.66,0.66].forEach((sx,idx)=>{
+          const dir=idx===0?-1:1;
+          const sh=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.26,0.48),mat(0xcbd5e1));
+          sh.position.set(sx*0.96,2.24,0);sh.rotation.z=-dir*0.28;tg.add(sh);
+          B(0.26,0.52,0.28,0x7ec4df,sx*1.06,1.88,0,tg);
+          B(0.32,0.44,0.34,0x203554,sx*1.08,1.44,0,tg);
+          [-0.12,0,0.12].forEach(sz=>{
+            const sp=new THREE.Mesh(new THREE.ConeGeometry(0.045,0.16,10),mat(0x7ec4df));
+            sp.rotation.z=-dir*Math.PI/2;
+            sp.position.set(sx*1.08+dir*0.21,1.44,sz);
+            tg.add(sp);
+          });
+          B(0.28,0.24,0.30,0x1b2d47,sx*1.08,1.14,0.03,tg);
+        });
+        B(0.52,0.54,0.50,0x6bb5d3,0,2.56,0,tg);
+        B(0.56,0.24,0.54,0x1f365c,0,2.74,0,tg);
+        B(0.42,0.18,0.54,0xd92b2b,0,2.42,0.02,tg);
+        const chin=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,0.04,14),mat(0xfacc15));
+        chin.rotation.x=Math.PI/2;chin.position.set(0,2.40,0.29);tg.add(chin);
+        B(0.58,0.11,0.56,0xcbd5e1,0,2.62,0.01,tg);
+        [-0.16,0,0.16].forEach(rx=>{
+          const rv=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.03,10),mat(0xd92b2b));
+          rv.rotation.x=Math.PI/2;rv.position.set(rx,2.62,0.29);tg.add(rv);
+        });
+        [-0.33,0.33].forEach((ex,idx)=>{
+          const dir=idx===0?-1:1;
+          const fin=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.20,8),mat(0xfacc15));
+          fin.rotation.z=-dir*Math.PI/2.4;fin.position.set(ex,2.54,0);tg.add(fin);
+        });
+        [-0.17,0.17].forEach((hx,idx)=>{
+          const dir=idx===0?-1:1;
+          const hrn=new THREE.Mesh(new THREE.ConeGeometry(0.065,0.28,10),mat(0xd92b2b));
+          hrn.position.set(hx,2.94,0.04);hrn.rotation.z=-dir*0.18;tg.add(hrn);
+        });
+        tg.scale.setScalar(1.1);        tg.position.set(X+2.2,0,Z+14.8);
+        tg.rotation.y=0.55;
+        root.add(tg);
+      })();
+      B(6.6,.04,5,0x9aa9b8,cx,.03,Z+14.5);sofaV(cx-2.1,Z+14.5,4.4,0x8c6a4a,1);sofaV(cx+2.1,Z+14.5,4.4,0x8c6a4a,-1);B(1,.4,2.4,0xc9a169,cx,.35,Z+14.5);wb(X+11.2,1.9,nz,4.4,2,0,wchart(0));plant(X+1.6,Z+1.8);plant(X+r.w-1.6,Z+18.5);flamp(X+2,Z+8);flamp(X+r.w-1.8,Z+8);},
+    ir:()=>{cooler(X+r.w-1.2,Z+1.4);cab(X+1.2,Z+1.4);plant(X+1.6,Z+20.4);plant(X+r.w-1.6,Z+20.4);wb(X+16.5,1.9,nz,4.5,2,0,wchart(1));flamp(X+1.8,Z+11.5);},
+    meet:()=>{mtable(r,14);wb(X+17.5,1.9,nz,4.5,2,0,wchart(0));B(6,.9,1,0x8a6a40,cx,.45,Z+20.5);plant(X+1.6,Z+20.4);plant(X+r.w-1.6,Z+20.4);flamp(X+2,Z+16);flamp(X+r.w-2,Z+3.5);},
+    cafe:()=>{B(4.2,1,1,0xc9a169,X+6.4,.5,Z+1.2);B(.7,.6,.6,0x222222,X+5.5,1.3,Z+1.2);B(.5,.4,.5,0xdddddd,X+7.5,1.2,Z+1.2);B(1.4,2.4,1.2,0xe8e8e8,X+1.2,1.2,Z+1.4);cooler(X+3.3,Z+1.2);wb(X+16.5,1.9,nz,4,2,0,menuM());
+      rtable(X+7,Z+9);rtable(X+14,Z+9);rtable(X+7,Z+16.5);
+      (()=>{
+        const px=X+17.8, pz=Z+5.5, sc=1.35;
+        const g=new THREE.Group();
+        [[-1.35,-0.72],[1.35,-0.72],[-1.35,0.72],[1.35,0.72]].forEach(([dx,dz])=>{
+          B(0.24,0.88,0.24,0x3b2312,dx,0.44,dz,g);
+          B(0.26,0.08,0.26,0xd4af37,dx,0.12,dz,g);
+        });
+        B(2.6,0.12,0.14,0x4a2d18,0,0.42,-0.72,g);
+        B(2.6,0.12,0.14,0x4a2d18,0,0.42,0.72,g);
+        B(3.9,0.18,2.15,0x5c371d,0,0.92,0,g);
+        B(3.52,0.05,1.76,0x16804b,0,1.02,0,g);
+        B(0.14,0.15,1.76,0x0f5c35,-1.72,1.09,0,g);
+        B(0.14,0.15,1.76,0x0f5c35,1.72,1.09,0,g);
+        B(3.52,0.15,0.14,0x0f5c35,0,1.09,-0.83,g);
+        B(3.52,0.15,0.14,0x0f5c35,0,1.09,0.83,g);
+        [[-1.74,-0.85],[1.74,-0.85],[-1.74,0.85],[1.74,0.85],[0,-0.86],[0,0.86]].forEach(([hx,hz])=>{
+          const pk=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.04,14),mat(0x111318));
+          pk.position.set(hx,1.05,hz);g.add(pk);
+        });
+        const addB=(bx,bz,col)=>{const bm=new THREE.Mesh(new THREE.SphereGeometry(0.072,12,10),mat(col));bm.position.set(bx,1.10,bz);g.add(bm);};
+        addB(-0.95,0.04,0xf8fafc);
+        addB(0.65,0,0x111827);
+        addB(0.51,-0.08,0xfacc15);addB(0.51,0.08,0xef4444);
+        addB(0.65,-0.16,0x2563eb);addB(0.65,0.16,0xf97316);
+        addB(0.79,-0.24,0x16a34a);addB(0.79,-0.08,0x9333ea);addB(0.79,0.08,0xdc2626);addB(0.79,0.24,0xfacc15);
+        const cue1=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.026,2.1,10),mat(0xc8965a));
+        cue1.rotation.z=Math.PI/2;cue1.rotation.y=0.22;cue1.position.set(-0.2,1.16,-0.35);g.add(cue1);
+        const cue2=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.026,2.1,10),mat(0x8b5a2b));
+        cue2.rotation.z=Math.PI/2;cue2.rotation.y=-0.18;cue2.position.set(0.15,1.16,0.38);g.add(cue2);
+        g.scale.setScalar(sc);
+        g.position.set(px,0,pz);
+        root.add(g);
+      })();
+      ball(X+17.5,.6,Z+12.5,.9,0x2a9d8f);ball(X+19.5,.6,Z+14,.9,0xc8433a);sofa(X+16.5,Z+19.5,5.5,0xc8433a);plant(X+r.w-1.6,Z+20.4);plant(X+1.6,Z+20.4);flamp(X+2,Z+13);flamp(X+r.w-1.8,Z+9.5);},
+    recv:()=>{B(8,.04,9,0x9aa9b8,cx,.03,Z+11);sofa(cx,Z+7,7,0x6f7d8c);B(3,.4,1.4,0xc9a169,cx,.35,Z+11);sofa(cx,Z+15,7,0x6f7d8c,true);plant(X+1.6,Z+20.4);plant(X+r.w-1.6,Z+20.4);B(1,.8,1,0xc9a169,X+1.6,.4,Z+11);flamp(X+2,Z+16);},
+    lobby:()=>{
+      const lg=new THREE.Mesh(new THREE.PlaneGeometry(8,2),new THREE.MeshBasicMaterial({map:logoTex(),transparent:true}));lg.position.set(X+14.5,2.1,Z+.24);root.add(lg);
+      B(8,1.2,1.8,0x8a5a35,X+14.5,.6,Z+6);B(8.4,.12,2.2,0xe9dcc6,X+14.5,1.26,Z+6);B(.8,.04,.5,0x23272e,X+12.5,1.34,Z+5.6);
+      robot(X,Z);
+      B(5,.04,5.5,0x9aa9b8,X+5,.03,Z+17.5);sofa(X+5,Z+15,6,0xc8433a);B(3,.4,1.4,0xc9a169,X+5,.35,Z+18.5);sofa(X+14,Z+19.5,6,0x6f7d8c);
+      B(.2,1.3,.2,0x444444,X+10,.65,Z+11.85);B(2.8,1.7,.1,0x20242c,X+10,2.2,Z+12);const kp=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.56),promoMat());kp.position.set(X+10,2.2,Z+12.07);root.add(kp);
+      plant(X+1.6,Z+20.4);plant(X+r.w-1.6,Z+20.4);plant(X+r.w-1.5,Z+11);flamp(X+1.8,Z+9);flamp(X+r.w-1.8,Z+16);}
+  };
+  if(f[r.id])f[r.id]();
+}
+function build(){
+  glass=new THREE.MeshLambertMaterial({color:0x9fc5dc,transparent:true,opacity:.38,depthWrite:false});
+  RM.forEach(r=>{
+    const fl=new THREE.Mesh(new THREE.BoxGeometry(r.w,.2,r.d),new THREE.MeshLambertMaterial({map:floorTex(r.c,r.id==="hq"||r.id==="ceo",r.w,r.d)}));fl.position.set(r.x+r.w/2,-.1,r.z+r.d/2);root.add(fl);
+    furn(r);
+    if(r.nolabel)return;
+    const isBottomRow=r.z>=25&&r.id!=="lobby";
+    const sw=7.6,sh=1.7;
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(sw,sh),new THREE.MeshBasicMaterial({map:signTex(r.n),transparent:true}));
+    if(isBottomRow){
+      const leftWallX=r.x+.24;
+      const leftWallZ=r.z+1.1+sw/2;
+      sg.rotation.y=Math.PI/2;
+      sg.position.set(leftWallX,2.05,leftWallZ);
+    }else{
+      const sxPos=r.id==="lobby"?(r.x+r.w-1-sw/2):(r.x+1+sw/2);
+      sg.position.set(sxPos,2.25,r.z+.22);
+    }
+    root.add(sg);signs.push(sg);
+    const d=document.createElement("div");d.className="fl";d.textContent=r.n;$("#labels").appendChild(d);flabels.push([d,r]);
+  });
+  wall("x",0,0,98,[]);wall("z",0,0,47,[]);
+  wall("x",20,0,98,[15,41,62,78,91],1);wall("x",25,0,98,[11,33,55,72,81.5],1);
+  [30,52,72,84].forEach(x=>wall("z",x,0,20,[10],1));[22,44,66,78].forEach(x=>wall("z",x,25,47,[36],1));
+}
+
+function addChar(e){
+  seat(e);
+  const g=new THREE.Group(),P={};g.scale.setScalar(1.2);
+  const fc=document.createElement("canvas");fc.width=fc.height=32;const x=fc.getContext("2d");
+  x.fillStyle=e.skin;x.fillRect(0,0,32,32);x.fillStyle="#1b2340";x.fillRect(7,12,5,5);x.fillRect(20,12,5,5);x.fillStyle="#fff";x.fillRect(7,12,2,2);x.fillRect(20,12,2,2);x.fillStyle="#a8433a";x.fillRect(11,23,10,3);
+  if(e.id==="eric"){x.strokeStyle="#2b2723";x.lineWidth=1.5;x.strokeRect(5.5,10.5,9,8);x.strokeRect(17.5,10.5,9,8);x.beginPath();x.moveTo(14.5,13);x.lineTo(17.5,13);x.stroke();}
+  const ft=new THREE.CanvasTexture(fc);ft.magFilter=ft.minFilter=THREE.NearestFilter;
+  const sm=mat(e.skin),head=new THREE.Mesh(new THREE.BoxGeometry(.6,.6,.6),[sm,sm,sm,sm,new THREE.MeshLambertMaterial({map:ft}),sm]);head.position.y=1.8;g.add(head);
+  B(.66,.16,.66,e.hair,0,2.14,0,g);B(.66,.5,.14,e.hair,0,1.9,-.26,g);B(.66,.14,.1,e.hair,0,2.06,.31,g);
+  if(e.hs==="long"){B(.66,.9,.14,e.hair,0,1.62,-.26,g);B(.08,.6,.4,e.hair,-.34,1.66,-.05,g);B(.08,.6,.4,e.hair,.34,1.66,-.05,g);}
+  else if(e.hs==="bob"){B(.66,.6,.14,e.hair,0,1.78,-.26,g);B(.08,.46,.5,e.hair,-.34,1.74,-.02,g);B(.08,.46,.5,e.hair,.34,1.74,-.02,g);}
+  else if(e.hs==="ponytail"){B(.2,.55,.2,e.hair,0,1.78,-.42,g);}
+  else if(e.hs==="hponytail"){B(.2,.5,.2,e.hair,0,2.2,-.34,g);}
+  else if(e.hs==="bun"){B(.26,.26,.26,e.hair,0,2.34,-.12,g);}
+  else if(e.hs==="twin"){B(.16,.5,.16,e.hair,-.42,1.72,-.18,g);B(.16,.5,.16,e.hair,.42,1.72,-.18,g);}
+  else if(e.hs==="fluffy"){B(.76,.2,.76,e.hair,0,2.24,0,g);}
+
+  const hp=new THREE.Group();hp.position.set(0,1.82,0);
+  B(.68,.07,.12,0x22262e,0,.32,0,hp);
+  B(.1,.28,.22,0xff6b35,-.35,0,0,hp);
+  B(.1,.28,.22,0xff6b35,.35,0,0,hp);
+  hp.visible=false;g.add(hp);
+
+  const mug=new THREE.Group();mug.position.set(.56,1.18,.28);
+  B(.16,.18,.16,0xffffff,0,0,0,mug);
+  B(.12,.03,.12,0x4b2c16,0,.08,0,mug);
+  mug.visible=false;g.add(mug);
+  const doc=new THREE.Group();doc.position.set(.48,1.2,.62);B(.28,.03,.36,0xffffff,0,0,0,doc);B(.2,.01,.02,0x8a94a6,0,.02,-.08,doc);B(.2,.01,.02,0x8a94a6,0,.02,.0,doc);doc.visible=false;g.add(doc);
+
+  B(.7,.8,.36,e.shirt,0,1.1,0,g);
+  const limb=(w,h,col,lx,ly,c2,sp)=>{const p=new THREE.Group();p.position.set(lx,ly,0);if(c2){const h1=h*sp,h2=h-h1;B(w,h1,w,col,0,-h1/2,0,p);B(w,h2,w,c2,0,-h1-h2/2,0,p);}else B(w,h,w,col,0,-h/2,0,p);g.add(p);return p;};
+  const ER=e.id==="eric";if(ER){B(.3,.2,.02,e.skin,0,1.4,.185,g);B(.16,.1,.02,e.skin,0,1.27,.185,g);}
+  P.la=limb(.24,.74,e.shirt,-.48,1.46,ER?e.skin:null,.35);
+  P.ra=limb(.24,.74,e.shirt,.48,1.46,ER?e.skin:null,.35);
+  const lgc=e.id==="eric"?0xb5a888:0x3b4a6b;P.ll=limb(.32,.7,lgc,-.18,.7,ER?e.skin:null,.55);
+  P.rl=limb(.32,.7,lgc,.18,.7,ER?e.skin:null,.55);
+
+  const c={e:e,g:g,p:P,hp:hp,mug:mug,doc:doc,errand:null,run:false,mode:"sit",restKind:null,path:null,done:null,tok:0,ph:Math.random()*6,away:false,k:""};
+  g.position.set(e.hx,-.29,e.hz);g.rotation.y=e.hr;
+  c.nl=document.createElement("div");c.nl.className="nl";c.nl.textContent=e.name;c.nl.dataset.e=e.id;$("#labels").appendChild(c.nl);
+  g.traverse(o=>{o.userData.eid=e.id;});
+  root.add(g);chars.push(c);
+}
+
+const DUTY_POOL=[
+ [/본부장/,[["🗒","업무 배분안 구상 중"],["🔍","보고 자료 검토 중"],["📧","메일 확인 중"]]],
+ [/총무/,[["📦","비품 재고 확인 중"],["🗂","문서 정리 중"],["📮","문서 접수 확인 중"]]],
+ [/경영관리/,[["📊","경영 지표 정리 중"],["🧾","결재 서류 검토 중"],["📧","메일 확인 중"]]],
+ [/전략/,[["📈","시장 동향 정리 중"],["📝","보고서 구상 중"],["🔍","자료 검토 중"]]],
+ [/법무/,[["📑","계약서 검토 중"],["📚","규정 확인 중"],["📧","메일 확인 중"]]],
+ [/IR/,[["📣","IR 자료 정리 중"],["📊","주가·지표 확인 중"],["📧","메일 확인 중"]]],
+ [/IT/,[["💻","시스템 점검 중"],["🔧","장비 상태 확인 중"],["🛠","자동화 스크립트 점검 중"]]]
+];
+function stInfo(c){
+  const id=c.e.id;
+  if(st.phase[id])return {e:"⌨️",t:st.phase[id],busy:1};
+  if(st.busy[id])return {e:"⌨️",t:"업무 중",busy:1};
+  if(id==="ceo1")return {e:"👑",t:"보고 수신 중"};
+  if(danceOn()&&c.away)return c.mode==="dance"?{e:"🕺",t:"댄스타임 중"}:{e:"🏃",t:"댄스타임 집합 중"};
+  if(c.errand)return {e:"📄",t:c.errand};
+  if(c.away){
+    if(c.restKind==="music")return {e:"🎧",t:"음악 감상 중"};
+    if(c.restKind==="pool")return {e:"🎱",t:"포켓볼 휴식 중"};
+    return {e:"☕",t:"휴식 중"};
+  }
+  if(c.mode==="idle")return {e:"⏳",t:"대기 중",sub:"업무 지시 대기"};
+  let pool=[];for(const r of DUTY_POOL){if(r[0].test(c.e.badge)){pool=r[1];break;}}
+  let h=0;for(let i=0;i<id.length;i++)h+=id.charCodeAt(i);
+  const k=(Math.floor(Date.now()/40000)+h)%(pool.length+1);
+  if(k===0||!pool.length)return {e:"⏳",t:"대기 중",sub:"업무 지시 대기"};
+  return {e:pool[k-1][0],t:pool[k-1][1]};
+}
+function lblText(c){
+  if(c.e.id==="ceo1")return "";
+  if(st.busy[c.e.id]&&!st.phase[c.e.id])return "";
+  const si=stInfo(c);return si.e+" "+si.t;
+}
+function drawLabel(c){
+  if(!c)return;
+  const on=c.e.id===st.sel,b=!!st.busy[c.e.id],r=c.away&&!b;
+  const base="nl"+(on?" on":"")+(b?" busy":r?" rest":""),ph=lblText(c),k=base+"|"+ph;
+  if(c.k!==k){c.nl.className=base;c.nl.dataset.s=ph;c.k=k;}
+}
+
+function labels(){
+  const w=gl3.clientWidth,h=gl3.clientHeight,m2=st.mode==="2d",ac=activeCam();
+  chars.forEach(c=>{
+    if(st.mode==="fpv"&&c.e.id==="ceo1"){c.nl.style.display="none";return;}
+    V.set(c.g.position.x,c.g.position.y+3.0,c.g.position.z).project(ac);
+    if(st.mode==="fpv"&&V.z>1){c.nl.style.display="none";return;}
+    c.nl.style.display="";
+    const on=c.e.id===st.sel,b=!!st.busy[c.e.id],r=c.away&&!b;
+    const cls="nl"+(on?" on":"")+(b?" busy":r?" rest":"");
+    const ph=lblText(c),key=cls+"|"+ph;
+    if(key!==c.lastCls){c.nl.className=cls;c.nl.dataset.s=ph;c.lastCls=key;}
+    c.nl.style.transform="translate("+((V.x*.5+.5)*w)+"px,"+((-V.y*.5+.5)*h)+"px) translate(-50%,-100%)";
+  });
+  flabels.forEach(a=>{
+    a[0].style.display=m2?"block":"none";
+    if(m2){V.set(a[1].x+a[1].w/2,.3,a[1].z+a[1].d-2.5).project(ac);a[0].style.transform="translate("+((V.x*.5+.5)*w)+"px,"+((-V.y*.5+.5)*h)+"px) translate(-50%,-50%)";}
+  });
+  updateRobotBubble(performance.now()/1000);
+}
+
+function pose(c,t){
+  const P=c.p,b=!!st.busy[c.e.id];
+  if(c.mode!=="dance"){P.la.rotation.z=0;P.ra.rotation.z=0;}
+  c.hp.visible=c.mode!=="sit"&&c.restKind==="music"&&!b;
+  c.mug.visible=c.mode!=="sit"&&c.restKind==="coffee"&&!b;
+  if(c.mode==="sit")c.errand=null;
+  c.doc.visible=!!c.errand&&c.mode!=="sit";
+  if(c.mode==="sit"){
+    P.ll.rotation.x=P.rl.rotation.x=-1.5;
+    P.la.rotation.x=-1.05+(b?Math.sin(t*16)*.22:Math.sin(t*1.5+c.ph)*.05);
+    P.ra.rotation.x=-1.05+(b?Math.sin(t*16+2)*.22:Math.cos(t*1.5+c.ph)*.05);
+  }else if(c.mode==="dance"){
+    danceMove(c,t);
+  }else if(c.mode==="walk"){
+    const s=c.run?Math.sin(t*16)*1.0:Math.sin(t*9)*.72;
+    P.ll.rotation.x=s;P.rl.rotation.x=-s;P.la.rotation.x=-s*(c.run?1.1:.85);P.ra.rotation.x=s*(c.run?1.1:.85);
+    if(c.run)c.g.position.y=Math.abs(Math.sin(t*16))*.12;
+  }else{
+    P.ll.rotation.x=P.rl.rotation.x=0;
+    if(c.restKind==="music"){
+      P.la.rotation.x=-.4;P.ra.rotation.x=-.4;
+      c.g.rotation.z=Math.sin(t*4)*.06;
+    }else if(c.restKind==="coffee"){
+      P.la.rotation.x=-.25;P.ra.rotation.x=-.95;
+      c.g.rotation.z=0;
+    }else{
+      P.la.rotation.x=-.15;P.ra.rotation.x=-.15;
+      c.g.rotation.z=0;
+    }
+  }
+  if(c.errand&&c.mode!=="sit"&&c.mode!=="dance")P.ra.rotation.x=-1.1;
+}
+
+function canWalk(x,z){
+  if(x<0.8||x>97.2||z<0.8||z>46.2)return false;
+  const near=(a,b)=>Math.abs(a-b)<0.55;
+  const door=(v,arr)=>arr.some(d=>Math.abs(v-d)<1.45);
+  if(near(z,20)&&!door(x,[15,41,62,78,91]))return false;
+  if(near(z,25)&&!door(x,[11,33,55,72,81.5]))return false;
+  if(z<20&&(near(x,30)||near(x,52)||near(x,72)||near(x,84))&&!door(z,[10]))return false;
+  if(z>25&&(near(x,22)||near(x,44)||near(x,66)||near(x,78))&&!door(z,[36]))return false;
+  return true;
+}
+function tick(dt,t){
+  if(st.mode==="fpv"){
+    const ceo=cOf("ceo1");
+    if(ceo){
+      ceo.tok++;ceo.path=null;ceo.away=false;
+      const kFwd=(fpv.keys.KeyW||fpv.keys.ArrowUp?1:0)-(fpv.keys.KeyS||fpv.keys.ArrowDown?1:0);
+      const kStr=(fpv.keys.KeyD||fpv.keys.ArrowRight?1:0)-(fpv.keys.KeyA||fpv.keys.ArrowLeft?1:0);
+      const fwd=kFwd+fpv.joy.y,str=kStr+fpv.joy.x;
+      const mag=Math.hypot(fwd,str);
+      if(mag>0.06){
+        const cl=Math.min(1,mag),sp=5.8*dt*cl/mag;
+        const sx=-Math.sin(fpv.yaw),sz=-Math.cos(fpv.yaw),rx=Math.cos(fpv.yaw),rz=-Math.sin(fpv.yaw);
+        const dx=(sx*fwd+rx*str)*sp,dz=(sz*fwd+rz*str)*sp;
+        const nx=ceo.g.position.x+dx,nz=ceo.g.position.z+dz;
+        if(canWalk(nx,ceo.g.position.z))ceo.g.position.x=nx;
+        if(canWalk(ceo.g.position.x,nz))ceo.g.position.z=nz;
+        ceo.mode="walk";
+      }else{ceo.mode="idle";}
+      ceo.g.position.y=0;
+      ceo.g.rotation.y=fpv.yaw+Math.PI;
+      if(fpvCam){
+        const bob=ceo.mode==="walk"?Math.sin(t*10)*0.05:0;
+        fpvCam.position.set(ceo.g.position.x,2.25+bob,ceo.g.position.z);
+        fpvCam.rotation.order="YXZ";
+        fpvCam.rotation.y=fpv.yaw;
+        fpvCam.rotation.x=fpv.pitch;
+      }
+    }
+  }
+  chars.forEach(c=>{
+    if(c.path&&c.path.length){
+      const p=c.path[0],g=c.g.position,dx=p[0]-g.x,dz=p[1]-g.z,d=Math.hypot(dx,dz),s=(c.run?7.5:3.2)*dt;
+      c.mode="walk";g.y=0;
+      if(d<=s){g.x=p[0];g.z=p[1];c.path.shift();if(!c.path.length){const r=c.done;c.done=null;if(r)r();}}
+      else{g.x+=dx/d*s;g.z+=dz/d*s;c.g.rotation.y=Math.atan2(dx,dz);}
+    }
+    pose(c,t);
+  });
+  roam(dt,t);
+  const s=cOf(st.sel);if(s){ring.visible=true;ring.position.x=s.g.position.x;ring.position.z=s.g.position.z;}else ring.visible=false;
+}
+
+function walk(c,pts){return new Promise(r=>{c.path=pts.slice();c.done=r;c.mode="walk";drawLabel(c);});}
+
+/* ---------- 댄스타임 (알렉스에게 "댄스타임" 전송) ---------- */
+const DANCE={on:false,t0:0,bpm:126,lead:4,secs:24};
+let danceAC=null,danceMaster=null,danceTimer=null,danceNext=0,danceStep=0,danceNoise=null;
+function danceOn(){try{return DANCE.on;}catch(e){return false;}}
+function danceCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+  if(!danceAC){danceAC=new AC();danceMaster=danceAC.createGain();danceMaster.connect(danceAC.destination);
+    const bf=danceAC.createBuffer(1,danceAC.sampleRate,danceAC.sampleRate),d=bf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;danceNoise=bf;}
+  return danceAC;
+}
+function danceUnlock(){try{const ac=danceCtx();if(!ac)return;if(ac.state!=="running")ac.resume();const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}catch(e){}}
+function danceMove(c,t){
+  const P=c.p,bp=60/DANCE.bpm,b=Math.max(0,(t-DANCE.t0)/bp),lead=Math.max(0,DANCE.lead),pos=b%(lead+4);
+  let tg;
+  if(pos<lead){const sw=Math.sin(b*Math.PI*2)*.35;tg=[-.9+sw,.9-sw,0,0];}
+  else{const k=Math.min(3,Math.floor(pos-lead));tg=[[-2.5,2.5,0,0],[2.0,-2.0,-.4,-.4],[-2.9,.3,0,-.9],[2.9,-2.9,0,0]][k].slice();}
+  if(!c.da)c.da=tg.slice();
+  for(let i=0;i<4;i++)c.da[i]+=(tg[i]-c.da[i])*.35;
+  P.la.rotation.z=c.da[0];P.ra.rotation.z=c.da[1];P.la.rotation.x=c.da[2];P.ra.rotation.x=c.da[3];
+  const s=Math.sin(b*Math.PI);
+  P.ll.rotation.x=s*.35;P.rl.rotation.x=-s*.35;
+  c.g.position.y=Math.abs(s)*.14;c.g.rotation.z=s*.05;
+}
+function danceMusicStart(){
+  try{
+    const ac=danceCtx();if(!ac)return "noaudio";
+    if(ac.state!=="running")ac.resume();
+    danceMaster.gain.cancelScheduledValues(0);danceMaster.gain.value=.28;
+    const at=ac.currentTime+.08;DANCE.t0=performance.now()/1000+.08+(ac.baseLatency||0);
+    danceStep=0;danceNext=at;clearInterval(danceTimer);danceTimer=setInterval(danceSched,25);
+    return ac.state;
+  }catch(e){return "error";}
+}
+function danceMusicStop(){
+  try{clearInterval(danceTimer);danceTimer=null;if(danceMaster&&danceAC)danceMaster.gain.setTargetAtTime(0,danceAC.currentTime,.2);}catch(e){}
+}
+function danceSched(){
+  const sx=60/DANCE.bpm/4;
+  while(danceNext<danceAC.currentTime+.15){danceNote(danceStep,danceNext);danceNext+=sx;danceStep++;}
+}
+function danceNote(s,tm){
+  const ac=danceAC,i=s%16,bar=Math.floor(s/16)%4;
+  const ROOT=[65.41,55,87.31,98],CH=[[261.63,329.63,392],[220,261.63,329.63],[349.23,440,523.25],[392,493.88,587.33]];
+  const osc=(type,f,dur,vol,f2,cut)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,tm);if(f2)o.frequency.exponentialRampToValueAtTime(f2,tm+dur);
+    g.gain.setValueAtTime(vol,tm);g.gain.exponentialRampToValueAtTime(.001,tm+dur);let n=o;if(cut){const fl=ac.createBiquadFilter();fl.type="lowpass";fl.frequency.value=cut;o.connect(fl);n=fl;}n.connect(g);g.connect(danceMaster);o.start(tm);o.stop(tm+dur+.02);};
+  const nz=(dur,vol,type,fq)=>{const n=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();n.buffer=danceNoise;f.type=type;f.frequency.value=fq;g.gain.setValueAtTime(vol,tm);g.gain.exponentialRampToValueAtTime(.001,tm+dur);n.connect(f);f.connect(g);g.connect(danceMaster);n.start(tm);n.stop(tm+dur+.02);};
+  if(i%4===0)osc("sine",150,.14,1,45);
+  if(i%4===2)nz(.05,.35,"highpass",7000);
+  if(i===4||i===12)nz(.12,.5,"bandpass",1500);
+  if(i%4===0)osc("sawtooth",ROOT[bar],.2,.5,null,500);
+  else if(i%4===2)osc("sawtooth",ROOT[bar]*2,.15,.4,null,700);
+  if(i%4===2)CH[bar].forEach(f=>osc("square",f,.09,.07,null,2500));
+  const LEAD=[0,3,6,8,11,14],k=LEAD.indexOf(i);
+  if(k>=0)osc("sawtooth",CH[bar][k%3]*(k<3?1:2),.22,.16,null,2600);
+}
+async function danceTime(){
+  if(DANCE.on)return;DANCE.on=true;
+  danceUnlock();
+  const list=chars.filter(c=>!(st.mode==="fpv"&&c.e.id==="ceo1"));
+  list.sort((a,b)=>a.g.position.x-b.g.position.x);
+  const N=list.length,HZ=22.5,x0=5,x1=93;
+  const tg=list.map((c,i)=>[N>1?x0+(x1-x0)*i/(N-1):49,HZ]);
+  list.forEach(c=>{c.tok++;c.away=true;c.restKind=null;c.errand=null;c.da=null;c.run=true;});
+  try{
+    await Promise.race([Promise.all(list.map((c,i)=>{
+      const sp=[c.g.position.x,c.g.position.z];
+      let pts=routePts(roomAt(sp[0],sp[1]).id,"hall",sp,tg[i])||[];
+      pts=pts.slice();pts.push(tg[i]);
+      return walk(c,pts);
+    })),sleep(20000)]);
+    const ms=danceMusicStart();
+    list.forEach((c,i)=>{c.run=false;c.path=null;c.done=null;c.g.position.set(tg[i][0],0,tg[i][1]);c.g.rotation.y=.35;c.mode="dance";c.da=null;drawLabel(c);});
+    if(ms!=="running"){wfLog("🔇 소리가 나오지 않으면 아이패드 무음 스위치와 볼륨을 확인해 주세요.");}
+    await sleep(Math.max(5,DANCE.secs)*1000);
+  }finally{
+    danceMusicStop();
+    list.forEach(c=>{c.run=false;c.g.rotation.z=0;c.g.position.y=0;c.mode="walk";});
+    await Promise.race([Promise.all(list.map(c=>goDesk(c,++c.tok))),sleep(45000)]);
+    list.forEach(c=>{if(c.mode!=="sit"){c.path=null;c.g.position.set(c.e.hx,-.29,c.e.hz);c.g.rotation.y=c.e.hr;c.mode="sit";c.away=false;c.restKind=null;drawLabel(c);}});
+    DANCE.on=false;
+  }
+}
+async function goDesk(c,tok){
+  const curRm=roomAt(c.g.position.x,c.g.position.z).id;
+  await walk(c,routePts(curRm,c.e.room,[c.g.position.x,c.g.position.z],[c.e.hx,c.e.hz]));
+  if(c.tok===tok){c.g.position.set(c.e.hx,-.29,c.e.hz);c.g.rotation.y=c.e.hr;c.mode="sit";c.away=false;c.restKind=null;drawLabel(c);}
+}
+async function errand(c){
+  const tok=++c.tok;c.away=true;c.restKind=null;
+  let tid=c.e.id==="alex"?"ceo1":(Math.random()<.5?"alex":"ceo1");
+  if(st.mode==="fpv"&&tid==="ceo1")tid="alex";
+  if(tid===c.e.id){c.away=false;return;}
+  const te=E(tid),dest=[te.hx,te.hz+3.3];
+  c.errand="서류 전달 중";
+  await walk(c,routePts(c.e.room,te.room,[c.g.position.x,c.g.position.z],dest));
+  if(c.tok!==tok)return;
+  c.mode="idle";c.g.rotation.y=Math.PI;c.errand="서류 건네는 중";drawLabel(c);
+  await sleep(2200+Math.random()*1200);
+  if(c.tok!==tok)return;
+  c.errand="복귀 중";
+  await goDesk(c,tok);
+}
+async function wander(c){
+  const tok=++c.tok;c.away=true;c.errand=null;
+  const sp=SPOTS[Math.floor(Math.random()*SPOTS.length)];
+  c.restKind=sp[2];
+  await walk(c,routePts(c.e.room,sp[0],[c.g.position.x,c.g.position.z],[sp[1],sp[2]]));
+  if(c.tok!==tok)return;c.mode="idle";drawLabel(c);
+  await sleep(4500+Math.random()*4000);
+  if(c.tok!==tok)return;await goDesk(c,tok);
+}
+
+const DEF={"3d":{az:.785,el:.62,s:37,tx:49,tz:23.5},"2d":{az:0,el:1.55,s:32,tx:49,tz:23.5}};
+function camUpdate(){
+  const a=gl3.clientWidth/Math.max(1,gl3.clientHeight);
+  camera.left=-cam.s*a;camera.right=cam.s*a;camera.top=cam.s;camera.bottom=-cam.s;camera.updateProjectionMatrix();
+  const ce=Math.cos(cam.el);camera.position.set(cam.tx+400*Math.sin(cam.az)*ce,400*Math.sin(cam.el),cam.tz+400*Math.cos(cam.az)*ce);camera.lookAt(cam.tx,0,cam.tz);
+  if(fpvCam){fpvCam.aspect=a;fpvCam.updateProjectionMatrix();}
+}
+function zoom(f){cam.s=Math.min(120,Math.max(2,cam.s*f));}
+function pan(dx,dy){const k=2*cam.s/Math.max(1,gl3.clientHeight),ky=k/Math.max(.3,Math.sin(cam.el));cam.tx+=-dx*k*Math.cos(cam.az)-dy*ky*Math.sin(cam.az);cam.tz+=dx*k*Math.sin(cam.az)-dy*ky*Math.cos(cam.az);}
+function setMode(m,resetFpv){
+  st.mode=m;
+  const ceo=cOf("ceo1");
+  if(m==="fpv"){
+    if(ceo){
+      ceo.tok++;ceo.path=null;
+      if(resetFpv){ceo.g.position.set(ceo.e.hx,0,ceo.e.hz);fpv.yaw=Math.PI;fpv.pitch=-0.05;}
+      else{fpv.yaw=ceo.g.rotation.y-Math.PI;fpv.pitch=-0.05;}
+      ceo.g.visible=false;
+    }
+    signs.forEach(x=>{x.visible=true;});if(grid)grid.visible=true;
+    $("#joy").classList.add("show");
+  }else{
+    if(ceo){ceo.g.visible=true;ceo.nl.style.display="";}
+    $("#joy").classList.remove("show");fpv.joy.x=0;fpv.joy.y=0;if($("#joyKnob"))$("#joyKnob").style.transform="";
+    const d=Object.assign({},DEF[m]),a=gl3.clientWidth/Math.max(1,gl3.clientHeight);d.s*=Math.max(1,1.5/a);Object.assign(cam,d);
+    signs.forEach(x=>{x.visible=m==="3d";});if(grid)grid.visible=m==="3d";
+  }
+  $("#m2").classList.toggle("on",m==="2d");$("#m3").classList.toggle("on",m==="3d");camUpdate();drawCards();
+}
+function pick(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  rc.setFromCamera({x:((e.clientX-r.left)/r.width)*2-1,y:-((e.clientY-r.top)/r.height)*2+1},activeCam());
+  const targets=chars.filter(c=>c.g.visible).map(c=>c.g).concat(RB&&RB.g?[RB.g]:[]);
+  const hit=rc.intersectObjects(targets,true).find(i=>i.object.userData.eid||i.object.userData.isRobot);
+  if(!hit)return;
+  if(hit.object.userData.isRobot){openRobotSmalltalk();return;}
+  if(hit.object.userData.eid)select(hit.object.userData.eid);
+}
+function controls(cv){
+  const ptr=new Map();let moved=0;
+  cv.addEventListener("pointerdown",e=>{if(e.isPrimary)ptr.clear();cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button,pt:e.pointerType});moved=0;});
+  cv.addEventListener("pointermove",e=>{
+    const p=ptr.get(e.pointerId);if(!p)return;
+    if(ptr.size===2){
+      const v=[...ptr.values()],d0=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y),x0=(v[0].x+v[1].x)/2,y0=(v[0].y+v[1].y)/2;
+      p.x=e.clientX;p.y=e.clientY;
+      const d1=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y),x1=(v[0].x+v[1].x)/2,y1=(v[0].y+v[1].y)/2;
+      if(d0>0&&d1>0)zoom(d0/d1);pan(x1-x0,y1-y0);moved=99;
+    }else{
+      const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+      if(st.mode==="fpv"){fpv.yaw-=dx*.005;fpv.pitch=Math.min(.65,Math.max(-.65,fpv.pitch-dy*.004));}else if(st.mode==="2d"||p.b===2)pan(dx,dy);else{cam.az-=dx*.006;cam.el=Math.min(1.45,Math.max(.2,cam.el+dy*.005));}
+    }
+    camUpdate();
+  });
+  const up=e=>{const had=ptr.delete(e.pointerId);if(had&&ptr.size===0&&moved<6&&e.type==="pointerup")pick(e);};
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);cv.addEventListener("lostpointercapture",e=>{ptr.delete(e.pointerId);});
+  cv.addEventListener("wheel",e=>{e.preventDefault();zoom(e.deltaY<0?.9:1.1);camUpdate();},{passive:false});
+  cv.addEventListener("contextmenu",e=>e.preventDefault());
+  ["gesturestart","gesturechange","gestureend"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
+}
+function rs(){const w=gl3.clientWidth,h=gl3.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camUpdate();}
+
+const FD=[...document.querySelectorAll(".fd")];
+function flow(t){
+  const fl=$("#flow"),c=cOf(st.sel),avEl=$("#av-head .pix")||$("#av-head");
+  if(st.view!=="office"||!c||!avEl||window.innerWidth<=820||(st.mode==="fpv"&&c.e.id==="ceo1")){fl.style.display="none";return;}
+  const s=stage.getBoundingClientRect();
+  V.set(c.g.position.x,c.g.position.y+3.3,c.g.position.z).project(activeCam());
+  const x1=s.left+(V.x*.5+.5)*s.width,y1=s.top+(-V.y*.5+.5)*s.height;
+  if(V.z>1||x1<s.left||x1>s.right||y1<s.top||y1>s.bottom){fl.style.display="none";return;}
+  const ar=avEl.getBoundingClientRect();
+  const x2=ar.left-6, y2=ar.top+ar.height*0.56;
+  const dx=x2-x1,p=[[x1,y1],[x1+dx*.38,y1-55],[x2-dx*.25,y2+35],[x2,y2]];
+  fl.style.display="block";$("#fp").setAttribute("d","M"+p[0]+" C"+p[1]+" "+p[2]+" "+p[3]);
+  FD.forEach((n,i)=>{const u=((t*.25)+i/FD.length)%1,w=1-u;
+    n.setAttribute("cx",w*w*w*p[0][0]+3*w*w*u*p[1][0]+3*w*u*u*p[2][0]+u*u*u*p[3][0]);
+    n.setAttribute("cy",w*w*w*p[0][1]+3*w*w*u*p[1][1]+3*w*u*u*p[2][1]+u*u*u*p[3][1]);});
+}
+
+let last=0,lastLive=0,lastBubble=0;
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(st.view!=="office"){$("#flow").style.display="none";return;}
+  tick(dt,now/1000);if(now-lastLive>130){lastLive=now;liveTick(now/1000);}if(PROMO&&now-lastPromo>45){lastPromo=now;promoDraw(PROMO.x,PROMO.w,PROMO.h,now/1000);PROMO.t.needsUpdate=true;}renderer.render(scene,activeCam());labels();flow(now/1000);
+  if(now-lastBubble>2600){lastBubble=now;chars.forEach(drawLabel);}
+}
+
+function init3d(){
+  gl3=$("#gl");
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));gl3.appendChild(renderer.domElement);
+  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-1,1,1,-1,1,1500);fpvCam=new THREE.PerspectiveCamera(62,1,0.1,300);V=new THREE.Vector3();rc=new THREE.Raycaster();root=new THREE.Group();scene.add(root);
+  scene.add(new THREE.AmbientLight(0xffffff,.82));const dl=new THREE.DirectionalLight(0xffffff,.5);dl.position.set(-30,60,40);scene.add(dl);
+  grid=new THREE.GridHelper(400,100,0xdad2be,0xdad2be);grid.position.set(49,-.3,23.5);grid.material.transparent=true;grid.material.opacity=.45;scene.add(grid);
+  build();EMP.forEach(addChar);
+  chars.forEach(drawLabel);
+  ring=new THREE.Mesh(new THREE.RingGeometry(.8,1,28),new THREE.MeshBasicMaterial({color:0xf0b43c,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.08;scene.add(ring);
+  controls(renderer.domElement);
+  new ResizeObserver(rs).observe(gl3);rs();setMode("3d");
+  requestAnimationFrame(loop);
+
+  setInterval(()=>{
+    if(st.view!=="office"||document.hidden||st.wfRun||DANCE.on)return;
+    chars.forEach(c=>{
+      if(c.e.id==="ceo1"||c.mode!=="sit"||c.away||st.busy[c.e.id])return;
+      if(Math.random()<0.012&&chars.filter(x=>x.errand).length<2){errand(c);return;}
+      if(Math.random()<0.015){wander(c);return;}
+    });
+  },3200);
+}
+
+/* ---------- AI Execution ---------- */
+function localAssistantReply(e, promptText){
+  const p=promptText.trim();
+  const shortP=p.length>60?p.slice(0,60)+"…":p;
+  if(e.id==="peter"||e.room==="legal"){
+    return "단테 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 건은 계약 상대방 지위, 책임 제한·해지 조항, 상장사 내부통제/공시 연관성을 우선 검토해야 합니다.\n\n• 실무 검토 초안:\n  1) 당사 지위(갑/을·화주/공급사 등) 및 핵심 의무 범위 확인\n  2) 손해배상 상한, 해지·위약벌, 지식재산·개인정보 조항 점검\n  3) 전자서명(모두싸인) 체결 전 최종 문안 및 결재 확인\n• 확인 필요 사항: 계약서/공문 원문, 당사자 정보, 확정 일자 및 관련 법령 조문 원문 확인이 필요합니다.";
+  }
+  if(e.id==="ryan"||e.room==="ir"){
+    return "단테 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 건은 제공된 사실·수치만을 기준으로 투자자 소통 방향과 공정공시·미공개정보 리스크를 함께 점검해야 합니다.\n\n• IR 실무 초안:\n  1) 핵심 메시지 요약(추진 배경·기대 효과·주의점)\n  2) 주주·투자자 예상 Q&A 및 대응 원칙 정리\n  3) 공시 의무 및 미공개중요정보 관리 여부 확인\n• 확인 필요 사항: 미확정 수치·일정은 임의 기재하지 않으며, 원자료 및 공시 기준 확인이 필요합니다.";
+  }
+  if(e.id==="alex"){
+    return "단테 대표님, 핵심 결론부터 말씀드리면 '"+shortP+"' 업무를 즉시 실행할 수 있도록 담당 배정과 처리 순서를 정리했습니다.\n\n• 실행 계획:\n  1) 1단계(사실·자료 취합): 관련 문서·조건·일정 정리\n  2) 2단계(전문 검토): 법무(피터)·재무/경영관리(제니)·IR(라이언) 등 쟁점 검토\n  3) 3단계(의사결정): 단테 대표님 보고 및 실행 확정\n• 즉시 진행 팁: 대상 문안이나 구체 조건을 붙여주시면 해당 담당자 관점으로 초안을 바로 작성합니다.";
+  }
+  return "단테 대표님, 핵심 결론입니다. "+e.name+"("+e.badge+")이 '"+shortP+"' 업무에 대한 1차 실무 처리안을 정리했습니다.\n\n• 처리 단계:\n  1) 요구사항 핵심 목표 및 산출물 형태 확정\n  2) 필요 데이터·규정·선행 자료 확인\n  3) 초안 작성 및 검토 후 최종 반영\n• 안내: 구체 수치·규정 조문·날짜는 확인되지 않은 항목을 임의 추정하지 않으며 원문 확인이 필요합니다.";
+}
+
+async function fetchRetry(url,opt){
+  let last=null;
+  for(let k=0;k<3;k++){
+    try{return await fetch(url,opt);}
+    catch(e){last=e;if(k<2)await sleep(1500*(k+1));}
+  }
+  throw new Error("네트워크 연결 실패("+((last&&last.message)||"알 수 없음")+"): 인터넷 연결이 끊겼거나 화면이 꺼져 요청이 중단되었을 수 있습니다. 연결을 확인하고 다시 지시해 주세요.");
+}
+let geminiNoSearch=false;
+async function callConfiguredLLM(inputMsgs){
+  if(aiCfg.provider==="local")throw new Error("내장 업무비서 모드로 설정되어 있습니다.");
+  if(aiCfg.provider==="auto"){
+    if(!sampleFn){try{if(window.claude&&claude.use)sampleFn=await claude.use("sample");}catch(e){}}
+    if(!sampleFn)throw new Error("자동(Claude) 연결을 쓸 수 없습니다. claude.ai의 게시 링크에서 열었는지, 로그인되어 있는지 확인해 주세요. 톱니바퀴(AI 연결 설정)에서 '자동(Claude)'을 선택했는지도 확인하세요.");
+    return await sampleFn(inputMsgs,{cache:false});
+  }
+  const cleanKey=(aiCfg.apiKey||"").trim();
+  const cleanModel=(aiCfg.model||"").trim();
+  if(!cleanKey)throw new Error("API Key가 비어 있습니다. AI 연결 설정에서 키를 입력해 주세요.");
+  const sysMsg=inputMsgs[0]?.content||COMMON;
+  const convo=inputMsgs.slice(1);
+  if(aiCfg.provider==="gemini"){
+    const m=cleanModel||"gemini-3.5-flash-lite";
+    let contents=convo
+      .filter(x=>x && typeof x.content==="string" && x.content.trim().length>0)
+      .map(x=>({role:x.role==="assistant"?"model":"user",parts:[{text:x.content.trim()}]}));
+    if(!contents.length){
+      const fallback=(inputMsgs[0]?.content||"").trim()||"안녕하세요";
+      contents=[{role:"user",parts:[{text:fallback}]}];
+    }
+    const endpoints=["v1beta","v1"];
+    let lastErr=null;
+    for(const ver of endpoints){
+      const url="https://generativelanguage.googleapis.com/"+ver+"/models/"+encodeURIComponent(m)+":generateContent?key="+encodeURIComponent(cleanKey);
+      const payload={contents:contents};
+      if(!geminiNoSearch)payload.tools=[{google_search:{}}];
+      if(sysMsg && sysMsg.trim() && convo.length>0){
+        payload.system_instruction={parts:[{text:sysMsg.trim()}]};
+      }
+      let res=await fetchRetry(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      if(!res.ok&&(res.status===429||res.status===400)&&payload.tools){
+        const p2={contents:payload.contents};if(payload.system_instruction)p2.system_instruction=payload.system_instruction;
+        const r2=await fetchRetry(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p2)});
+        if(r2.ok)geminiNoSearch=true;
+        res=r2;
+      }
+      if(res.ok){
+        const data=await res.json();
+        const txt=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
+        if(!txt)throw new Error("Gemini에서 빈 응답을 반환했습니다. (모델: "+m+")");
+        const chunks=data.candidates?.[0]?.groundingMetadata?.groundingChunks||[];
+        const sites=[];
+        chunks.forEach(ch=>{
+          const title=(ch.web?.title||"").trim();
+          const uri=(ch.web?.uri||"").trim();
+          if(title||uri){
+            const label=title&&uri?title+" ("+uri+")":(title||uri);
+            if(sites.indexOf(label)<0)sites.push(label);
+          }
+        });
+        const withRefs=sites.length?txt+"\n\n[조사한 관련 사이트·출처]\n- "+sites.slice(0,5).join("\n- "):txt;
+        return {text:withRefs};
+      }
+      let errDetail="";
+      try{
+        const errJson=await res.json();
+        errDetail=errJson?.error?.message||errJson?.error?.status||"";
+        const qv=(errJson?.error?.details||[]).flatMap(d=>d.violations||[]).map(v=>v.quotaMetric||v.quotaId).filter(Boolean);
+        if(qv.length)errDetail+=" [한도 항목: "+[...new Set(qv)].join(", ")+"]";
+      }catch(e){}
+      lastErr=new Error("Gemini API 오류 (HTTP "+res.status+", "+ver+", 모델: "+m+")"+(errDetail?" - "+errDetail:""));
+      if(res.status!==404)throw lastErr;
+    }
+    throw lastErr;
+  }
+  if(aiCfg.provider==="openai"){
+    const m=cleanModel||"gpt-4o-mini";
+    const messages=[{role:"system",content:sysMsg}].concat(convo.map(x=>({role:x.role==="assistant"?"assistant":"user",content:x.content})));
+    const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+cleanKey},body:JSON.stringify({model:m,messages:messages})});
+    let errDetail="";
+    if(!res.ok){
+      try{
+        const errJson=await res.json();
+        errDetail=errJson?.error?.message||errJson?.error?.code||"";
+      }catch(e){}
+      throw new Error("OpenAI API 오류 (HTTP "+res.status+", 모델: "+m+")"+(errDetail?" - "+errDetail:""));
+    }
+    const data=await res.json();
+    const txt=data.choices?.[0]?.message?.content||"";
+    if(!txt)throw new Error("OpenAI에서 빈 응답을 반환했습니다. (모델: "+m+")");
+    return {text:txt};
+  }
+  throw new Error("지원하지 않는 AI 연결 방식입니다: "+aiCfg.provider);
+}
+
+function updateEngineBadge(){
+  const el=$("#engLabel");
+  if(!el)return;
+  if(aiCfg.provider==="gemini")el.textContent="online · Gemini";
+  else if(aiCfg.provider==="openai")el.textContent="online · OpenAI";
+  else if(aiCfg.provider==="local")el.textContent="online · 내장비서";
+  else el.textContent=sampleFn?"online · Claude":"online · AI준비됨";
+}
+
+/* ---------- chat UI ---------- */
+function stat(e){
+  if(e.id==="ceo1")return '<span class="st">대표님(나)</span>';
+  const c=cOf(e.id);
+  if(st.phase[e.id])return '<span class="st'+(st.busy[e.id]?' busy':'')+'">'+esc(st.phase[e.id])+'</span>';
+  if(st.busy[e.id])return '<span class="st busy">작업중</span>';
+  if(c&&c.away)return '<span class="st rest">'+esc(stInfo(c).t)+'</span>';
+  return '<span class="st">'+esc(c?stInfo(c).t:"대기 중")+'</span>';
+}
+function cardHTML(e){
+  const h=st.hist[e.id]||[],a=h.filter(m=>m.role==="assistant"),last=a[a.length-1],n=Math.min(8,a.length),b=!!st.busy[e.id],c=cOf(e.id),rest=c&&c.away&&!b;
+  const engName=aiCfg.provider==="gemini"?"Gemini":aiCfg.provider==="openai"?"OpenAI":aiCfg.provider==="local"?"LocalAI":"AI";
+  let bar="";for(let i=0;i<8;i++)bar+='<i'+(i<n?' class="f"':'')+'></i>';
+  const subTxt=e.id==="ceo1"?"👑 보고 수신 중":b?"작업 중":(c?(function(){const q=stInfo(c);return q.e+" "+q.t;})():"⏳ 대기 중");
+  const bw=(e.id==="ceo1"&&e.id===st.sel)?'<span class="bwbtn'+(st.mode==="fpv"?' on':'')+'" data-bw="1">WALK</span>':'';
+  return '<button class="card'+(e.id===st.sel?" on":"")+'" data-e="'+e.id+'"><span class="avcol">'+pix(e)+bw+'</span><span class="ci"><span class="t"><b>'+esc(e.name)+'</b></span><span class="m"><span>◎ '+engName+'</span><span>'+Math.round(n/8*100)+'%</span></span><span class="l">'+(last?esc(last.content.replace(/\s+/g," ").slice(0,22))+"…":esc(e.badge))+'</span><span class="s'+(b?" w":"")+'">'+subTxt+'</span><span class="bar">'+bar+'</span></span></button>';
+}
+function drawCards(){
+  const a=$("#strip"),d=$("#side"),sl=a.scrollLeft,sd=d.scrollTop,h=EMP.map(cardHTML).join("");
+  a.innerHTML=h+'<button class="add px" id="addb2" style="flex:0 0 100px">＋ 직원</button>';
+  d.innerHTML='<button class="add px" id="addb">＋ 직원</button>'+h;
+  a.scrollLeft=sl;d.scrollTop=sd;
+  $("#addb").onclick=openAdd;$("#addb2").onclick=openAdd;
+}
+function slideTo(id){
+  const a=$("#strip"),c=a.querySelector('[data-e="'+id+'"]');
+  if(c&&a.clientWidth)a.scrollTo({left:c.offsetLeft-(a.clientWidth-c.offsetWidth)/2,behavior:"smooth"});
+  const d=$("#side"),c2=d.querySelector('[data-e="'+id+'"]');
+  if(c2&&d.clientHeight)d.scrollTo({top:c2.offsetTop-(d.clientHeight-c2.offsetHeight)/2,behavior:"smooth"});
+}
+function bubble(role,text,t){const d=document.createElement("div");d.className="b "+(role==="user"?"me":"ai");d.textContent=text;const tm=document.createElement("time");tm.textContent=t||"";d.appendChild(tm);msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+function openRobotSmalltalk(){
+  st.robotChat=true;
+  st.hist.robot=st.hist.robot||[];
+  if(!st.hist.robot.length){
+    const nowKst=new Date().toLocaleTimeString("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit"});
+    st.hist.robot.push({role:"assistant",content:"안녕하세요, 단테 대표님! 로비 AI 로봇이에요 ("+nowKst+" 기준). 오늘 날씨나 간단한 잡담, 사무실 이야기 편하게 걸어 주세요 🤖",show:"안녕하세요, 단테 대표님! 로비 AI 로봇이에요 ("+nowKst+" 기준). 오늘 날씨나 간단한 잡담, 사무실 이야기 편하게 걸어 주세요 🤖",t:T()});
+  }
+  drawChat();
+  inp.focus();
+}
+function drawChat(){
+  if(st.robotChat){
+    const h=st.hist.robot=st.hist.robot||[];
+    $("#av-head").innerHTML='<span class="pix" style="--h:#4fd1ff;--s:#f4f6fa;--t:#1b2a4a"></span>';
+    $("#hn").textContent="로비 AI 로봇";$("#hb").textContent="스몰토크";
+    $("#hs").textContent="사실 기반 가벼운 대화 중 (현재 시각·날씨 등)";
+    $("#chatBox").style.display="";$("#ceoNoticeBox").style.display="none";
+    msgs.innerHTML="";
+    h.forEach(m=>bubble(m.role,m.show,m.t));
+    inp.placeholder="로봇에게 오늘 날씨나 가벼운 이야기를 물어보세요…";$("#send").disabled=!!st.busy.robot;
+    return;
+  }
+  const e=E(st.sel),h=st.hist[e.id]=st.hist[e.id]||[],c=cOf(e.id),rest=c&&c.away&&!st.busy[e.id];
+  $("#av-head").innerHTML=pix(e);$("#hn").textContent=e.name;$("#hb").textContent=e.badge;
+  if(e.id==="ceo1"){
+    $("#hs").textContent="단테 대표님 보고함 — 업무 지시 대기 및 보고 수신 중";
+    $("#chatBox").style.display="none";$("#ceoNoticeBox").style.display="";
+  }else{
+    const si=c?stInfo(c):{e:"⏳",t:"대기 중",sub:"업무 지시 대기"};
+    $("#hs").textContent=st.busy[e.id]?(st.phase[e.id]||"업무 중"):si.e+" "+si.t+(si.sub?" · "+si.sub:"");
+    $("#chatBox").style.display="";$("#ceoNoticeBox").style.display="none";
+  }
+  msgs.innerHTML="";
+  if(!h.length){
+    const d=document.createElement("div");d.className="empty";
+    d.innerHTML=e.id==="ceo1"
+      ?'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v13H5.17L4 18.17V4z"/><path d="M8 9h8M8 13h5"/></svg><div>아직 도착한 보고가 없습니다.<br>업무 보고가 이곳에 표시됩니다.</div>'
+      :'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 8V5M9 13h.01M15 13h.01M9 16h6M2 12v3M22 12v3"/><circle cx="12" cy="4" r="1"/></svg><div>아직 대화가 없습니다.<br>'+esc(e.name)+'에게 지시해 보세요.</div>';
+    msgs.appendChild(d);
+  }
+  h.forEach(m=>{bubble(m.role,m.show,m.t);if(m.act)approvalBar(m.act);});
+  srvLiveDraw();
+  inp.placeholder=e.name+"에게 지시하거나 메시지를 입력하세요…";$("#send").disabled=!!st.busy[e.id];
+}
+function setIcon(){
+  $("#vt").innerHTML=st.view==="office"
+   ?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4"/><circle cx="12" cy="12" r="2.5"/></svg>'
+   :'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="3" width="12" height="18"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>';
+  $("#vt").title=st.view==="office"?"대화 상세 화면으로":"가상 사무실로";$("#vt").classList.toggle("act",st.view==="chat");
+}
+function drawAll(){updateEngineBadge();drawCards();drawChat();setIcon();document.body.dataset.view=st.view;$("#act").textContent="직원 "+EMP.length+"명 활성";$("#cnt").textContent="직원 "+EMP.length+"명";}
+function select(id){st.robotChat=false;st.sel=id;drawCards();drawChat();slideTo(id);}
+document.addEventListener("click",e=>{const bw=e.target.closest("[data-bw]");if(bw){e.stopPropagation();setMode(st.mode==="fpv"?"3d":"fpv");return;}const b=e.target.closest("[data-e]");if(b)select(b.dataset.e);});
+$("#vt").onclick=()=>{st.view=st.view==="office"?"chat":"office";drawAll();};
+
+$("#gear").onclick=()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==="dark"?"light":"dark";};
+$("#m2").onclick=()=>setMode("2d");$("#m3").onclick=()=>setMode("3d");$("#rs").onclick=()=>setMode(st.mode,true);
+window.addEventListener("keydown",e=>{const tg=document.activeElement&&document.activeElement.tagName;if(st.mode==="fpv"&&tg!=="INPUT"&&tg!=="TEXTAREA"&&tg!=="SELECT"&&$("#modal").hidden&&$("#aiModal").hidden){fpv.keys[e.code]=true;}});
+window.addEventListener("keyup",e=>{fpv.keys[e.code]=false;});
+(()=>{
+  const base=$("#joy"),knob=$("#joyKnob"),maxR=32;let pid=null;
+  const upd=(cx,cy)=>{
+    const r=base.getBoundingClientRect(),dx=cx-(r.left+r.width/2),dy=cy-(r.top+r.height/2);
+    const d=Math.hypot(dx,dy),cl=Math.min(maxR,d),a=d>0?cl/d:0;
+    const kx=dx*a,ky=dy*a;
+    knob.style.transform="translate("+kx+"px,"+ky+"px)";
+    fpv.joy.x=kx/maxR;fpv.joy.y=-ky/maxR;
+  };
+  const rst=ev=>{if(pid!==null&&ev.pointerId===pid){pid=null;fpv.joy.x=0;fpv.joy.y=0;knob.style.transform="";}};
+  base.addEventListener("pointerdown",ev=>{ev.preventDefault();pid=ev.pointerId;base.setPointerCapture(pid);upd(ev.clientX,ev.clientY);});
+  base.addEventListener("pointermove",ev=>{if(ev.pointerId===pid){ev.preventDefault();upd(ev.clientX,ev.clientY);}});
+  base.addEventListener("pointerup",rst);base.addEventListener("pointercancel",rst);
+})();
+$("#fb").onclick=()=>$("#file").click();
+$("#file").onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{st.file={name:f.name,text:String(r.result).slice(0,12000)};$("#hint").textContent="📎 "+f.name+" 첨부됨";};r.readAsText(f);ev.target.value="";};
+
+/* ---------- 업무 지시 워크플로 ---------- */
+const LEAD_OF={karina:"jenny",ethan:"jenny",laura:"aiden",brian:"aiden",nora:"eric",jason:"eric",ann:"peter",sophia:"peter",suji:"ryan",kevin:"ryan",ava:"teo",joy:"teo"};
+const BUSY_PHASES=["업무 검토 중","업무 배분 중","협업 회의 중","작업 중","검수 중","재작업","보고서 작성 중"];
+const TEAM_LEADS=[...new Set(Object.values(LEAD_OF))];
+const membersOf=lid=>Object.keys(LEAD_OF).filter(k=>LEAD_OF[k]===lid);
+const LLM_GAP_MS=4200;let llmNextSlot=0;
+async function paceLLM(){
+  if(aiCfg.provider!=="gemini")return;
+  const now=Date.now(),t=Math.max(now,llmNextSlot);llmNextSlot=t+LLM_GAP_MS;
+  if(t>now)await sleep(t-now);
+}
+function setPhase(id,label){
+  if(label){st.phase[id]=label;st.busy[id]=BUSY_PHASES.indexOf(label)>=0;}
+  else{delete st.phase[id];st.busy[id]=false;}
+  drawCards();
+  const c=cOf(id);if(c)drawLabel(c);
+}
+function wfLog(text){
+  const h=st.hist.alex=st.hist.alex||[];
+  h.push({role:"assistant",content:text,show:text,t:T(),wf:true});
+  if(st.sel==="alex"&&!st.robotChat)drawChat();
+}
+function parseJSON(t){
+  const s=String(t).replace(/```json|```/g,"").trim();
+  const a=s.indexOf("{"),b=s.lastIndexOf("}");
+  if(a<0||b<=a)throw new Error("AI 응답에서 JSON을 찾지 못했습니다.");
+  return JSON.parse(s.slice(a,b+1));
+}
+function mkInput(sys,text){
+  return aiCfg.provider==="auto"
+    ?[{role:"user",content:sys+"\n\n[요청]\n"+text}]
+    :[{role:"system",content:sys},{role:"user",content:text}];
+}
+async function callAs(emp,text){
+  await paceLLM();
+  const r=await callConfiguredLLM(mkInput(emp.sys,text));
+  const t=((r&&r.text)||"").trim();
+  if(!t)throw new Error(emp.name+"의 응답이 비어 있습니다.");
+  return t;
+}
+async function toMeet(id){
+  const c=cOf(id);if(!c)return;
+  const tok=++c.tok;c.away=true;
+  const p=walk(c,routePts(roomAt(c.g.position.x,c.g.position.z).id,"meet",[c.g.position.x,c.g.position.z],[27,32]));
+  await Promise.race([p,sleep(8000)]);
+  if(c.tok===tok)c.mode="idle";
+}
+async function seatAt(id,x,z,ry){
+  const c=cOf(id);if(!c)return;
+  const tok=++c.tok;c.away=true;
+  const p=walk(c,routePts(roomAt(c.g.position.x,c.g.position.z).id,"meet",[c.g.position.x,c.g.position.z],[x,z]));
+  const ok=await Promise.race([p.then(()=>true),sleep(14000).then(()=>false)]);
+  if(ok&&c.tok===tok){c.g.position.set(x,-.29,z);c.g.rotation.y=ry;c.mode="sit";c.restKind=null;drawLabel(c);}
+}
+async function reviewItem(it){
+  const rid=LEAD_OF[it.id]||"alex",rv=E(rid);
+  setPhase(rid,"검수 중");
+  if(rid!=="alex")await toMeet(rid);
+  try{
+    const v=parseJSON(await callAs(rv,"[단테 대표님 원 지시]\n"+it.full+"\n\n[담당자 "+E(it.id).name+"의 결과물]\n"+it.draft+"\n\n검수 기준: 지시 범위 충족, 사실과 추정의 구분, 미확인 수치 사용 여부, 누락 항목.\n설명 없이 JSON만 출력하세요: {\"verdict\":\"승인\" 또는 \"보완\",\"comment\":\"보완이면 구체적 수정 사항, 승인이면 한 줄 의견\"}"));
+    it.review=String(v.comment||"");
+    if(v.verdict==="보완"){
+      it.status="재작업";setPhase(it.id,"재작업");
+      it.draft=await callAs(E(it.id),"[원 작업 지시]\n"+it.task+"\n\n[이전 결과물]\n"+it.draft+"\n\n[검수 의견]\n"+it.review+"\n\n검수 의견을 반영해 결과물을 다시 작성하세요.");
+      it.status="보완 완료";
+    }else it.status="승인";
+  }catch(err){it.status="검수 확인 필요";it.review=err.message;}
+  finally{
+    if(rid!=="alex"){const cc=cOf(rid);if(cc){cc.tok++;goDesk(cc,cc.tok);}}
+    setPhase(rid,null);
+    setPhase(it.id,it.status);
+  }
+}
+async function runDirective(text,f){
+  const a=E("alex"),h=st.hist.alex=st.hist.alex||[];
+  const full=(text+(f?"\n\n[첨부 파일: "+f.name+"]\n"+f.text:"")).trim();
+  h.push({role:"user",content:full,show:(f?"📎 "+f.name+"\n":"")+text,t:T()});
+  inp.value="";st.file=null;$("#hint").textContent="";
+  if(aiCfg.provider==="local"){
+    wfLog("단테 대표님, AI 연결이 필요합니다. 톱니바퀴(AI 연결 설정)에서 Claude 자동 또는 Gemini·OpenAI를 선택해 주세요. 내장비서 모드에서는 업무 배분이 실행되지 않습니다.");
+    drawChat();return;
+  }
+  st.wfRun=true;
+  Object.keys(st.phase).forEach(id=>setPhase(id,null));
+  setPhase("alex","업무 검토 중");
+  try{
+    let step=0;const wf=t=>wfLog(["①","②","③","④","⑤","⑥","⑦"][step++]+" "+t);
+    const roster=TEAM_LEADS.map(id=>{const l=E(id);return id+" | "+l.name+" | "+l.badge+" | 팀 업무: "+(l.duty||"")+" | 팀원: "+membersOf(id).map(m=>E(m).name+"("+E(m).duty+")").join(" / ");}).join("\n");
+    const plan=parseJSON(await callAs(a,"[단테 대표님 업무 지시]\n"+full+"\n\n[업무를 배정할 수 있는 팀(팀장)]\n"+roster+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"summary\":\"업무 해석과 처리 방향 2~3문장\",\"collab\":true 또는 false,\"assignments\":[{\"id\":\"팀장 id\",\"task\":\"그 팀에 줄 구체적 업무 지시\"}]}\nassignments는 관련 있는 팀만 1~3개이며, id는 반드시 위 팀장 id만 씁니다. collab은 2개 이상 팀이 자료·판단·결과물을 서로 맞춰야 하면 true, 각자 독립적으로 처리할 수 있으면 false입니다. 알렉스 본인과 대표는 배정하지 않습니다. 사실 확인이 필요한 항목은 task에 '확인 필요'라고 적습니다."));
+    const byLead=new Map();
+    (plan.assignments||[]).forEach(x=>{
+      if(!x||!E(x.id))return;
+      const lid=TEAM_LEADS.includes(x.id)?x.id:LEAD_OF[x.id];
+      if(!lid)return;
+      byLead.set(lid,(byLead.has(lid)?byLead.get(lid)+"\n":"")+String(x.task||""));
+    });
+    const teams=[...byLead.entries()].slice(0,3).map(([lid,task])=>({lead:lid,task:task,items:[],report:""}));
+    if(!teams.length)throw new Error("배분할 담당 팀을 정하지 못했습니다.");
+    wf("업무 검토 완료 (단테 대표님 지시 반영)\n"+(plan.summary||"")+"\n\n배분: "+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+")").join(", "));
+    setPhase("alex",null);
+    teams.forEach(t=>setPhase(t.lead,"배정"));
+
+    // 협업이 필요하면 회의실에서 회의
+    let minutes="";
+    if(teams.length>=2&&(plan.collab!==false||/회의|협의|협업/.test(text))){
+      const ids=["alex"].concat(teams.map(t=>t.lead));
+      ids.forEach(id=>setPhase(id,"협업 회의 중"));
+      const seats=[[36.3,36,-Math.PI/2],[30.3,33.4,Math.PI/2],[30.3,36,Math.PI/2],[30.3,38.6,Math.PI/2]];
+      const seated=Promise.all(ids.map((id,i)=>seatAt(id,seats[i][0],seats[i][1],seats[i][2])));
+      const talk=Promise.all(teams.map(async t=>{
+        const L=E(t.lead),tag=L.name+"("+L.badge+")";
+        const others=teams.filter(o=>o!==t).map(o=>E(o.lead).name+"("+E(o.lead).badge+"): "+o.task).join("\n");
+        try{
+          return tag+"\n"+await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+"\n\n[함께 협업할 팀의 업무]\n"+others+"\n\n협업 회의에서 발언할 내용을 5문장 이내로 쓰세요: 1) 우리 팀이 맡을 범위 2) 다른 팀에서 받아야 할 자료나 판단 3) 다른 팀에 제공할 것 4) 순서·일정상 주의점 5) 사실 확인이 필요한 부분. 업무 내용에 없는 수치는 만들지 마세요.");
+        }catch(err){return tag+"\n(발언 생성 실패: "+err.message+")";}
+      }));
+      const speeches=(await Promise.all([seated,talk]))[1];
+      try{
+        minutes=await callAs(a,"[단테 대표님 원 지시]\n"+full+"\n\n[팀별 배정 업무]\n"+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+"): "+t.task).join("\n")+"\n\n[팀장 발언]\n"+speeches.join("\n\n")+"\n\n협업 회의록을 작성하세요. 순서: 1) 역할 분담 2) 팀 간 전달 사항(누가 누구에게 무엇을) 3) 처리 순서 4) 중복·충돌 조정 5) 사실 확인이 필요한 사항. 발언에 없는 내용과 수치는 추가하지 마세요. 10문장 이내.");
+      }catch(err){minutes="(회의록 작성 실패: "+err.message+")";}
+      wf("협업 회의 (회의실: "+ids.map(id=>E(id).name).join(", ")+")\n\n"+speeches.join("\n\n")+"\n\n[회의록]\n"+minutes);
+      ids.forEach(id=>{setPhase(id,null);const cc=cOf(id);if(cc){cc.tok++;goDesk(cc,cc.tok);}});
+      teams.forEach(t=>setPhase(t.lead,"배정"));
+    }
+
+    // ② 팀장이 전문 담당직원에게 업무 배분
+    await Promise.all(teams.map(async t=>{
+      const L=E(t.lead),ms=membersOf(t.lead);
+      setPhase(t.lead,"업무 배분 중");
+      let asg=[];
+      try{
+        const r=parseJSON(await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 우리 팀에 준 업무]\n"+t.task+(minutes?"\n\n[협업 회의 결과]\n"+minutes:"")+"\n\n[배정 가능한 팀원]\n"+ms.map(m=>m+" | "+E(m).name+" | "+E(m).badge+" | "+(E(m).duty||"")).join("\n")+"\n\n[출력 규칙] 설명 없이 JSON만 출력하세요: {\"assignments\":[{\"id\":\"팀원 id\",\"task\":\"팀원에게 줄 구체적 작업 지시\"}]}\n필요한 팀원만 1~"+ms.length+"명 배정하고, id는 위 팀원 id만 씁니다. 팀장 본인은 배정하지 않습니다."));
+        const seen=new Set();
+        (r.assignments||[]).forEach(x=>{if(x&&ms.includes(x.id)&&!seen.has(x.id)){seen.add(x.id);asg.push({id:x.id,task:String(x.task||"")});}});
+      }catch(err){}
+      if(!asg.length)asg=ms.map(id=>({id:id,task:t.task}));
+      if(!asg.length)asg=[{id:t.lead,task:t.task}];
+      t.items=asg.map(x=>({id:x.id,task:x.task||t.task,full:full,draft:"",status:"배정"}));
+      setPhase(t.lead,null);
+    }));
+    const items=teams.flatMap(t=>t.items);
+    wf("팀장 업무 배분 완료\n"+teams.map(t=>E(t.lead).name+" → "+t.items.map(it=>E(it.id).name).join(", ")).join("\n"));
+
+    // ③ 전문 직원 작업
+    items.forEach(it=>setPhase(it.id,"배정"));
+    await Promise.all(items.map(async it=>{
+      setPhase(it.id,"작업 중");
+      try{
+        it.draft=await callAs(E(it.id),"[단테 대표님 원 지시]\n"+full+"\n\n[배분된 작업]\n"+it.task+"\n\n결과물을 작성하세요. 사실, 분석, 제안, 미확인 정보를 구분해 표시하고, 출처가 없는 수치는 쓰지 마세요.");
+        it.status="검수 대기";
+      }catch(err){it.status="작업 실패";it.review=err.message;}
+      setPhase(it.id,it.status);
+    }));
+    wf("전문 직원 작업 완료\n"+items.map(it=>E(it.id).name+": "+it.status).join("\n"));
+
+    // ④ 팀장 검수
+    await Promise.all(items.filter(it=>it.status==="검수 대기").map(it=>reviewItem(it)));
+    wf("팀장 검수 완료\n"+items.map(it=>E(it.id).name+": "+it.status+(it.review?" — "+it.review:"")).join("\n"));
+
+    // ⑤ 팀장이 팀 결과를 취합해 알렉스에게 보고
+    await Promise.all(teams.map(async t=>{
+      const L=E(t.lead);
+      setPhase(t.lead,"보고서 작성 중");
+      const body=t.items.map(it=>"■ "+E(it.id).name+"("+E(it.id).badge+") / 상태: "+it.status+"\n검수 의견: "+(it.review||"-")+"\n결과물:\n"+(it.draft||"(결과 없음)")).join("\n\n");
+      try{
+        t.report=await callAs(L,"[단테 대표님 원 지시]\n"+full+"\n\n[알렉스 본부장이 준 업무]\n"+t.task+"\n\n[팀원 결과와 검수 의견]\n"+body+"\n\n위 내용으로 알렉스 본부장에게 올릴 팀 보고서를 작성하세요. 순서: 핵심 결론, 팀원별 결과 요약, 보완 내역, 확인되지 않은 사항. 결과물에 없는 수치는 추가하지 마세요.");
+      }catch(err){t.report="(팀 보고서 작성 실패: "+err.message+")\n\n"+body;}
+      setPhase(t.lead,null);
+    }));
+    wf("팀장 보고 완료 → 알렉스 취합\n"+teams.map(t=>E(t.lead).name+"("+E(t.lead).badge+")").join(", "));
+
+    // ⑥ 알렉스가 최종 보고서를 작성해 단테 대표님께 보고
+    setPhase("alex","보고서 작성 중");
+    const body=teams.map(t=>"■ "+E(t.lead).name+"("+E(t.lead).badge+") 팀 보고\n[검수 내역] "+t.items.map(it=>E(it.id).name+": "+it.status+(it.review?" — "+it.review:"")).join(" / ")+"\n"+t.report).join("\n\n");
+    let report;
+    try{report=await callAs(a,"[단테 대표님 원 지시]\n"+full+(minutes?"\n\n[협업 회의록]\n"+minutes:"")+"\n\n[팀별 보고와 검수 내역]\n"+body+"\n\n위 내용으로 단테 대표님께 올릴 최종 보고서를 작성하세요. 순서: 1) 핵심 결론 2) 팀별 결과 요약 3) 검수 과정과 보완 내역 4) 확인되지 않았거나 추가 확인이 필요한 사항 5) 외부 실행 여부: 이번 업무에서 외부 발송·공시·계약 실행은 하지 않았으며, 필요하면 단테 대표님 승인 후 진행합니다. 협업 회의록이 있으면 그 결정 사항을 반영하세요. 결과물에 없는 수치는 추가하지 마세요.");}catch(err){report="(알렉스 최종 보고서 작성 실패: "+err.message+")\n\n아래는 팀별 보고 원문입니다.\n\n"+body;}
+    h.push({role:"assistant",content:report,show:"📋 단테 대표님 보고\n\n"+report,t:T()});
+  }catch(err){
+    wfLog("⚠ 업무 진행 중 문제가 발생했습니다: "+(err&&err.message?err.message:String(err))+"\n내용을 확인한 뒤 다시 지시해 주세요.");
+  }finally{
+    st.wfRun=false;setPhase("alex",null);
+    drawCards();drawChat();
+  }
+}
+
+async function fetchLiveFactContext(q){
+  const nowStr=new Date().toLocaleString("ko-KR",{timeZone:"Asia/Seoul",dateStyle:"full",timeStyle:"short"});
+  const facts=["현재 서울 시각: "+nowStr];
+  if(/날씨|기온|온도|비|눈|미세먼지|바람|습도|weather/i.test(q)){
+    try{
+      const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=Asia%2FSeoul");
+      if(r.ok){
+        const j=await r.json();const cur=j.current||{};
+        const wMap={0:"맑음",1:"대체로 맑음",2:"구름 조금",3:"흐림",45:"안개",48:"서리 안개",51:"가벼운 이슬비",53:"이슬비",55:"강한 이슬비",61:"약한 비",63:"비",65:"강한 비",71:"약한 눈",73:"눈",75:"강한 눈",80:"소나기",95:"뇌우"};
+        const desc=wMap[cur.weather_code]||"관측 중";
+        facts.push("실시간 서울 기상 관측(Open-Meteo): 날씨 "+desc+", 현재 기온 "+cur.temperature_2m+"°C(체감 "+cur.apparent_temperature+"°C), 습도 "+cur.relative_humidity_2m+"%, 풍속 "+cur.wind_speed_10m+"km/h");
+      }
+    }catch(e){}
+  }
+  return facts.join("\n");
+}
+
+async function send(){
+  if(st.robotChat){
+    const text=inp.value.trim();
+    if(!text||st.busy.robot)return;
+    const h=st.hist.robot=st.hist.robot||[];
+    h.push({role:"user",content:text,show:text,t:T()});
+    inp.value="";st.busy.robot=true;drawChat();
+    const factCtx=await fetchLiveFactContext(text);
+    const sys="당신은 sw ai office 로비를 순찰하는 친근한 AI 로봇입니다. 사용자를 '단테 대표님'으로 부르며 다정하고 간결하게(2~3문장) 스몰토크하세요. 반드시 사실에 근거해 답하고, 모르는 최신 정보는 지어내지 말고 확인되지 않았다고 말하세요.\n[실시간 확인된 사실]\n"+factCtx;
+    const convo=h.slice(-8).map((m,i)=>({role:m.role,content:i===0?sys+"\n\n[사용자 말]\n"+m.content:m.content}));
+    let replyText="";
+    try{
+      if(aiCfg.provider==="gemini"&&(aiCfg.apiKey||"").trim()){
+        const cleanKey=aiCfg.apiKey.trim();
+        const m=(aiCfg.model||"gemini-3.5-flash-lite").trim();
+        const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(m)+":generateContent?key="+encodeURIComponent(cleanKey);
+        const contents=h.slice(-8).map(x=>({role:x.role==="assistant"?"model":"user",parts:[{text:x.content}]}));
+        const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:sys}]},tools:[{google_search:{}}],contents:contents})});
+        if(res.ok){const d=await res.json();replyText=(d.candidates?.[0]?.content?.parts?.[0]?.text||"").trim();}
+      }
+      if(!replyText){
+        const r=await callConfiguredLLM(convo);
+        replyText=((r&&r.text)||"").trim();
+      }
+    }catch(e){}
+    if(!replyText){
+      if(/날씨|기온|온도|비|눈/i.test(text)&&factCtx.includes("실시간 서울 기상 관측")){
+        replyText="단테 대표님, "+factCtx.split("\n")[1].replace("실시간 서울 기상 관측(Open-Meteo): ","현재 서울 날씨는 ")+"이에요! 외출이나 환기하실 때 참고하세요 😊";
+      }else if(/몇\s*시|시간|날짜|오늘\s*며칠|요일/i.test(text)){
+        replyText="단테 대표님, "+factCtx.split("\n")[0]+"입니다! 오늘도 좋은 하루 보내세요 🤖";
+      }else{
+        replyText="단테 대표님, 말씀 반가워요! 지금도 현재 서울 날씨나 시각은 바로 알려드릴 수 있고, AI 연결 설정이 연결되어 있으면 최신 정보까지 찾아서 대화할 수 있어요 😊";
+      }
+    }
+    h.push({role:"assistant",content:replyText,show:replyText,t:T()});
+    st.busy.robot=false;drawChat();msgs.scrollTop=msgs.scrollHeight;
+    return;
+  }
+  const e=E(st.sel),text=inp.value.trim();
+  if(!text||e.id==="ceo1")return;
+  if(e.id==="alex"&&/댄스\s*타임|dance\s*time/i.test(text)){
+    if(st.wfRun){$("#hint").textContent="업무가 진행 중입니다. 보고가 끝난 뒤 댄스타임을 요청해 주세요.";return;}
+    const hh=st.hist.alex=st.hist.alex||[];
+    hh.push({role:"user",content:text,show:text,t:T(),wf:true});inp.value="";
+    if(DANCE.on){wfLog("단테 대표님, 지금 댄스타임이 진행 중이에요! 🕺");drawChat();return;}
+    wfLog("네, 단테 대표님! 댄스타임 시작합니다 🕺 전 직원이 복도로 모입니다.");drawChat();
+    danceTime();return;
+  }
+  if(e.id==="alex"&&st.wfOn){
+    if(st.wfRun){$("#hint").textContent="업무가 진행 중입니다. 보고가 끝난 뒤 다시 지시해 주세요.";return;}
+    return srvCfg.on?runDirectiveServer(text,st.file):runDirective(text,st.file);
+  }
+  if(st.busy[e.id])return;
+  const h=st.hist[e.id]=st.hist[e.id]||[],f=st.file;st.file=null;$("#hint").textContent="";
+  const fullUserContent=(text+(f?"\n\n[첨부 파일: "+f.name+"]\n"+f.text:"")).trim();
+  h.push({role:"user",content:fullUserContent,show:(f?"📎 "+f.name+"\n":"")+text,t:T()});
+  inp.value="";st.busy[e.id]=true;
+  const c=cOf(e.id);if(c){c.tok++;c.restKind=null;if(c.away)goDesk(c,c.tok);drawLabel(c);}
+  drawCards();drawChat();
+  const input=h
+    .filter(m=>m && !m.wf && typeof m.content==="string" && m.content.trim().length>0)
+    .map((m,i)=>({role:m.role,content:i===0?e.sys+"\n\n[단테 대표님 요청]\n"+m.content.trim():m.content.trim()}));
+  bubble("assistant","응답을 불러오는 중입니다…",T());
+  let replyText="";
+  try{
+    const r=await callConfiguredLLM(input);
+    replyText=(r&&r.text)||"";
+    if(!replyText||!replyText.trim()){
+      throw new Error("응답 텍스트가 비어 있습니다.");
+    }
+  }catch(llmErr){
+    const reason=(llmErr&&llmErr.message)?llmErr.message:String(llmErr||"알 수 없는 오류");
+    if(aiCfg.provider==="local"){
+      replyText=localAssistantReply(e,text);
+    }else{
+      replyText="[AI 호출 실패 원인 확인 필요]\n"+reason+"\n\n• 조치: 우측 상단 톱니바퀴(AI 연결 설정)에서 모델명·API Key·연결 상태를 확인하거나, 잠시 후 다시 시도해 주세요.";
+    }  }
+  h.push({role:"assistant",content:replyText,show:replyText,t:T()});
+  st.busy[e.id]=false;
+  if(c)drawLabel(c);
+  drawCards();
+  if(st.sel===e.id&&!st.robotChat){
+    drawChat();
+    msgs.scrollTop=msgs.scrollHeight;
+  }
+}
+$("#send").onclick=send;
+inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send();}});
+inp.addEventListener("input",()=>$("#send").classList.toggle("ready",!!inp.value.trim()));
+
+
+/* ---------- 서버(Worker) 업무 처리 모드 ---------- */
+const SRV_PENDING="sw_srv_pending";
+const srvCfg={on:false,url:"https://ai-office-api.creditor5120.workers.dev/",token:"",rep:""};
+try{const sv=JSON.parse((function(){try{return localStorage.getItem("sw_srv_cfg");}catch(e){return null;}})()||"null");if(sv)Object.assign(srvCfg,sv);}catch(e){}
+const SRV_HISTORY_KEY="swAIOfficeV11History";
+try{
+  const saved=JSON.parse(localStorage.getItem(SRV_HISTORY_KEY)||"{}");
+  if(saved&&typeof saved==="object"&&!Array.isArray(saved)){
+    Object.entries(saved).forEach(([id,items])=>{if(Array.isArray(items))st.hist[id]=items.slice(-40);});
+  }
+}catch(e){}
+function srvSaveHistory(){
+  try{
+    const saved={};
+    Object.entries(st.hist).forEach(([id,items])=>{
+      if(Array.isArray(items)&&id!=="robot")saved[id]=items.slice(-40);
+    });
+    localStorage.setItem(SRV_HISTORY_KEY,JSON.stringify(saved));
+  }catch(e){console.warn("서버 업무 보고 이력 저장 실패:",e);}
+}
+const SRV_DEPT_OF_LEAD={jenny:"경영관리팀",aiden:"총무팀",eric:"전략기획팀",peter:"법무팀",ryan:"IR팀",teo:"IT·기술팀"};
+const SRV_ROOM_DEPT={legal:"법무팀",ir:"IR팀",it:"IT·기술팀"};
+function srvDeptOf(e){const lid=SRV_DEPT_OF_LEAD[e.id]?e.id:LEAD_OF[e.id];if(lid)return SRV_DEPT_OF_LEAD[lid];return SRV_ROOM_DEPT[e.room]||"";}
+function srvEmployees(){
+  const out=[];
+  EMP.forEach(e=>{
+    if(e.id==="ceo1")return;
+    const coo=e.id==="alex",dept=coo?"본부장실":srvDeptOf(e);
+    if(!dept)return;
+    out.push({id:coo?"COO":e.id,name:e.name,department:dept,position:e.badge,
+      instruction:"당신은 앱코(ABKO) 경영관리부 소속 AI "+e.badge+" "+e.name+"입니다. 사용자는 대표이사 '단테'이며 '단테 대표님'으로 호칭합니다. 사실에 근거해서만 답하고, 모르거나 확실하지 않으면 '확인되지 않음'이라고 말합니다. "+(e.duty||"")});
+  });
+  return out;
+}
+async function srvPost(payload,extra){
+  const res=await fetch(srvCfg.url,{method:"POST",headers:Object.assign({"Content-Type":"application/json","Authorization":"Bearer "+srvCfg.token},extra||{}),body:JSON.stringify(payload)});
+  let data=null;try{data=await res.json();}catch(e){}
+  return {status:res.status,data:data||{}};
+}
+let srvLastStage="";
+const srvLive={on:false,start:0,stage:"",calls:0,fails:0,lastEvt:0,lastResp:0,note:""};
+function srvFmt(ms){const x=Math.max(0,Math.round(ms/1000));return x>=60?Math.floor(x/60)+"분 "+(x%60)+"초":x+"초";}
+function srvLiveText(){
+  const now=Date.now(),L=srvLive,idle=Math.max(0,now-Math.max(L.lastEvt,L.lastResp,L.start));
+  let t="⏳ 서버에서 처리 중 · 경과 "+srvFmt(now-L.start)+"\n현재 단계: "+(L.stage||"접수 확인 중")+"\nAI 호출 완료 "+L.calls+"회"+(L.fails?" · 실패 "+L.fails+"회(자동 재시도)":"")+" · 마지막 진행 "+srvFmt(idle)+" 전";
+  if(L.note)t+="\n"+L.note;
+  if(idle>180000)t+="\n⚠ 3분 넘게 새 진행이 없습니다. AI 응답이 늦거나 막혔을 수 있습니다. 조금 더 기다려 보시고, 계속 변화가 없으면 새로고침 후 '이어서'를 입력하세요.";
+  return t;
+}
+function srvLiveDraw(){
+  if(!srvLive.on)return;
+  const hint=$("#hint");if(hint)hint.textContent="⏳ 처리 중 · "+srvFmt(Date.now()-srvLive.start)+" · "+(srvLive.stage||"접수 확인 중");
+  if(st.robotChat||st.sel!=="alex")return;
+  let d=document.getElementById("srvLive");
+  if(!d){d=document.createElement("div");d.id="srvLive";d.className="b ai";d.style.borderStyle="dashed";msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+  d.textContent=srvLiveText();
+}
+async function srvApplyProgress(taskId){
+  try{
+    const r=await srvPost({action:"get_task_history",taskId:taskId});
+    if(r.status!==200||!r.data.events||!r.data.events.length)return;
+    const evs=r.data.events;
+    srvLive.calls=evs.filter(x=>x.eventType==="AI_CALL_COMPLETED").length;
+    srvLive.fails=evs.filter(x=>x.eventType==="AI_CALL_FAILED").length;
+    const tm=Date.parse(evs[evs.length-1].createdAt);if(tm)srvLive.lastEvt=tm;
+    const ev=[...evs].reverse().find(x=>x.eventType==="WORKFLOW_STAGE_STARTED");
+    if(!ev)return;
+    srvLive.stage=String(ev.stage||"");
+    if(ev.stage===srvLastStage)return;
+    srvLastStage=ev.stage;
+    Object.keys(st.phase).forEach(id=>setPhase(id,null));
+    const names=(ev.detail&&ev.detail.participants)||[];
+    const ids=names.map(n=>{const x=EMP.find(e=>e.name===n);return x&&x.id;}).filter(Boolean);
+    const S=String(ev.stage||"");let label=null,targets=[];
+    if(/본부장 최종/.test(S)){label="보고서 작성 중";targets=["alex"];}
+    else if(/본부장 실행계획|본부장 업무 분석/.test(S)){label="업무 검토 중";targets=["alex"];}
+    else if(/담당 직원 및 팀장/.test(S)){label="업무 배분 중";targets=["alex"];}
+    else if(/완성본 작성/.test(S)){label="작업 중";targets=ids;}
+    else if(/결과물 수정|지적사항 실제 수정/.test(S)){label="재작업";targets=ids;}
+    else if(/검수/.test(S)){label="검수 중";targets=ids;}
+    targets.forEach(id=>setPhase(id,label));
+  }catch(e){}
+}
+async function srvRun(job){
+  st.wfRun=true;srvLastStage="";
+  Object.assign(srvLive,{on:true,start:Date.now(),stage:"",calls:0,fails:0,lastEvt:0,lastResp:Date.now(),note:""});
+  setPhase("alex","업무 검토 중");
+  const timer=setInterval(()=>srvApplyProgress(job.taskId),5000);
+  const first=setTimeout(()=>srvApplyProgress(job.taskId),2500);
+  const tick=setInterval(srvLiveDraw,1000);srvLiveDraw();
+  let netErr=0,quotaWaits=0,n=0;
+  const stop=(msg,keep)=>{const e=new Error(msg);e.keep=!!keep;return e;};
+  try{
+    while(n++<600){
+      let r;
+      srvLive.note="서버에 요청 중 — AI 응답을 기다리고 있습니다(한 번에 최대 2분 걸릴 수 있음)";
+      try{r=await srvPost(job.payload);netErr=0;srvLive.lastResp=Date.now();}
+      catch(e){
+        if(++netErr>=5)throw stop("서버에 연결하지 못했습니다. Worker 주소와 접근 토큰, 그리고 이 페이지가 Worker가 허용한 주소(GitHub Pages)에서 열렸는지 확인해 주세요.",true);
+        srvLive.note="서버 연결 재시도 중 ("+netErr+"/5)";
+        await sleep(4000);continue;
+      }
+      const d=r.data||{};
+      if(r.status===200&&d.reply)return d;
+      if(r.status===200&&d.status)throw stop(d.message||("업무 상태: "+d.status),false);
+      const retry=r.status===202||r.status===429||(r.status===409&&(d.resumeRequired||/처리 중|잠금/.test(String(d.error||""))));
+      if(retry){
+        const wait=Math.min(Math.max(Number(d.resumeDelayMs)||1500,1200),600000);
+        if(r.status===429){
+          quotaWaits++;
+          if(quotaWaits===1){wfLog("Gemini 사용 한도로 대기 중입니다. 한도가 풀리면 자동으로 이어서 처리합니다.");drawChat();}
+          if(quotaWaits>6)throw stop("Gemini 사용 한도가 풀리지 않아 잠시 멈췄습니다.",true);
+          srvLive.note="Gemini 사용 한도 대기 중 — 약 "+srvFmt(wait)+" 뒤 다시 시도합니다("+quotaWaits+"/6)";
+        }else if(r.status===409)srvLive.note="다른 처리가 끝나기를 기다리는 중입니다";
+        else srvLive.note="서버 응답 정상 — 다음 단계를 이어서 진행합니다";
+        await sleep(wait);
+        continue;
+      }
+      const msg=(d.error||("서버 응답 오류 "+r.status))+(d.currentStage?" (단계: "+d.currentStage+")":"");
+      throw stop(msg,r.status===500);
+    }
+    throw stop("처리 시간이 너무 길어 멈췄습니다.",true);
+  }finally{clearInterval(timer);clearInterval(tick);clearTimeout(first);srvLive.on=false;const el=document.getElementById("srvLive");if(el)el.remove();const hh=$("#hint");if(hh)hh.textContent="";}
+}
+function srvShowResult(d){
+  const h=st.hist.alex=st.hist.alex||[],gate=(d.workflow&&d.workflow.reviewGate)||{};
+  const label={completed:"완료",partial:"부분 완료",failed:"실패"};
+  (d.deliverables||[]).forEach(x=>{
+    const emp=E(x.id);if(!emp)return;
+    const hh=st.hist[emp.id]=st.hist[emp.id]||[];
+    const rv=(d.finalReviewResults||[]).find(r=>r.id===x.id);
+    const txt="📄 결과물 · 상태: "+(label[x.status]||x.status)+(rv?" · 팀장 2차 검수: "+rv.judgment:"")+"\n\n"+x.content;
+    hh.push({role:"assistant",content:txt,show:txt,t:T()});
+  });
+  const rep="📋 단테 대표님 보고 (서버 처리 · 업무번호 "+d.taskId+")\n직원별 결과물은 각 직원 카드를 눌러 확인하세요.\n\n"+d.reply;
+  const report={role:"assistant",content:rep,show:rep,t:T(),act:{taskId:d.taskId,releaseAllowed:gate.finalReleaseAllowed===true}};
+  h.push(report);
+  const ceoHistory=st.hist.ceo1=st.hist.ceo1||[];
+  ceoHistory.push(report);
+  srvSaveHistory();
+}
+function approvalBar(act){
+  const d=document.createElement("div");d.className="b ai";d.style.cssText="display:flex;gap:8px;flex-wrap:wrap;align-items:center";
+  if(act.done){d.textContent=act.done;msgs.appendChild(d);return;}
+  const add=(t,dec,pri)=>{const b=document.createElement("button");b.className="btn"+(pri?" pri ready":"");b.textContent=t;b.onclick=()=>srvDecide(act,dec);d.appendChild(b);};
+  if(act.releaseAllowed)add("✅ 승인","APPROVE",true);
+  else{const n=document.createElement("span");n.textContent="검수 미통과 결과물이라 승인할 수 없습니다. ";d.appendChild(n);}
+  add("↩ 반려","REJECT",false);
+  msgs.appendChild(d);
+}
+async function srvDecide(act,dec){
+  if(!srvCfg.rep){alert("설정창(톱니바퀴)에 대표 승인 전용 토큰을 입력해 주세요.");return;}
+  let reason="";
+  if(dec==="REJECT"){reason=(prompt("반려 사유를 입력해 주세요.")||"").trim();if(!reason)return;}
+  else if(!confirm("이 결과를 승인할까요? 승인 이력은 서버에 기록되며 덮어쓸 수 없습니다."))return;
+  try{
+    const r=await srvPost({action:"representative_decision",taskId:act.taskId,decision:dec,reason:reason},{"X-Representative-Authorization":"Bearer "+srvCfg.rep});
+    const d=r.data||{};
+    if(r.status===200){act.done="✔ "+(d.decisionLabel||"결정")+" 기록 완료 · "+(d.recordedAt?new Date(d.recordedAt).toLocaleString("ko-KR"):"")+(d.duplicate?" (이미 기록된 결정)":"");srvSaveHistory();}
+    else alert(d.error||("처리하지 못했습니다. (응답 "+r.status+")"));
+  }catch(e){alert("서버에 연결하지 못했습니다.");}
+  drawChat();msgs.scrollTop=msgs.scrollHeight;
+}
+async function srvRestoreDecisionHistory(){
+  if(!srvCfg.token)return;
+  const reports=st.hist.ceo1||[];
+  let changed=false;
+  for(const message of reports){
+    const act=message&&message.act;
+    if(!act||!act.taskId||act.done)continue;
+    try{
+      const r=await srvPost({action:"get_representative_decision",taskId:act.taskId});
+      const d=r.data||{};
+      if(r.status===200&&d.decision){
+        act.done="✔ "+(d.decisionLabel||"대표 결정")+" 기록 완료 · "+(d.recordedAt?new Date(d.recordedAt).toLocaleString("ko-KR"):"")+(d.duplicate?" (이미 기록된 결정)":"");
+        changed=true;
+      }
+    }catch(e){}
+  }
+  if(changed){srvSaveHistory();if(st.sel==="ceo1")drawChat();}
+}
+function srvPendingGet(){try{return JSON.parse((function(){try{return localStorage.getItem(SRV_PENDING);}catch(e){return null;}})()||"null");}catch(e){return null;}}
+async function runDirectiveServer(text,f,auto){
+  const h=st.hist.alex=st.hist.alex||[];
+  if(location.protocol==="file:"){
+    wfLog("PC에 저장된 HTML 파일(file://)에서는 서버 업무를 실행할 수 없습니다. GitHub Pages에 배포된 SW AI OFFICE 주소에서 다시 열어 주세요.");
+    drawChat();return;
+  }
+  if(!srvCfg.url||!srvCfg.token){
+    wfLog("단테 대표님, 서버 모드를 쓰려면 톱니바퀴(AI 연결 설정)에서 Worker 주소와 접근 토큰을 입력해 주세요.");drawChat();return;
+  }
+  let job=null;
+  if(auto||text.trim()==="이어서"){
+    job=srvPendingGet();
+    if(!job){if(!auto){inp.value="";wfLog("이어서 처리할 업무가 없습니다.");drawChat();}return;}
+    if(!auto){inp.value="";h.push({role:"user",content:text,show:text,t:T()});}
+    wfLog("저장된 업무를 이어서 처리합니다. 업무번호 "+job.taskId);
+  }else{
+    const full=(text+(f?"\n\n[첨부 파일: "+f.name+"]\n"+f.text:"")).trim();
+    h.push({role:"user",content:full,show:(f?"📎 "+f.name+"\n":"")+text,t:T()});
+    inp.value="";st.file=null;$("#hint").textContent="";
+    const taskId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():("t"+Date.now()+Math.random().toString(16).slice(2));
+    job={taskId:taskId,payload:{task:full,employees:srvEmployees(),taskId:taskId,idempotencyKey:taskId}};
+    try{localStorage.setItem(SRV_PENDING,JSON.stringify(job));}catch(e){}
+    wfLog("서버(Worker)에 업무를 접수했습니다. 업무번호 "+taskId+"\n본부장 분석 → 담당 배정 → 전문 직원 작성 → 팀장 검수 → 수정 → 보고 순서로 진행하며, 몇 분 걸릴 수 있습니다.");
+  }
+  drawChat();
+  srvSaveHistory();
+  try{
+    const d=await srvRun(job);
+    try{localStorage.removeItem(SRV_PENDING);}catch(e){}
+    srvShowResult(d);
+  }catch(err){
+    if(!err.keep){try{localStorage.removeItem(SRV_PENDING);}catch(e){}}
+    wfLog("⚠ 업무 진행 중 문제가 발생했습니다: "+(err&&err.message?err.message:String(err))+(err&&err.keep?"\n'이어서'라고 입력하면 저장된 지점부터 이어서 처리합니다.":"\n내용을 확인한 뒤 다시 지시해 주세요."));
+  }finally{
+    st.wfRun=false;Object.keys(st.phase).forEach(id=>setPhase(id,null));
+    srvSaveHistory();
+    drawCards();drawChat();msgs.scrollTop=msgs.scrollHeight;
+  }
+}
+
+/* ---------- AI Config Modal ---------- */
+function syncAiModalFields(){
+  const prov=$("#aiProvider").value;
+  const needKey=prov==="gemini"||prov==="openai";
+  $("#aiKeyRow").style.display=needKey?"flex":"none";
+  $("#aiModelRow").style.display=needKey?"flex":"none";
+  if($("#geminiPresetRow"))$("#geminiPresetRow").style.display=prov==="gemini"?"flex":"none";
+  if(prov==="gemini"&&(!$("#aiModel").value.trim()||$("#aiModel").value.includes("gpt")))$("#aiModel").value="gemini-3.5-flash-lite";
+  if(prov==="openai"&&(!$("#aiModel").value.trim()||$("#aiModel").value.includes("gemini")))$("#aiModel").value="gpt-4o-mini";
+}
+document.querySelectorAll("[data-gmodel]").forEach(btn=>{
+  btn.onclick=()=>{$("#aiModel").value=btn.dataset.gmodel;};
+});
+function openAiModal(){
+  $("#aiProvider").value=aiCfg.provider;
+  $("#aiKey").value=aiCfg.apiKey;
+  $("#aiModel").value=aiCfg.model;
+  syncAiModalFields();
+  $("#srvOn").checked=!!srvCfg.on;$("#srvUrl").value=srvCfg.url||"";$("#srvToken").value=srvCfg.token||"";$("#srvRep").value=srvCfg.rep||"";
+  syncSrvRows();
+  $("#aiModal").hidden=false;
+}
+function syncSrvRows(){const on=$("#srvOn").checked;["#srvUrlRow","#srvTokRow","#srvRepRow"].forEach(i=>{$(i).style.display=on?"flex":"none";});}
+$("#srvOn").onchange=syncSrvRows;
+$("#aiCfgBtn").onclick=openAiModal;
+$("#engLabel").onclick=openAiModal;
+$("#aiProvider").onchange=syncAiModalFields;
+$("#aiCancel").onclick=()=>{$("#aiModal").hidden=true;};
+$("#aiSave").onclick=()=>{
+  aiCfg.provider=$("#aiProvider").value;
+  aiCfg.apiKey=$("#aiKey").value.trim();
+  aiCfg.model=$("#aiModel").value.trim()||(aiCfg.provider==="openai"?"gpt-4o-mini":"gemini-3.5-flash-lite");
+  try{localStorage.setItem("sw_ai_cfg",JSON.stringify(aiCfg));}catch(e){}
+  srvCfg.on=$("#srvOn").checked;srvCfg.url=$("#srvUrl").value.trim();srvCfg.token=$("#srvToken").value.trim();srvCfg.rep=$("#srvRep").value.trim();
+  try{localStorage.setItem("sw_srv_cfg",JSON.stringify(srvCfg));}catch(e){}
+  $("#aiModal").hidden=true;
+  drawAll();
+};
+
+/* ---------- add employee ---------- */
+const PAL=[["#1b1b1f","#f4cfae","#2a7a4b"],["#6b3d1e","#f0c7a3","#7a4aa0"],["#c9a227","#f4cfae","#2a6fa0"],["#8a8d93","#e8b98f","#a0452a"],["#1b1b1f","#d9a577","#444a8c"]];
+function openAdd(){
+  const sel=$("#mr");sel.innerHTML="";
+  RM.filter(r=>r.nd&&EMP.filter(e=>e.room===r.id).length<r.nd).forEach(r=>{const o=document.createElement("option");o.value=r.id;o.textContent=r.n;sel.appendChild(o);});
+  $("#mm").textContent=sel.options.length?"":"모든 부서의 자리가 가득 찼습니다.";
+  ["#mn","#mrole","#mi"].forEach(i=>{$(i).value="";});$("#modal").hidden=false;
+}
+$("#mc").onclick=()=>{$("#modal").hidden=true;};
+$("#ms").onclick=()=>{
+  const name=$("#mn").value.trim(),role=$("#mrole").value.trim(),duty=$("#mi").value.trim(),room=$("#mr").value;
+  if(!name||!role||!room){$("#mm").textContent="이름·부서·직책은 꼭 입력해 주세요.";return;}
+  const p=PAL[CUSTOM.length%PAL.length],d={id:"c"+Date.now(),name:name,badge:role,room:room,hair:p[0],skin:p[1],shirt:p[2],duty:duty||"단테 대표님의 업무를 돕습니다."};
+  CUSTOM.push(d);try{localStorage.setItem("sw_custom",JSON.stringify(CUSTOM));}catch(e){}
+  const ne=mk(d);EMP.push(ne);if(root)addChar(ne);$("#modal").hidden=true;st.sel=ne.id;drawAll();
+  chars.forEach(drawLabel);
+};
+
+/* ---------- iOS/iPadOS Home Screen Icon & Manifest ---------- */
+(()=>{
+  try{
+    const c=document.createElement("canvas");c.width=c.height=180;const x=c.getContext("2d");
+    x.fillStyle="#8a5b3a";x.fillRect(0,0,180,180);
+    x.fillStyle="#5b3a22";x.fillRect(16,16,148,148);
+    x.strokeStyle="#a77a55";x.lineWidth=6;x.strokeRect(16,16,148,148);
+    x.fillStyle="#ffffff";x.font="bold 38px 'Courier New',monospace";x.textAlign="center";x.textBaseline="middle";
+    x.fillText("SW.AI",90,78);
+    x.fillStyle="#efe7d4";x.font="bold 20px sans-serif";
+    x.fillText("OFFICE",90,118);
+    const png=c.toDataURL("image/png");
+    const ai=$("#appleIcon");if(ai)ai.href=png;
+    const mf={name:"SW AI Office",short_name:"SW AI Office",start_url:".",display:"standalone",background_color:"#efe7d4",theme_color:"#8a5b3a",icons:[{src:png,sizes:"180x180",type:"image/png"}]};
+    const ml=$("#appManifest");if(ml)ml.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:"application/json"}));
+  }catch(e){}
+})();
+
+/* ---------- start ---------- */
+drawAll();
+function boot3dSafe(){
+  try{
+    if(window.THREE && (!renderer || !gl3 || !gl3.querySelector("canvas"))){
+      init3d();
+    }else if(!window.THREE && $("#gl") && !$("#gl").innerHTML.trim()){
+      $("#gl").textContent="3D 엔진을 불러오는 중입니다… (네트워크 확인 필요)";
+    }
+  }catch(err){
+    if($("#gl"))$("#gl").textContent="3D 화면을 만들지 못했습니다: "+err.message;
+  }
+}
+boot3dSafe();
+window.addEventListener("load",function(){setTimeout(boot3dSafe,250);});
+try{if(srvCfg.on&&srvCfg.url&&srvCfg.token&&srvPendingGet())setTimeout(()=>runDirectiveServer("이어서",null,true),1500);}catch(e){}
+try{if(srvCfg.on&&srvCfg.url&&srvCfg.token)setTimeout(()=>srvRestoreDecisionHistory(),3000);}catch(e){}
+try{if(window.claude&&claude.use)claude.use("sample").then(s=>{sampleFn=s;updateEngineBadge();}).catch(()=>{});}catch(e){}
+</script>
+<div id="safariDiag"><button type="button" class="x" onclick="this.parentElement.style.display='none'">닫기</button><b>Safari 진단 로그</b><div id="safariDiagBody"></div></div>
+<script>
+(function(){
+  const box=document.getElementById("safariDiag"), body=document.getElementById("safariDiagBody");
+  function logErr(msg){
+    if(!box||!body)return;
+    box.style.display="block";
+    const line=document.createElement("div");
+    line.textContent="• "+msg;
+    body.appendChild(line);
+  }
+  window.addEventListener("error",function(ev){
+    const target=ev.target;
+    if(target && target.tagName==="SCRIPT"){
+      logErr("외부 스크립트 로드 실패: "+(target.src||"unknown"));
+    }else{
+      logErr("스크립트 오류: "+(ev.message||"알 수 없는 오류")+(ev.filename?" ("+ev.filename.split("/").pop()+":"+ev.lineno+")":""));
+    }
+  },true);
+  window.addEventListener("unhandledrejection",function(ev){
+    logErr("비동기 오류: "+(ev.reason&&(ev.reason.message||ev.reason)||"알 수 없는 거부"));
+  });
+})();
+</script>
+</body>
+</html>
