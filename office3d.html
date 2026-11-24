@@ -748,8 +748,10 @@ function renderTaskHistory(){
  const history=loadCombinedTaskHistory();
  list.replaceChildren();
  const isRepresentative=selected?.userData.person.id==='CEO';
-  const visibleHistory=history.filter(record=>isRepresentative||!record.employeeId||record.employeeId===selected?.userData.person.id||(Array.isArray(record.employeeIds)&&record.employeeIds.includes(selected?.userData.person.id)));
- if(!visibleHistory.length){list.textContent='이 직원의 저장된 업무 기록이 없습니다.';return}
+ const heading=document.querySelector('#taskHistoryPanel h3');
+ if(heading)heading.textContent=isRepresentative?'대표이사 전사 업무 보고함':'최근 업무 기록';
+ const visibleHistory=history.filter(record=>isRepresentative||!record.employeeId||record.employeeId===selected?.userData.person.id||(Array.isArray(record.employeeIds)&&record.employeeIds.includes(selected?.userData.person.id)));
+ if(!visibleHistory.length){list.textContent=isRepresentative?'아직 등록된 전사 업무 보고가 없습니다.':'이 직원의 저장된 업무 기록이 없습니다.';return}
  visibleHistory.slice(0,5).forEach(record=>{
   const item=document.createElement('button');item.type='button';item.className='historyItem';
   const date=new Date(record.savedAt),stamp=Number.isNaN(date.getTime())?'':date.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
