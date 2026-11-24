@@ -503,6 +503,10 @@ document.getElementById('close').onclick=()=>modal.classList.remove('show');moda
 async function submitSelectedTask(value,resumeRecord=null){
  const task=String(resumeRecord?.task||value||'').trim(),selectedPerson=selected?.userData.person;
  if(!task)return;
+ if(location.protocol==='file:'){
+  appendChat('시스템','PC에 저장된 HTML 파일(file://)에서는 서버 업무를 실행할 수 없습니다. GitHub Pages에 배포된 SW AI OFFICE 주소에서 다시 열어 주세요.');
+  return;
+ }
  // 이어하기는 저장된 담당자 ID를 기준으로 복구하고, 신규 업무는 현재 선택된 직원을 기준으로 처리한다.
  const p=resumeRecord?directory.find(person=>person.id===resumeRecord.employeeId):(selectedPerson?.id==='CEO'?staff.find(person=>person.id==='COO'):selectedPerson);
  if(!p){appendChat('시스템','본부장 알렉스를 찾을 수 없어 업무를 접수하지 못했습니다.');return}
