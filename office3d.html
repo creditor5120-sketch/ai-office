@@ -405,7 +405,7 @@ function makeAvatar(person,index,x,z){
 const dante={id:'CEO',name:'단테',department:'대표이사실',position:'대표이사',instruction:'SW AI OFFICE 대표이사'};
 const staff=[dante,...directory];
 makeAvatar(dante,0,0,-.15);
-const characterNames={
+const characterNames = {
  'COO':'알렉스',
  'MA-01':'데니스','MA-02':'카리나','MA-03':'이던','MA-04':'클로이','MA-05':'루카스',
  'LE-01':'피터','LE-02':'앤','LE-03':'소피아','LE-04':'줄리안','LE-05':'민준',
@@ -424,8 +424,8 @@ for(const p of directory){
 avatarRoot.scale.set(.8,1,.8);
 avatars.forEach((avatar,index)=>{
  let x,z;
- if(avatar.userData.person.id==='CEO'){x=0;z=-.15;} // 대표이사 단테
- else if(avatar.userData.person.id==='COO'){x=11;z=-.15;} // 본부장 알렉스
+ if(avatar.userData.person.id==='CEO'){x=0;z=-.15;}
+ else if(avatar.userData.person.id==='COO'){x=11;z=-.15;}
  else {[x,z]=officeDeskSlots[index-2]||[0,0];}
  avatar.position.set(x*.8,.82,z*.8);
  avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
