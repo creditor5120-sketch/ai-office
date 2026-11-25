@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office regression test to correctly identify the representative CEO and legal team lead roles.
+- 요약: Fix the 3D office desk count and team slot population logic to ensure the 31-desk requirement is met and the office layout remains consistent.
 
 ## 판단 근거
 
-The smoke test was failing because it expected the CEO to be the first staff card, but the current implementation of `office3d.html` initializes the staff array with the CEO first, followed by the directory. The test logic was slightly misaligned with the actual DOM structure of the staff cards. This patch ensures the test correctly identifies the CEO and legal team lead by their data attributes, which is the robust way to handle the staff list.
+The 3D office layout logic was missing a few desk slots to reach the required 31-desk count, and the loop for populating the remaining slots was slightly misaligned with the desk/chair group creation. This patch ensures the desk count is exactly 31 as per the audit requirements and improves the layout consistency.
 
