@@ -99,6 +99,10 @@ try {
   if (routedPayloads.length !== 1 || routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
     throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify({routedPayloads,chatHistory:await page.locator('#chatHistory').innerText(),selectedName:await page.locator('#chatName').innerText(),taskInput:await page.locator('#taskInput').inputValue(),pageErrors,browserConsole,failedRequests}));
   }
+  // Regression test: Ensure routing contract is strictly enforced
+  if (routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
+    throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
+  }
   const routedDirectory = routedPayloads[0].employees || [];
   const expectedNames = { COO: '알렉스', 'MA-01': '데니스', 'LE-01': '피터', 'IR-01': '라이언', 'GA-01': '에이든', 'SP-01': '에릭', 'IT-01': '테오' };
   for (const [employeeId, expectedName] of Object.entries(expectedNames)) {
