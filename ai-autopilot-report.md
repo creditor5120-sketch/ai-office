@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office regression test to correctly identify the representative CEO and legal lead.
+- 요약: Fix the 3D office floor audit regression by correctly populating the desk count in the 3D office.
 
 ## 판단 근거
 
-The smoke test was failing because it expected the CEO to be named '단테' and the legal lead to be '피터', but the test code was using incorrect selectors or expected values that did not match the current implementation. The patch updates the smoke test to correctly target the CEO and legal lead cards by their data-emp attributes, ensuring the regression test accurately verifies the routing contract.
+The smoke test failed because the `officeAudit.deskCount` was expected to be 31, but the implementation had a mismatch between the `officeDeskSlots` array and the actual desk rendering logic. The patch ensures the `officeDeskSlots` array accurately reflects the 31 desk positions defined in the 3D office layout, satisfying the regression test requirement.
 
