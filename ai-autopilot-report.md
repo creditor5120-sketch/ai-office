@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement the representative-to-Alex routing contract and verify it with a regression test.
+- 요약: Fix the 3D office floor audit test to correctly reflect the 31-desk layout.
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The existing implementation already handles this, but it lacked a regression test to ensure this behavior is preserved during future changes. This patch adds a test case to verify the routing payload and ensures the UI correctly reflects the assignment.
+The smoke test expected a desk count of 31, but the office3d.html source defines 31 desk slots (5 teams of 6 slots = 30, plus 1 extra in the loop). The test was failing because the audit function was not correctly reporting the desk count from the officeDeskSlots array. This patch ensures the audit function returns the correct length of the desk slots array, which is 31.
 
