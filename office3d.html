@@ -413,7 +413,7 @@ const characterNames = {
  'IT-01':'테오','IT-02':'아바','IT-03':'레오','IT-04':'조이','IT-05':'토니'
 };
 directory.forEach((p, i) => {
-  const displayPerson = { ...p, jobTitle: p.position, name: characterNames[p.id] || p.name };
+  const displayPerson = { ...p, jobTitle: p.position, name: characterNames[p.id] || p.name, department: p.department || '일반팀' };
   const [x, z] = officeDeskSlots[i] || [0, 0];
   makeAvatar(displayPerson, i + 1, x * .8, (z + 1.18) * .8);
 });
