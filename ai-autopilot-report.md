@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card rendering and detail view list to correctly display the representative CEO (단테) and COO (알렉스) with their respective IDs.
+- 요약: Fix the 3D office staff card rendering logic to correctly map the CEO (Dante) and COO (Alex) roles, ensuring the routing contract is maintained.
 
 ## 판단 근거
 
-The 3D office source code had a hardcoded mapping that did not fully align with the agreed-upon routing contract where the CEO (단테) is mapped to the COO (알렉스) for task routing, while maintaining their distinct identities in the UI. The patch ensures the staff card generation and detail view list correctly use the characterNames mapping and the CEO/COO ID logic, ensuring the UI truthfully reflects the routing contract.
+The previous implementation had a mismatch between the 3D avatar generation and the staff card rendering, which could lead to incorrect routing or display of the CEO/COO roles. This patch ensures that the staff cards correctly identify the CEO and COO, maintaining the agreed-upon routing contract where selecting the CEO routes to the COO (Alex).
 
