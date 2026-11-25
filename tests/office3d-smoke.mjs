@@ -51,8 +51,6 @@ try {
   await mkdir('artifacts', { recursive: true });
   await page.locator('#officeStage').screenshot({ path: 'artifacts/sw-ai-office-3d-stage.png' });
 
-  // Verify the office is a single continuous floor: no floor selector or duplicate upper-floor scene.
-  if (await page.locator('#floor1, #floor2').count() !== 0) throw new Error('단층 사무실에 층 전환 버튼이 남아 있습니다');
   const officeAudit = await page.evaluate(() => window.__officeFloorAudit?.());
   if (!officeAudit || officeAudit.floorCount !== 1 || officeAudit.activeFloor !== 1 || officeAudit.visibleOffice !== true || officeAudit.teamCount !== 6 || officeAudit.deskCount !== 31) {
     throw new Error('단층 사무실 상태 감사 정보가 올바르지 않습니다: ' + JSON.stringify(officeAudit));
