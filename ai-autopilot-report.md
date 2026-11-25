@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The previous implementation of the `__officeFloorAudit` function in `office3d.html` was not correctly capturing the `officeDeskSlots.length` value, which is the source of truth for the desk count. This patch ensures the audit function accurately reflects the desk count as requested in the instructions.
+The 3D office initialization logic dynamically populates `officeDeskSlots` up to 31 slots. The `__officeFloorAudit` function was previously returning a hardcoded value or potentially inconsistent data. Updating it to return `officeDeskSlots.length` ensures the smoke test correctly verifies the 31-desk layout as required by the project constraints.
 
