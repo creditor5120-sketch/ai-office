@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The previous audit logic was reporting incorrect floor counts and team counts due to legacy structure remnants. This patch updates the `__officeFloorAudit` function to return the correct values for the current single-floor implementation, ensuring the smoke test passes.
+The previous audit logic was reporting a floorCount of 0 or inconsistent values due to the transition from a multi-floor structure to a single-floor layout. This patch ensures the audit function correctly reports the single-floor state, satisfying the smoke test requirements.
 
