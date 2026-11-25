@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card rendering and selection logic to ensure the CEO (단테) and COO (알렉스) are correctly identified and routed.
+- 요약: Fix the 3D office staff card and detail view rendering by correctly mapping the character names from the characterNames dictionary.
 
 ## 판단 근거
 
-The current implementation of `office3d.html` has a potential mismatch in the `staff` array initialization and the `characterNames` mapping. By ensuring the `staff` array is correctly constructed with the CEO and COO roles, and that the `characterNames` mapping is applied consistently during avatar creation, we ensure the routing contract (CEO -> COO) is robustly supported. The patch ensures the `staff` array is correctly initialized and the `characterNames` are applied to all directory members.
+The current implementation in office3d.html was using the raw employee IDs as names in the staff cards and detail view, rather than the mapped names (e.g., 'MA-01' instead of '데니스'). This patch ensures the characterNames mapping is applied consistently when generating the staff cards and detail view items, improving the user experience and maintaining consistency with the 2D map view.
 

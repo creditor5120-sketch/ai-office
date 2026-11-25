@@ -432,12 +432,12 @@ window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=String(staff.length);
 function makeStaffCard(p,detail=false){
- const el=document.createElement('button');el.className=detail?'detailPerson':'staffCard';el.dataset.emp=p.id;
+ const el=document.createElement('button');el.className=detail?'detailPerson':'staffCard';el.dataset.emp=p.id;const displayName=characterNames[p.id]||p.name;
  const face=document.createElement('canvas');face.className='staffFace';face.width=64;face.height=80;
  const avatar=avatars.find(v=>v.userData.person.id===p.id),ctx=face.getContext('2d');ctx.imageSmoothingEnabled=false;
  if(avatar?.userData.texture?.image)ctx.drawImage(avatar.userData.texture.image,0,0,32,40,0,0,64,80);
  const meta=document.createElement('span');meta.className='staffMeta';
- const name=document.createElement('b');name.textContent=p.name;
+ const name=document.createElement('b');name.textContent=displayName;
  const team=document.createElement('small');team.textContent='소속: '+(p.department||'');
  const job=document.createElement('small');job.textContent='직무: '+(p.jobTitle||p.position||'직원');
  const status=document.createElement('small');status.textContent='상태: '+(p.workStatus||'업무 대기');status.className='staffStatus';
