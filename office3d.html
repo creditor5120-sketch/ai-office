@@ -412,19 +412,18 @@ const characterNames = {
  'SP-01':'에릭','SP-02':'노라','SP-03':'제이슨','SP-04':'이사벨라','SP-05':'아담',
  'IT-01':'테오','IT-02':'아바','IT-03':'레오','IT-04':'조이','IT-05':'토니'
 };
-for(const p of directory){
-  const displayPerson={...p,jobTitle:p.position,name:characterNames[p.id]||p.name};
-  const slotIdx=avatars.length-1;
-  const [x,z]=officeDeskSlots[slotIdx]||[0,0];
-  makeAvatar(displayPerson,avatars.length,x*.8,(z+1.18)*.8);
-}
+directory.forEach((p, i) => {
+  const displayPerson = { ...p, jobTitle: p.position, name: characterNames[p.id] || p.name };
+  const [x, z] = officeDeskSlots[i] || [0, 0];
+  makeAvatar(displayPerson, i + 1, x * .8, (z + 1.18) * .8);
+});
 // 단층 사무실에 실제 직원 아바타를 직접 배치한다.
 avatarRoot.scale.set(.8,1,.8);
 avatars.forEach((avatar,index)=>{
  let x,z;
  if(avatar.userData.person.id==='CEO'){x=0;z=-.15;}
  else if(avatar.userData.person.id==='COO'){x=11;z=-.15;}
- else {[x,z]=officeDeskSlots[index-2]||[0,0];}
+ else {[x,z]=officeDeskSlots[index-1]||[0,0];}
  avatar.position.set(x*.8,.82,z*.8);
  avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
  avatar.userData.targetX=x*.8;avatar.userData.targetZ=z*.8;
