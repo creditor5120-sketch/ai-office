@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office desk count and staff card population logic to ensure consistency with the 31-desk layout.
+- 요약: Fix the 3D office initialization error by ensuring the `office3d.html` script correctly handles the `officeDeskSlots` population and `avatarCount` audit.
 
 ## 판단 근거
 
-The 3D office layout defines 31 desk slots, but the staff card population logic was using an index-based approach that could lead to mismatches or incomplete rendering if the number of staff does not perfectly align with the desk slots. By explicitly linking the staff cards to the desk slots and ensuring the audit count matches the 31-desk layout, we maintain the integrity of the 3D office visualization.
+The smoke test failed because `officeAudit.deskCount` was expected to be 31, but the `officeDeskSlots` array in `office3d.html` was missing the final team's slots. This patch ensures the `officeDeskSlots` array is fully populated to match the 31 desk slots defined in the office layout, satisfying the audit requirement and fixing the initialization error.
 
