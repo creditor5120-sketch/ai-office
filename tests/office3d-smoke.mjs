@@ -69,7 +69,7 @@ try {
   const selectedName = (await page.locator('#chatName').innerText()).trim();
   if (selectedName !== '단테') throw new Error(`대표이사 첫 직원 카드 이름 오류: expected 단테, found ${selectedName || '(empty)'}`);
   // 직원 카드를 누르면 프로필 모달이 열리므로 다음 직원 선택 전에 닫는다.
-  await page.locator('#close').click();
+  await page.locator('#modal #close').click();
   await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
   const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]');
   await legalLeadCard.waitFor({ state: 'visible', timeout: 10000 });
@@ -77,7 +77,7 @@ try {
   const legalLeadName = (await page.locator('#chatName').innerText()).trim();
   if (legalLeadName !== '피터') throw new Error(`법무팀장 이름 오류: expected 피터, found ${legalLeadName || '(empty)'}`);
   // 대표 단테의 전사 업무 지시는 알렉스에게, 직원 선택 지시는 해당 직원에게 전달되어야 한다.
-  await page.locator('#close').click();
+  await page.locator('#modal #close').click();
   await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
   await page.locator('#officeChatToken').fill('smoke-test-api-token');
   const routedPayloads = [];
@@ -122,7 +122,7 @@ try {
     throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
   }
   await page.locator('#staffStrip .staffCard[data-emp="LE-01"]').click();
-  await page.locator('#close').click();
+  await page.locator('#modal #close').click();
   await page.locator('#taskInput').fill('직원 직접 업무 라우팅 회귀 테스트');
   await page.locator('#sendTask').click();
   await page.waitForTimeout(200);
