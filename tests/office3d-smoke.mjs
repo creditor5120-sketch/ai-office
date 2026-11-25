@@ -63,13 +63,13 @@ try {
   const visibleCount = Number((await page.locator('#activeCount').innerText()).trim());
   if (visibleCount < 31) throw new Error(`Expected at least 31 rendered staff, found ${visibleCount}`);
 
-  await page.locator('#staffStrip .staffCard[data-emp="CEO"]').click();
+  await page.locator('#staffStrip .staffCard[data-emp="CEO"]').first().click();
   const selectedName = (await page.locator('#chatName').innerText()).trim();
   if (selectedName !== '단테') throw new Error(`대표이사 첫 직원 카드 이름 오류: expected 단테, found ${selectedName || '(empty)'}`);
   // 직원 카드를 누르면 프로필 모달이 열리므로 다음 직원 선택 전에 닫는다.
   await page.locator('#modal #close').click();
   await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
-  const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]');
+  const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]').first();
   await legalLeadCard.waitFor({ state: 'visible', timeout: 10000 });
   await legalLeadCard.click();
   const legalLeadName = (await page.locator('#chatName').innerText()).trim();
@@ -88,7 +88,7 @@ try {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) });
     }
   });
-  await page.locator('#staffStrip .staffCard[data-emp="CEO"]').click();
+  await page.locator('#staffStrip .staffCard[data-emp="CEO"]').first().click();
   await page.locator('#close').click();
   await page.locator('#taskInput').fill('대표 업무 라우팅 회귀 테스트');
   await page.locator('#sendTask').click();
@@ -119,7 +119,7 @@ try {
   if (routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
     throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
   }
-  await page.locator('#staffStrip .staffCard[data-emp="LE-01"]').click();
+  await page.locator('#staffStrip .staffCard[data-emp="LE-01"]').first().click();
   await page.locator('#modal #close').click();
   await page.locator('#taskInput').fill('직원 직접 업무 라우팅 회귀 테스트');
   await page.locator('#sendTask').click();
