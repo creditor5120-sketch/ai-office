@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card and detail view rendering by correctly mapping the character names from the characterNames dictionary.
+- 요약: Fix the 3D office staff card rendering logic to correctly map the COO role to 알렉스 and ensure the representative CEO Dante is correctly identified.
 
 ## 판단 근거
 
-The current implementation in office3d.html was using the raw employee IDs as names in the staff cards and detail view, rather than the mapped names (e.g., 'MA-01' instead of '데니스'). This patch ensures the characterNames mapping is applied consistently when generating the staff cards and detail view items, improving the user experience and maintaining consistency with the 2D map view.
+The 3D office source code had a slight mismatch in the character mapping logic where the COO role was correctly identified as 알렉스, but the staff card generation logic needed to ensure the display name and role mapping were consistent with the established routing contract. This patch ensures the staff card generation uses the correct character mapping for all employees, including the CEO and COO, maintaining parity with the 2D map and the routing contract.
 
