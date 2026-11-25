@@ -84,3 +84,35 @@ test('representative approval gate blocks incomplete or unreviewed work', async 
     assert.ok(result.blockers.some(item => item.includes(expectedBlocker)), label + ' 차단 사유가 표시되어야 합니다.');
   }
 });
+
+test('representative approval gate blocks incomplete or unreviewed work', async () => {
+  const office = await readFile(new URL('../office3d.html', import.meta.url), 'utf8');
+  const start = office.indexOf('function evaluateRepresentativeRelease(record){');
+  const end = office.indexOf('\nfunction renderRepresentativeDecision', start);
+  assert.ok(start >= 0 && end > start, 'approval gate function must be present and extractable');
+  const evaluate = new Script(office.slice(start, end) + '\nevaluateRepresentativeRelease').runInNewContext();
+
+  const approvedRecord = {
+    taskId: 'approval-gate-test',
+    deliverables: [{ id: 'specialist-1', title: '업무 결과물', status: 'completed' }],
+    finalReviewResults: [{ id: 'specialist-1', judgment: '승인' }],
+    workflow: { reviewGate: { finalReleaseAllowed: true } }
+  };
+  const allowed = evaluate(approvedRecord);
+  assert.equal(allowed.allowed, true);
+  assert.equal(allowed.blockers.length, 0);
+
+  const blockedCases = [
+    ['서버 검수 게이트 미승인', { ...approvedRecord, workflow: { reviewGate: { finalReleaseAllowed: false } } }, '서버 최종 검수 게이트'],
+    ['결과물 없음', { ...approvedRecord, deliverables: [] }, '결과물이 등록되지 않았습니다'],
+    ['결과물 미완료', { ...approvedRecord, deliverables: [{ id: 'specialist-1', title: '업무 결과물', status: 'partial' }] }, '완료되지 않은 결과물'],
+    ['최종 검수 누락', { ...approvedRecord, finalReviewResults: [] }, '최종 검수가 누락된 결과물'],
+    ['최종 검수 조건부 승인', { ...approvedRecord, finalReviewResults: [{ id: 'specialist-1', judgment: '조건부 승인' }] }, '최종 검수 승인 상태가 아닌 결과물']
+  ];
+
+  for (const [label, record, expectedBlocker] of blockedCases) {
+    const result = evaluate(record);
+    assert.equal(result.allowed, false, label + ' 상태에서는 대표 승인이 차단되어야 합니다.');
+    assert.ok(result.blockers.some(item => item.includes(expectedBlocker)), label + ' 차단 사유가 표시되어야 합니다.');
+  }
+});
