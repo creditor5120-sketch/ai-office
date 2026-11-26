@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The 3D office initialization logic for the staff count was missing a direct update to the DOM element 'activeCount' during the initial load, which could lead to a mismatch between the rendered staff and the UI status. Additionally, the routing contract for the CEO (Dante) to COO (Alex) was verified in the smoke test, but ensuring the UI truthfully reflects this assignment is critical for the acceptance flow.
+The 3D office initialization logic for the staff count was missing a direct update to the DOM element 'activeCount' during the initial load, leading to a '-' display. Additionally, the routing contract for the CEO (Dante) to COO (Alex) is critical for the workflow bridge; ensuring this is explicitly handled in the staff card generation and selection logic prevents routing errors.
 
