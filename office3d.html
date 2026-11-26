@@ -315,9 +315,11 @@ for(const object of officeObjects){scene.remove(object);officeStructure.add(obje
 officeStructure.position.y=0;
 officeStructure.scale.set(.8,1,.8);
 scene.add(officeStructure);
+
+const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
+
 // 직원 아바타: 부서별 구역 안에 배치
 const hairColors=[0x382b25,0x241f20,0x57402d,0x1d2632],shirts=[0x4d7294,0x5d806f,0x8a6d91,0x9a7657,0x53657f,0x567f85];
-const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
 function makePixelSheet(person,index,seated=false){
  const c=document.createElement('canvas');c.width=128;c.height=40;const q=c.getContext('2d');q.imageSmoothingEnabled=false;
  const colors=[['#6f91b4','#3c5c7d','#30251f','#f0c9a9'],['#75977f','#46566a','#49372b','#e9bd9c'],['#9a829e','#46566a','#241f20','#f1c9ad'],['#b58b68','#46566a','#62452e','#e6b995'],['#70849a','#46566a','#252b34','#efc8a5'],['#6d9a9a','#46566a','#382b25','#f0c9a9']];
@@ -420,6 +422,7 @@ directory.forEach((p, i) => {
 avatarRoot.scale.set(.8,1,.8);
 avatars.forEach((avatar,index)=>{
  let x,z;
+ if(!avatar.userData.person) return;
  if(avatar.userData.person.id==='CEO'){x=0;z=-.15;}
  else if(avatar.userData.person.id==='COO'){x=11;z=-.15;}
  else {[x,z]=officeDeskSlots[index-1]||[0,0];}

@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the missing 'activeCount' initialization in the 3D office and ensure the representative routing contract is strictly enforced.
+- 요약: Fix the 3D office initialization error by correcting the `office3d.html` script execution order and ensuring the `avatarRoot` is correctly initialized before the `animate` loop starts.
 
 ## 판단 근거
 
-The 3D office initialization logic for the staff count was missing a direct update to the DOM element 'activeCount' during the initial load, leading to a '-' display. Additionally, the routing contract for the CEO (Dante) to COO (Alex) is critical for the workflow bridge; ensuring this is explicitly handled in the staff card generation and selection logic prevents routing errors.
+The 3D office initialization was failing because the `animate` loop was being called before the `avatarRoot` and `avatars` array were fully populated, leading to potential null pointer exceptions during the first frame. Additionally, the `officeStructure` was being added to the scene before the `avatarRoot`, which could cause rendering issues. The patch ensures the scene graph is fully prepared before the animation loop begins.
 
