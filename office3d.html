@@ -438,7 +438,8 @@ function makeStaffCard(p,detail=false){
  const displayName=characterNames[p.id]||p.name;
  const displayJob=p.position||'직원';
  const face=document.createElement('canvas');face.className='staffFace';face.width=64;face.height=80;
- const avatar=avatars.find(v=>v.userData.person.id===p.id),ctx=face.getContext('2d');ctx.imageSmoothingEnabled=false;
+ const ctx=face.getContext('2d');ctx.imageSmoothingEnabled=false;
+ const avatar=avatars.find(v=>v.userData.person.id===p.id);
  if(avatar?.userData.texture?.image)ctx.drawImage(avatar.userData.texture.image,0,0,32,40,0,0,64,80);
  const meta=document.createElement('span');meta.className='staffMeta';
  const name=document.createElement('b');name.textContent=displayName;
