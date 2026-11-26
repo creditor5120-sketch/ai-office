@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the officeTeams and officeDeskSlots definition to ensure the 3D office layout and audit count remain consistent.
+- 요약: Fix the 3D office staff card rendering and detail view employee list to ensure consistent display of the COO (알렉스) and other staff members.
 
 ## 판단 근거
 
-The officeDeskSlots was previously defined using a slice(0, 31) on the flatMap of all teams, but the loop that actually placed the desks only iterated over the first 5 teams. This caused a discrepancy between the audit count (31) and the actual number of desks rendered (25). I have updated the desk placement loop to include the 6th team (기술·IT팀) and adjusted the desk placement logic to match the 31-desk audit requirement.
+The current implementation of `refreshStaffCards` and the initial staff card generation in `office3d.html` had a slight mismatch in how the COO (알렉스) was handled compared to other staff, potentially causing UI inconsistencies in the staff strip and detail view. This patch ensures that the COO is correctly identified and rendered with the proper display name and status, maintaining parity with the routing contract.
 
