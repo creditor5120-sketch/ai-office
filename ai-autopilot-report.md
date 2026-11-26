@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test failed because the `officeAudit.deskCount` was expected to be 31, but the implementation had a mismatch in the `officeDeskSlots` definition. The desk count must remain 31 as per the established office layout. I have updated the `officeDeskSlots` in `office3d.html` to match the 31 slots defined in the layout, ensuring the audit passes while maintaining the integrity of the 3D office structure.
+The smoke test failed because the `officeAudit.deskCount` was expected to be 31, but the implementation had a mismatch in the `officeDeskSlots` array and the desk placement logic. The desk count must remain 31 as per the established office layout. I have updated the `officeDeskSlots` array in `office3d.html` to correctly contain 31 entries, matching the 31 desk placements in the 3D office.
 
