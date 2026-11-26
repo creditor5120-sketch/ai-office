@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test was failing due to a race condition where the loading panel was not being hidden correctly, causing the test to timeout. This patch ensures the loading panel is explicitly hidden after the 3D scene is ready and adds a more robust check for the loading panel's state.
+The smoke test was failing due to a race condition where the loading panel was not being hidden correctly, or the 3D scene was not being initialized in time. By ensuring the loading panel is hidden only after the 3D scene is ready and adding a more robust check for the 3D canvas, we ensure the test is stable.
 
