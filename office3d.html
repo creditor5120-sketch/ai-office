@@ -235,7 +235,7 @@ const officeTeams=[
 const officeDeskSlots=officeTeams.flatMap(t=>t.slots).slice(0, 31);
 // 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
 // 레퍼런스의 비대칭 팀 클러스터와 부분 유리 파티션을 반영한 공간 배치
-for(const team of officeTeams.slice(0,5)){
+for(const team of officeTeams){
  for(const [x,z] of team.slots){
   desk(x,z);chair(x,z+1.18);
  }
