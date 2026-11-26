@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The loading panel was not being removed from the DOM after the 3D scene initialized, potentially obstructing user interaction. This patch ensures the loading element is both hidden and removed from the DOM upon successful initialization, consistent with the expected behavior in the 3D office.
+The loading panel was not being removed from the DOM after the 3D scene initialized, potentially obscuring the UI. This patch ensures the loading element is removed once the scene is ready.
 
