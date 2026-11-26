@@ -53,4 +53,24 @@ test('representative approval gate blocks incomplete or unreviewed work', async 
   const allowed = evaluate(approvedRecord);
   assert.equal(allowed.allowed, true);
   assert.equal(allowed.blockers.length, 0);
+
+  const incompleteRecord = {
+    taskId: 'approval-gate-incomplete',
+    deliverables: [{ id: 'specialist-1', title: '업무 결과물', status: 'in-progress' }],
+    finalReviewResults: [],
+    workflow: { reviewGate: { finalReleaseAllowed: true } }
+  };
+  const blocked = evaluate(incompleteRecord);
+  assert.equal(blocked.allowed, false);
+  assert.ok(blocked.blockers.length > 0);
+
+  const unreviewedRecord = {
+    taskId: 'approval-gate-unreviewed',
+    deliverables: [{ id: 'specialist-1', title: '업무 결과물', status: 'completed' }],
+    finalReviewResults: [],
+    workflow: { reviewGate: { finalReleaseAllowed: true } }
+  };
+  const unreviewed = evaluate(unreviewedRecord);
+  assert.equal(unreviewed.allowed, false);
+  assert.ok(unreviewed.blockers.some(b => b.includes('최종 검수가 누락된 결과물')));
 });
