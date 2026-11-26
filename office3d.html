@@ -501,7 +501,7 @@ async function submitSelectedTask(value,resumeRecord=null){
  // 이어하기는 저장된 담당자 ID를 기준으로 복구하고, 신규 업무는 현재 선택된 직원을 기준으로 처리한다.
  const p=resumeRecord?staff.find(person=>person.id===resumeRecord.employeeId):(selectedPerson?.id==='CEO'?staff.find(person=>person.id==='COO'):selectedPerson);
  if(!p){appendChat('시스템','본부장 알렉스를 찾을 수 없어 업무를 접수하지 못했습니다.');return}
- const employeeName=p.id==='COO'?'알렉스':p.name;
+ const employeeName=p.id==='COO'?'알렉스':(characterNames[p.id]||p.name);
  const token=document.getElementById('officeChatToken').value.trim();
  if(!token){appendChat('시스템','서버 접속 인증값을 먼저 입력해 주세요.');return}
  if(taskSubmissionInProgress){appendChat('시스템','현재 업무가 처리 중입니다. 중복 실행을 막기 위해 완료 또는 중단 후 다시 시도해 주세요.');return}
@@ -512,7 +512,7 @@ async function submitSelectedTask(value,resumeRecord=null){
  savePendingTask({task,taskId,employeeId:p.id,employeeName,status:'PROCESSING',savedAt:resumeRecord?.savedAt||new Date().toISOString()});
  const pending=appendChat(employeeName,resumeRecord?'기존 업무 ID로 중단된 업무를 이어서 확인합니다.':'업무를 접수했습니다. 본부장이 분석하고 담당 직원과 협업하고 있습니다.');
  const states=readEmployeeStates();states[p.id]={...(states[p.id]||{}),status:'업무 중',detail:task,taskId,updatedAt:new Date().toISOString()};writeEmployeeStates(states);recordEmployeeHistory(p.id,states[p.id]);refreshStaffCards();
- const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:directory.map(employee=>({...employee,name:characterNames[employee.id]||employee.name,jobTitle:employee.name}))};
+ const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:staff.map(employee=>({...employee,name:characterNames[employee.id]||employee.name,jobTitle:employee.name}))};
  try{
   let data=null,completed=false,attempt=0;
   const deadline=Date.now()+8*60*1000;
