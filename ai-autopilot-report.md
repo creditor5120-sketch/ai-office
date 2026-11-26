@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office desk count regression and ensure the office audit accurately reflects the 31-desk layout.
+- 요약: Fix the missing 'representativeDecision' field in the compactTaskHistoryRecord function to ensure representative approval status is correctly saved and restored.
 
 ## 판단 근거
 
-The smoke test failed because the `officeAudit.deskCount` was expected to be 31, but the implementation had a mismatch in the `officeDeskSlots` array and the desk placement logic. The desk count must remain 31 as per the established office layout. I have updated the `officeDeskSlots` array in `office3d.html` to correctly contain 31 entries, matching the 31 desk placements in the 3D office.
+The `compactTaskHistoryRecord` function was missing the `representativeDecision` field, causing the representative's approval/rejection status to be lost when saving or restoring task history. This patch adds the field to the compaction logic, ensuring the UI correctly reflects the decision state.
 
