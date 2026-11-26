@@ -53,6 +53,24 @@ test('representative approval gate blocks incomplete or unreviewed work', async 
   const allowed = evaluate(approvedRecord);
   assert.equal(allowed.allowed, true);
   assert.equal(allowed.blockers.length, 0);
+});
+
+test('representative approval gate blocks incomplete or unreviewed work', async () => {
+  const office = await readFile(new URL('../office3d.html', import.meta.url), 'utf8');
+  const start = office.indexOf('function evaluateRepresentativeRelease(record){');
+  const end = office.indexOf('\nfunction renderRepresentativeDecision', start);
+  assert.ok(start >= 0 && end > start, 'approval gate function must be present and extractable');
+  const evaluate = new Script(office.slice(start, end) + '\nevaluateRepresentativeRelease').runInNewContext();
+
+  const approvedRecord = {
+    taskId: 'approval-gate-test',
+    deliverables: [{ id: 'specialist-1', title: '업무 결과물', status: 'completed' }],
+    finalReviewResults: [{ id: 'specialist-1', judgment: '승인' }],
+    workflow: { reviewGate: { finalReleaseAllowed: true } }
+  };
+  const allowed = evaluate(approvedRecord);
+  assert.equal(allowed.allowed, true);
+  assert.equal(allowed.blockers.length, 0);
 
   const blockedCases = [
     ['서버 검수 게이트 미승인', { ...approvedRecord, workflow: { reviewGate: { finalReleaseAllowed: false } } }, '서버 최종 검수 게이트'],
