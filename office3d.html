@@ -61,7 +61,7 @@ header{position:absolute;z-index:6;left:0;right:0;top:0;height:58px;display:flex
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-
+import directory from './employees.js';
 window.addEventListener('error',e=>{
  const box=document.getElementById('loading');
  if(box){box.style.display='block';box.textContent='3D 초기화 오류: '+(e.message||'스크립트 오류');}
@@ -71,7 +71,6 @@ window.addEventListener('unhandledrejection',e=>{
  if(box){box.style.display='block';box.textContent='3D 초기화 오류: '+(e.reason?.message||String(e.reason));}
 });
 
-import directory from './employees.js';
 const mount=document.getElementById('scene'),scene=new THREE.Scene();
 scene.background=new THREE.Color(0xd9d2bd);scene.fog=new THREE.Fog(0xd9d2bd,72,130);
 const camera=new THREE.PerspectiveCamera(42,1,.1,180);camera.position.set(27,29,29);
