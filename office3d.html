@@ -429,7 +429,7 @@ avatars.forEach((avatar,index)=>{
 });
 window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:true});
 const staffCountValue=staff.length;
-document.getElementById('activeCount').textContent=String(staff.length);
+document.getElementById('activeCount').textContent=String(staffCountValue);
 function makeStaffCard(p,detail=false){
  const el=document.createElement('button');el.className=detail?'detailPerson':'staffCard';el.dataset.emp=p.id;
  const displayName=characterNames[p.id]||p.name;
