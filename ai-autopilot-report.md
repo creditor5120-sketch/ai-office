@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The smoke test identified a potential race condition where the loading panel might not be hidden correctly if the 3D scene initialization fails or is delayed. Adding a fallback to ensure the loading panel is hidden and the scene is ready improves robustness.
+The smoke test identified that the loading panel was not being hidden correctly in some environments, and the 3D scene initialization needed a more robust check to ensure the canvas is ready before proceeding. This patch ensures the loading panel is hidden only after the 3D scene is fully initialized and the canvas is attached.
 
