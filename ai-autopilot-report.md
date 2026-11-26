@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The representative approval gate logic was implemented but lacked a dedicated regression test to verify that it correctly identifies and blocks incomplete deliverables, missing reviews, or unapproved judgments, ensuring the integrity of the final release gate.
+The representative approval gate is a critical safety mechanism. Adding a dedicated test ensures that the logic correctly identifies and blocks incomplete deliverables, missing reviews, or unapproved judgments, preventing premature final release.
 
