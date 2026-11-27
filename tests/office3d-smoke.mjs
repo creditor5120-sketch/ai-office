@@ -66,6 +66,10 @@ try {
   await page.locator('#staffStrip .staffCard[data-emp="CEO"]').first().click();
   const selectedName = (await page.locator('#chatName').innerText()).trim();
   if (selectedName !== '단테') throw new Error(`대표이사 첫 직원 카드 이름 오류: expected 단테, found ${selectedName || '(empty)'}`);
+  // Ensure modal is closed before proceeding
+  if (await page.locator('#modal').isVisible()) {
+    await page.locator('#modal #close').click();
+  }
   // 직원 카드를 누르면 프로필 모달이 열리므로 다음 직원 선택 전에 닫는다.
   if (await page.locator('#modal').isVisible()) {
     await page.locator('#modal #close').click();
