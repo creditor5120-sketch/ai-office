@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Add a regression test to ensure the representative approval gate correctly blocks incomplete or unreviewed work.
+- 요약: Fix the routing contract regression in the 3D office and ensure the representative CEO selection correctly routes to COO 알렉스.
 
 ## 판단 근거
 
-The approval gate logic in `office3d.html` needs a corresponding regression test to prevent regressions in the representative decision flow, ensuring that incomplete or unreviewed deliverables are correctly blocked from approval.
+The previous implementation had a potential ambiguity in the routing logic where the CEO selection might not consistently map to the COO (알렉스) ID. By explicitly enforcing the routing contract in the `selectAvatar` and `submitSelectedTask` functions, we ensure that selecting the CEO always triggers the COO's workflow, maintaining parity with the established routing contract and passing the regression tests.
 
