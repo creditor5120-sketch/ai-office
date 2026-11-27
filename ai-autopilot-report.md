@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the representative routing regression and ensure the 3D office UI truthfully reflects the specialist assignment and collaboration status.
+- 요약: Fix the 3D office staff card data binding and ensure the representative CEO routing contract is strictly maintained.
 
 ## 판단 근거
 
-The previous implementation had a gap in the routing contract where the CEO selection was not consistently routing to the COO (알렉스). This patch ensures that selecting the CEO in the 3D office correctly sets the employeeId to 'COO' and the display name to '알렉스', while preserving the original employee IDs for all other staff. Additionally, it ensures the UI status indicators are updated to reflect the correct assignment and collaboration status, satisfying the requirement for truthful visualization.
+The 3D office staff card rendering logic had a minor inconsistency in mapping the CEO role to the '단테' display name, which could lead to UI/logic mismatches. This patch ensures the `characterNames` mapping is consistently applied during staff card generation and detail view rendering, reinforcing the routing contract verified by the regression tests.
 
