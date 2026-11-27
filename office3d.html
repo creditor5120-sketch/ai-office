@@ -969,6 +969,7 @@ renderTaskHistory();
 const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex,false);
 refreshStaffCards();
 syncAvatarWorkStates(true);
+document.getElementById('activeCount').textContent=String(staff.length);
 window.addEventListener('load', () => { const loading=document.getElementById('loading'); if(loading) { loading.style.display='none'; loading.textContent=''; } });
 </script>
 </body></html>
