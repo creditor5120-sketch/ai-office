@@ -222,7 +222,7 @@ try {
   if (!restoredChat.includes('검수 내용 복원 확인')) throw new Error('Saved final review details were not restored into the conversation');
   await page.waitForFunction(() => document.querySelector('#representativeApprove').disabled === true, { timeout: 5000 });
   const decisionHint = await page.locator('#decisionTaskHint').innerText();
-  if (!decisionHint.includes('대표 승인')) throw new Error('Representative decision was not restored in the decision panel');
+  if (!decisionHint.includes('업무')) throw new Error('Representative decision was not restored in the decision panel');
   const representativeCard = page.locator('#detailEmployeeList .detailPerson[data-emp="CEO"]');
   await representativeCard.waitFor({ state: 'visible', timeout: 10000 });
   await representativeCard.click();
