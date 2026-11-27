@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Add a regression test for the representative approval gate logic.
+- 요약: Fix the regression test to correctly handle the representative approval gate logic.
 
 ## 판단 근거
 
-The approval gate logic in `office3d.html` is critical for ensuring that only fully reviewed and approved work is finalized. Adding a regression test in `tests/office3d-entrypoint.test.mjs` ensures this logic remains robust against future changes.
+The test `representative approval gate blocks incomplete or unreviewed work` was duplicated in `tests/office3d-entrypoint.test.mjs` and contained an incorrect assertion in the second instance. Removing the duplicate and ensuring the logic is correctly tested ensures the integrity of the approval gate.
 
