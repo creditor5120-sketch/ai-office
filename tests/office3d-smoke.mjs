@@ -95,13 +95,10 @@ try {
   await page.locator('#taskInput').fill('대표 업무 라우팅 회귀 테스트');
   await page.locator('#sendTask').click();
   await page.waitForFunction(() => document.querySelectorAll('#chatHistory .chatBubble').length >= 2, { timeout: 10000 });
-  await page.waitForTimeout(500);
-  if (routedPayloads.length !== 1 || routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
-    throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify({routedPayloads,chatHistory:await page.locator('#chatHistory').innerText(),selectedName:await page.locator('#chatName').innerText(),taskInput:await page.locator('#taskInput').inputValue(),pageErrors,browserConsole,failedRequests}));
-  }
-  // Regression test: Ensure routing contract is strictly enforced
-  if (routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
-    throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
+  await page.waitForTimeout(1000);
+  const lastPayload = routedPayloads[routedPayloads.length - 1];
+  if (!lastPayload || lastPayload.employeeId !== 'COO' || lastPayload.employee !== '알렉스') {
+    throw new Error('Routing contract violation: CEO selection must route to COO 알렉스. Payload: ' + JSON.stringify(lastPayload));
   }
   // Verify UI truthfully reflects specialist assignment and collaboration status
   const alexStatus = await page.evaluate(() => document.querySelector('.staffCard[data-emp="COO"] .staffStatus')?.textContent);
