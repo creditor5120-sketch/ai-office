@@ -959,10 +959,10 @@ function animate(){
 animate();
 function resizeOffice(){const w=mount.clientWidth||innerWidth,h=mount.clientHeight||innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 addEventListener('resize',resizeOffice);if('ResizeObserver' in window)new ResizeObserver(resizeOffice).observe(document.getElementById('officeStage'));
-syncAvatarWorkStates(true);
 renderTaskHistory();
 const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex,false);
 refreshStaffCards();
+syncAvatarWorkStates(true);
 const loading=document.getElementById('loading');
 if(loading) loading.style.display='none';
 </script>
