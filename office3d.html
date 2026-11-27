@@ -792,7 +792,9 @@ function renderRepresentativeDecision(record=null){
  const taskId=record?.taskId||'',decision=record?.representativeDecision||record?.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.detail||null;
  const release=evaluateRepresentativeRelease(record);
  hint.textContent=taskId?(decision?`업무 ${taskId} · ${decision.decisionLabel||decision.decision||'결정 기록됨'} (${decision.recordedAt||record.audit?.events?.find(event=>event.eventType==='REPRESENTATIVE_DECISION')?.createdAt||'시각 미확인'})`:`선택 업무 ID: ${taskId}`):'업무 기록을 선택하면 승인 또는 반려를 기록할 수 있습니다.';
- const allowed=!!taskId&&!decision;approve.disabled=!allowed||!release.allowed;reject.disabled=!allowed;
+ const allowed=!!taskId&&!decision;
+ approve.disabled=!allowed||!release.allowed;
+ reject.disabled=!allowed;
  if(taskId&&!decision&&!release.allowed)hint.textContent+=' · 대표 승인 보류: '+release.blockers.join(' / ')+' 반려 기록은 가능합니다.';
 }
 async function submitRepresentativeDecision(decision){
