@@ -471,7 +471,7 @@ renderer.domElement.addEventListener('pointerdown',e=>{const rect=renderer.domEl
 function selectAvatar(a,showProfile=true){
  if(selected)selected.userData.marker.visible=false;selected=a;a.userData.marker.visible=true;
  const p=a.userData.person;document.getElementById('selectedCount')&&(document.getElementById('selectedCount').textContent='1');
- const displayName=characterNames[p.id]||p.name;document.getElementById('chatName').textContent=displayName;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
+ const displayName=p.id==='CEO'?'단테':(p.id==='COO'?'알렉스':(characterNames[p.id]||p.name));document.getElementById('chatName').textContent=displayName;const selectedState=readEmployeeStates()[p.id]||{};document.getElementById('chatRole').textContent=(p.department||'')+' · '+(p.position||'직원')+' · '+(selectedState.status||p.workStatus||'업무 대기');
  renderEmployeeChat(p.id,p.instruction||'담당 업무를 수행하는 직원입니다.');
  renderTaskHistory();selectedTaskForDecision=null;renderRepresentativeDecision(null);
  document.getElementById('chatAvatar').textContent='👤';
