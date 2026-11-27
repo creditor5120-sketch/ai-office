@@ -432,7 +432,7 @@ const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=String(staffCountValue);
 function makeStaffCard(p,detail=false){
  const el=document.createElement('button');el.className=detail?'detailPerson':'staffCard';el.dataset.emp=p.id==='CEO'?'CEO':(p.id==='COO'?'COO':p.id);
- const displayName=p.id==='CEO'?'단테':(characterNames[p.id]||p.name);
+ const displayName=p.id==='CEO'?'단테':(p.id==='COO'?'알렉스':(characterNames[p.id]||p.name));
  const displayJob=p.jobTitle||p.position||'직원';
  const face=document.createElement('canvas');face.className='staffFace';face.width=64;face.height=80;
  const ctx=face.getContext('2d');ctx.imageSmoothingEnabled=false;
@@ -441,7 +441,7 @@ function makeStaffCard(p,detail=false){
  const meta=document.createElement('span');meta.className='staffMeta';
  const name=document.createElement('b');name.textContent=displayName;
  const team=document.createElement('small');team.textContent='소속: '+(p.department||'일반팀');
- const job=document.createElement('small');job.textContent='직무: '+(p.id==='COO'?'본부장':(p.jobTitle||p.position||'직원'));
+ const job=document.createElement('small');job.textContent='직무: '+(p.id==='CEO'?'대표이사':(p.id==='COO'?'본부장':(p.jobTitle||p.position||'직원')));
  const status=document.createElement('small');status.textContent='상태: '+(p.workStatus||'업무 대기');status.className='staffStatus';
  meta.append(name,team,job,status);el.append(face,meta);
  el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a,true)};return el;
