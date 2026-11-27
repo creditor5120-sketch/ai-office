@@ -67,7 +67,9 @@ try {
   const selectedName = (await page.locator('#chatName').innerText()).trim();
   if (selectedName !== '단테') throw new Error(`대표이사 첫 직원 카드 이름 오류: expected 단테, found ${selectedName || '(empty)'}`);
   // 직원 카드를 누르면 프로필 모달이 열리므로 다음 직원 선택 전에 닫는다.
-  await page.locator('#modal #close').click();
+  if (await page.locator('#modal').isVisible()) {
+    await page.locator('#modal #close').click();
+  }
   await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
   const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]').first();
   await legalLeadCard.waitFor({ state: 'visible', timeout: 10000 });
