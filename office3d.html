@@ -429,8 +429,8 @@ avatars.forEach((avatar,index)=>{
  else if(avatar.userData.person.id==='COO'){x=11;z=-.15;}
  else {[x,z]=officeDeskSlots[index-1]||[0,0];}
  avatar.position.set(x*.8,.82,z*.8);
- avatar.userData.homeX=x*.8;avatar.userData.homeZ=z*.8;
- avatar.userData.targetX=x*.8;avatar.userData.targetZ=z*.8;
+ avatar.userData.homeX=Number((x*.8).toFixed(3));avatar.userData.homeZ=Number((z*.8).toFixed(3));
+ avatar.userData.targetX=Number((x*.8).toFixed(3));avatar.userData.targetZ=Number((z*.8).toFixed(3));
 });
 const staffCountValue=staff.length;
 document.getElementById('activeCount').textContent=String(staffCountValue);

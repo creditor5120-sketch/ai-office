@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the regression test failure in `tests/office3d-smoke.mjs` by ensuring the modal is closed before selecting a new employee.
+- 요약: 3D 사무실 아바타 초기화 위치 및 부서명 표시에 대한 사소한 시각적 안정성 패치를 적용했습니다.
 
 ## 판단 근거
 
-The smoke test was failing because it attempted to click a new employee card while the profile modal from the previous selection was still open, causing the click to be intercepted by the modal overlay. Adding a wait-and-close step ensures the UI is in the expected state for the next interaction.
+동일한 단층 사무실 계약과 직원 명단, 6개 팀 배치를 그대로 유지하면서 아바타 좌표 초기화와 팀 이름 표시가 항상 정렬되도록 최소한의 유틸리티 정돈을 수행했습니다. Writable allowlist 규칙에 따라 office3d.html 외의 다른 파일은 수정하지 않았습니다.
 
