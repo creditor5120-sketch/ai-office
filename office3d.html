@@ -233,8 +233,6 @@ const officeTeams=[
  {name:'기술·IT팀',center:[21,2],slots:[[17,-1],[19.3,-1],[21.6,-1],[17,1.3],[19.3,1.3]]}
 ];
 const officeDeskSlots=officeTeams.flatMap(t=>t.slots);
-// 다섯 팀실을 3개 상단·2개 하단으로 배치해 긴 책상 행을 없애고, 중앙 통로를 확보한다.
-// 레퍼런스의 비대칭 팀 클러스터와 부분 유리 파티션을 반영한 공간 배치
 for(const team of officeTeams){
  for(const [x,z] of team.slots){
   desk(x,z);chair(x,z+1.18);
@@ -256,6 +254,7 @@ officeWall(12,1.6,.16,M.glass,7,.8,15.0);
 officeWall(.16,1.6,7,M.glass,13,.8,11.5);
 officeWall(8,1.4,.16,M.wall,-21,.7,13.8);
 officeWall(.16,1.4,6,M.wall,-25,.7,10.8);
+window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:true});
 officeSign('경영관리팀',-14,-17.5);
 officeSign('법무팀',-25,-6.5);
 officeSign('IR팀',-10,5.4);
@@ -317,8 +316,6 @@ for(const object of officeObjects){scene.remove(object);officeStructure.add(obje
 officeStructure.position.y=0;
 officeStructure.scale.set(.8,1,.8);
 scene.add(officeStructure);
-
-window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:6,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:true});
 const avatarRoot=new THREE.Group();scene.add(avatarRoot);const avatars=[];
 
 // 직원 아바타: 부서별 구역 안에 배치

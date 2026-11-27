@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the regression in the 3D office staff card rendering and ensure the representative routing contract is strictly maintained.
+- 요약: Fix the 3D office initialization error by ensuring the `officeTeams` and `officeDeskSlots` are correctly defined before use, and add a regression test for the 3D office floor audit.
 
 ## 판단 근거
 
-The 3D office staff card rendering logic was missing the explicit mapping for the representative (CEO) and the COO (Alex) in the `makeAvatar` and `makeStaffCard` functions, causing potential UI inconsistencies. The patch ensures the CEO is correctly identified as '단테' and the COO as '알렉스' in both the 3D avatar generation and the staff card UI, maintaining the routing contract verified by the smoke tests.
+The `office3d.html` file had a potential reference error where `officeDeskSlots` was used before being fully populated in the script execution flow. By moving the `officeDeskSlots` definition and the `officeTeams` loop to a consistent block, we ensure the audit function `__officeFloorAudit` correctly reports the desk count. I have also added a regression test to verify the 3D office floor audit state.
 
