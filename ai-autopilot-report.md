@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office initialization error by ensuring the loading panel is correctly hidden after the 3D scene is fully mounted and rendered.
+- 요약: Add a regression test for the representative approval gate logic.
 
 ## 판단 근거
 
-The smoke test reported a 3D startup timeout because the loading panel was not being hidden reliably. By moving the loading panel removal to a `setTimeout` after the scene is rendered and the controls are updated, we ensure the UI is ready before the user interacts with it.
+The approval gate logic in `office3d.html` is critical for ensuring that only fully reviewed and approved work is finalized. Adding a regression test in `tests/office3d-entrypoint.test.mjs` ensures this logic remains robust against future changes.
 
