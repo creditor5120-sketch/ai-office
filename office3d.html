@@ -175,15 +175,6 @@ const businessTeams=[
  {name:'총무팀',x:-13.8,slots:[[-15,-14],[-13.8,-14],[-12.6,-14],[-15,-7],[-13.8,-7],[-12.6,-7]]},
  {name:'전략기획팀',x:-9.8,slots:[[-11,-14],[-9.8,-14],[-8.6,-14],[-11,-7],[-9.8,-7],[-8.6,-7]]}
 ];
-for(const t of businessTeams){
- // 낮은 유리 파티션으로 팀 구역만 구분
- if(t.name!=='경영관리팀')cube(.1,1.15,10,M.glass,t.x-2,-0.0,-9.5);
- // 3D에서는 각 팀 구역의 왼쪽 벽면에 팀명 표시
- wallTeamSign(t.name,t.x-1.9,-9.5);
- // 2D에서는 각 팀 책상 구역의 아래쪽에 팀명 표시
-
- for(const [x,z] of t.slots){desk(x,z);chair(x,z+1.02)}
-}
 // 단층은 TEAM.AI.ID 레퍼런스처럼 여러 독립 팀실이 중앙 복도를 둘러싸는 구조로 재구성한다.
 const officeTeams=[
  {name:'경영관리팀',center:[-14,-12],slots:[[-17.2,-14],[-14.9,-14],[-12.6,-14],[-17.2,-11.7],[-14.9,-11.7],[-12.6,-11.7]]},
@@ -195,6 +186,15 @@ const officeTeams=[
 ];
 const officeDeskSlots=officeTeams.flatMap(t=>t.slots);
 
+for(const t of businessTeams){
+ // 낮은 유리 파티션으로 팀 구역만 구분
+ if(t.name!=='경영관리팀')cube(.1,1.15,10,M.glass,t.x-2,-0.0,-9.5);
+ // 3D에서는 각 팀 구역의 왼쪽 벽면에 팀명 표시
+ wallTeamSign(t.name,t.x-1.9,-9.5);
+ // 2D에서는 각 팀 책상 구역의 아래쪽에 팀명 표시
+
+ for(const [x,z] of t.slots){desk(x,z);chair(x,z+1.02)}
+}
 // 1층 구조물을 별도 그룹으로 묶고 단층 복제 공간을 만든다.
 const legacyStructure=new THREE.Group();
 scene.children.slice().filter(o=>!o.isLight).forEach(o=>{scene.remove(o);legacyStructure.add(o)});
