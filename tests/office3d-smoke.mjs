@@ -97,10 +97,6 @@ try {
   if (routedPayloads.length !== 1 || routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
     throw new Error('대표 단테의 업무 지시가 본부장 알렉스에게 전달되지 않았습니다: ' + JSON.stringify({routedPayloads,chatHistory:await page.locator('#chatHistory').innerText(),selectedName:await page.locator('#chatName').innerText(),taskInput:await page.locator('#taskInput').inputValue(),pageErrors,browserConsole,failedRequests}));
   }
-  // Regression test: Ensure routing contract is strictly enforced
-  if (routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
-    throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
-  }
   // Verify UI truthfully reflects specialist assignment and collaboration status
   const alexStatus = await page.evaluate(() => document.querySelector('.staffCard[data-emp="COO"] .staffStatus')?.textContent);
   if (!alexStatus) throw new Error('본부장 알렉스의 상태 표시가 UI에 없습니다.');
@@ -119,10 +115,6 @@ try {
   }
   const alexCardName = (await page.locator('#staffStrip .staffCard[data-emp="COO"] .staffMeta b').innerText()).trim();
   if (alexCardName !== '알렉스') throw new Error('본부장 카드 이름 오류: expected 알렉스, found ' + alexCardName);
-  // Regression test: Ensure routing contract is strictly enforced
-  if (routedPayloads[0].employeeId !== 'COO' || routedPayloads[0].employee !== '알렉스') {
-    throw new Error('Routing contract violation: CEO selection must route to COO 알렉스');
-  }
   await page.locator('#staffStrip .staffCard[data-emp="LE-01"]').first().click();
   await page.locator('#modal #close').click();
   await page.locator('#taskInput').fill('직원 직접 업무 라우팅 회귀 테스트');
