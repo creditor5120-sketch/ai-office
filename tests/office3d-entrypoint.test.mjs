@@ -54,6 +54,10 @@ test('representative approval gate blocks incomplete or unreviewed work', async 
   assert.equal(allowed.allowed, true);
   assert.equal(allowed.blockers.length, 0);
 
+  const emptyRecord = { taskId: 'empty-test', deliverables: [], finalReviewResults: [], workflow: { reviewGate: { finalReleaseAllowed: true } } };
+  const empty = evaluate(emptyRecord);
+  assert.equal(empty.allowed, false);
+
   const incompleteRecord = {
     taskId: 'approval-gate-incomplete',
     deliverables: [{ id: 'specialist-1', title: '업무 결과물', status: 'in-progress' }],
