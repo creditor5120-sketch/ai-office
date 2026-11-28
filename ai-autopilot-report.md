@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement the representative-to-COO routing contract and verify it with a regression test.
+- 요약: Fix the representative approval gate logic to correctly handle partial completion and unreviewed deliverables.
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The existing implementation was missing the explicit mapping in the `submitSelectedTask` function. This patch ensures the `p` variable correctly resolves to the COO when the CEO is selected, maintaining consistency with the agreed-upon routing contract and passing the regression test.
+The previous implementation of `evaluateRepresentativeRelease` had a logic gap where it could potentially allow approval if the `finalReleaseAllowed` flag was true, even if deliverables were incomplete or unreviewed. The patch ensures that all deliverables must be 'completed' and all must have a corresponding review entry, while also explicitly blocking 'PARTIAL_COMPLETED' status.
 
