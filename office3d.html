@@ -441,7 +441,7 @@ function makeStaffCard(p,detail=false){
 }
 avatars.map(a=>a.userData.person).forEach(p=>{document.getElementById('staffStrip').appendChild(makeStaffCard(p));document.getElementById('detailEmployeeList').appendChild(makeStaffCard(p,true))});
 const detailToggle=document.getElementById('detailToggle');let detailMode=false;
-detailToggle.onclick=()=>{detailMode=!detailMode;document.getElementById('appMain').style.display=detailMode?'none':'grid';document.getElementById('staffStrip').style.display=detailMode?'none':'flex';document.getElementById('detailView').style.display=detailMode?'grid':'none';detailToggle.textContent=detailMode?'↙ 사무실로':'↗ 업무 상세';if(detailMode){const alex=avatars.find(v=>v.userData.person.id==='COO');if(alex)selectAvatar(alex,false)}};
+detailToggle.onclick=()=>{detailMode=!detailMode;document.getElementById('appMain').style.display=detailMode?'none':'grid';document.getElementById('staffStrip').style.display=detailMode?'none':'flex';document.getElementById('detailView').style.display=detailMode?'grid':'none';detailToggle.textContent=detailMode?'↙ 사무실로':'↗ 업무 상세';if(detailMode){const alex=avatars.find(v=>v.userData.person.id==='COO');if(alex)selectAvatar(alex,false);else if(avatars.length>0)selectAvatar(avatars[0],false)}};
 document.getElementById('zoomIn').onclick=()=>{camera.position.multiplyScalar(.85);controls.update()};
 document.getElementById('zoomOut').onclick=()=>{camera.position.multiplyScalar(1.18);controls.update()};
 
@@ -954,7 +954,7 @@ animate();
 function resizeOffice(){const w=mount.clientWidth||innerWidth,h=mount.clientHeight||innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 addEventListener('resize',resizeOffice);if('ResizeObserver' in window)new ResizeObserver(resizeOffice).observe(document.getElementById('officeStage'));
 renderTaskHistory();
-const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex,false);
+const initialAlex=avatars.find(a=>a.userData.person.id==='COO');if(initialAlex)selectAvatar(initialAlex,false);else if(avatars.length>0)selectAvatar(avatars[0],false);
 refreshStaffCards();
 syncAvatarWorkStates(true);
 document.getElementById('activeCount').textContent=String(staff.length);
