@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office staff card rendering and status synchronization.
+- 요약: Fix the routing contract regression in the 3D office and ensure the representative CEO selection correctly routes to COO 알렉스.
 
 ## 판단 근거
 
-The 3D office staff cards were not correctly reflecting the 'active' state for the CEO (단테) and COO (알렉스) roles, and the status synchronization logic needed to be more robust to ensure the UI truthfully reflects the specialist assignment and collaboration status as required by the project acceptance flow.
+The previous implementation had a potential ambiguity in the routing logic for the CEO. By explicitly mapping the CEO ID to the COO ID and name, we ensure the routing contract is strictly enforced as per the project requirements. This patch updates the `selectAvatar` and `submitSelectedTask` functions to handle the CEO-to-COO mapping consistently, ensuring the UI and payload reflect the correct assignment.
 
