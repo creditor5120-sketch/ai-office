@@ -775,7 +775,7 @@ function evaluateRepresentativeRelease(record){
  if(incomplete.length || String(record?.workflow?.status).toUpperCase() === 'PARTIAL_COMPLETED')blockers.push('완료되지 않은 결과물: '+(incomplete.length ? incomplete.map(item=>(item.title||item.name||item.id||'담당자')+' ('+(item.status||'상태 미기재')+')').join(', ') : '부분 완료'));
  if(unreviewed.length)blockers.push('최종 검수가 누락된 결과물: '+unreviewed.map(item=>item.title||item.name||item.id||'담당자').join(', '));
  if(notApproved.length)blockers.push('최종 검수 승인 상태가 아닌 결과물: '+notApproved.map(item=>{const review=reviewById.get(item.id);return (item.title||item.name||item.id||'담당자')+' ('+(review.judgment||'판정 미기재')+')'}).join(', '));
- return {allowed:gateAllowed&&deliverables.length>0&&incomplete.length===0&&unreviewed.length===0&&notApproved.length===0,blockers};
+ return {allowed:gateAllowed&&deliverables.length>0&&incomplete.length===0&&unreviewed.length===0&&notApproved.length===0,blockers:blockers};
 }
 function renderRepresentativeDecision(record=null){
  const hint=document.getElementById('decisionTaskHint'),approve=document.getElementById('representativeApprove'),reject=document.getElementById('representativeReject');
