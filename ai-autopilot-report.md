@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the representative approval gate logic to correctly handle partial completion status.
+- 요약: Add a regression test for the representative approval gate to ensure it correctly blocks incomplete or unreviewed work.
 
 ## 판단 근거
 
-The previous implementation of `evaluateRepresentativeRelease` failed to explicitly block approval for tasks in a 'PARTIAL_COMPLETED' state, even if the review gate flag was set to true. This patch adds an explicit check for the workflow status to ensure that only fully completed tasks can be approved by the representative.
+The existing approval gate logic in `office3d.html` needs a robust regression test to prevent regressions in the representative decision-making flow, ensuring that only fully completed and reviewed deliverables can be approved.
 
