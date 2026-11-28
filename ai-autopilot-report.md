@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The current implementation was missing this specific routing logic in the `submitSelectedTask` function. This patch ensures that if the selected employee is the CEO, the task is automatically assigned to the COO, while preserving the original employee ID for all other staff. A regression test is included to enforce this contract.
+The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The existing implementation was missing the explicit mapping in the `submitSelectedTask` function. This patch ensures the `p` variable correctly resolves to the COO when the CEO is selected, maintaining consistency with the agreed-upon routing contract and passing the regression test.
 
