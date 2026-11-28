@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The current implementation of `detailToggle.onclick` and the `load` event listener had a slight inconsistency in ensuring the COO (알렉스) is the default selected avatar when the detail view is toggled or the page loads. By centralizing the selection logic and ensuring the `selectAvatar` function is called with the correct parameters, we ensure the UI state remains consistent with the routing contract.
+The current implementation of the detail view toggle and initial selection logic had a slight inconsistency where the COO (알렉스) might not be correctly selected or the UI state might not be fully synchronized. This patch ensures that the COO is explicitly selected and the UI is updated correctly when the detail view is toggled, maintaining the agreed-upon routing contract.
 
