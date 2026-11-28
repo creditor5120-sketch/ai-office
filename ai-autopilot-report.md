@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The current implementation was missing the explicit routing logic in the `submitSelectedTask` function. This patch ensures that if the selected employee is the CEO, the task is routed to the COO, and the employee display name is set to '알렉스'. A regression test is included to verify this behavior.
+The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The current implementation was missing the explicit routing logic in `office3d.html` to map the CEO ID to the COO ID and name. This patch ensures the payload sent to the API correctly identifies the employee as 알렉스 (COO) when the CEO is selected, while preserving the original ID for other employees.
 
