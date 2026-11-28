@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the approval gate logic in office3d.html to correctly handle partial completion states.
+- 요약: Fix the approval gate logic to correctly handle partial completion and unreviewed deliverables.
 
 ## 판단 근거
 
-The approval gate logic in `office3d.html` was missing a check for `PARTIAL_COMPLETED` status, which could allow representative approval for incomplete work. This patch ensures that the `evaluateRepresentativeRelease` function explicitly blocks approval if the workflow status indicates partial completion, aligning the UI with the backend safety requirements.
+The previous implementation of `evaluateRepresentativeRelease` had a logic gap where it did not explicitly block approval for partially completed tasks or unreviewed deliverables, relying on incomplete checks. This patch ensures that any task with a status other than 'completed' or any deliverable missing a review is strictly blocked, aligning with the requirement that the representative must only approve fully finalized work.
 
