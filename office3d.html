@@ -437,7 +437,7 @@ function makeStaffCard(p,detail=false){
  const job=document.createElement('small');job.textContent='직무: '+(p.jobTitle||displayJob);
  const status=document.createElement('small');status.textContent='상태: '+(p.workStatus||'업무 대기');status.className='staffStatus';
  meta.append(name,team,job,status);el.append(face,meta);
- el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a,true)};return el;
+ el.onclick=()=>{const a=avatars.find(v=>v.userData.person.id===p.id);if(a)selectAvatar(a,true);};return el;
 }
 avatars.map(a=>a.userData.person).forEach(p=>{document.getElementById('staffStrip').appendChild(makeStaffCard(p));document.getElementById('detailEmployeeList').appendChild(makeStaffCard(p,true))});
 const detailToggle=document.getElementById('detailToggle');let detailMode=false;
@@ -471,7 +471,7 @@ function selectAvatar(a,showProfile=true){
  const teamName=p.department==='본부장실'?'본부장실':(p.department||'')+'팀';
  const jobTitle=p.jobTitle||(p.position==='팀장'?p.position:p.name);
  const stateMap=readEmployeeStates();const liveState=stateMap[p.id];const workStatus=liveState?.status||(p.currentTask?'업무 중 ('+p.currentTask+')':(p.workStatus||'업무 대기'));
- const employeeHistory=(readEmployeeHistory()[p.id]||[]).slice(0,3);
+ const employeeHistory=(readEmployeeHistory()[p.id]||[]).slice(0,5);
  const historyText=employeeHistory.length?'\n\n최근 업무 이력\n'+employeeHistory.map(item=>(item.status||'상태 변경')+' · '+(item.detail||'업무 내용 미기재')).join('\n'):'\n\n최근 업무 이력 없음';
  const workDetail=liveState?.detail||'현재 진행 중인 업무 없음';
  const workLocation=liveState?.location==='회의실'||['협업 중','검수 중'].includes(workStatus)?'회의실':liveState?.location==='본부장실'||p.id==='COO'?'본부장실':'담당 좌석';
