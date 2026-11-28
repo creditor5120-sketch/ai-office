@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The `evaluateRepresentativeRelease` function in `office3d.html` was incorrectly implemented in the previous patch, causing it to fail the regression test for the approval gate. Specifically, the logic for checking `finalReleaseAllowed` and the completeness of deliverables was inconsistent. This patch restores the correct logic to ensure the approval gate correctly blocks incomplete or unreviewed work.
+The `evaluateRepresentativeRelease` function in `office3d.html` was incorrectly implemented in the previous patch, causing it to return `allowed: false` even when all conditions were met. This patch corrects the logic to properly evaluate the `gateAllowed` flag and the status of deliverables, ensuring the representative approval gate functions as intended.
 
