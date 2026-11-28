@@ -468,7 +468,7 @@ function selectAvatar(a,showProfile=true){
  document.getElementById('detailTop').textContent=p.name+' · '+(p.department||'')+' '+(p.position||'');
  document.getElementById('personName').textContent=p.name;
  const photo=document.getElementById('profilePhoto');const photoCtx=photo.getContext('2d');photoCtx.clearRect(0,0,photo.width,photo.height);photoCtx.imageSmoothingEnabled=false;const spriteImage=a.userData.texture?.image;if(spriteImage)photoCtx.drawImage(spriteImage,0,0,32,40,0,0,photo.width,photo.height);
- const teamName=p.department==='본부장실'?'본부장실':(p.department||'')+'팀';
+ const teamName=p.department==='본부장실'?'본부장실':(p.department||'');
  const jobTitle=p.jobTitle||(p.position==='팀장'?p.position:p.name);
  const stateMap=readEmployeeStates();const liveState=stateMap[p.id];const workStatus=liveState?.status||(p.currentTask?'업무 중 ('+p.currentTask+')':(p.workStatus||'업무 대기'));
  const employeeHistory=(readEmployeeHistory()[p.id]||[]).slice(0,5);
