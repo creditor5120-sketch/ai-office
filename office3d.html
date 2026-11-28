@@ -502,7 +502,7 @@ async function submitSelectedTask(value,resumeRecord=null){
  const payload={task,taskId,idempotencyKey:taskId,employee:employeeName,employeeId:p.id,department:p.department||'',position:p.position||'',instruction:p.instruction||'',employees:staff.map(employee=>({...employee,name:employee.id==='COO'?'알렉스':(characterNames[employee.id]||employee.name)}))};
  try{
   let data=null,completed=false,attempt=0;
-  const deadline=Date.now()+8*60*1000;
+  const deadline=Date.now()+10*60*1000;
   while(attempt<1200&&Date.now()<deadline){
    attempt++;
    let response;
