@@ -237,7 +237,7 @@ let officePartitionCount=0;
 function officeWall(w,h,d,material,x,y,z){
  cube(w,h,d,material,x,y,z);officePartitionCount++;
 }
-window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:officeTeams.length,deskCount:31,avatarCount:avatars.length,visibleOffice:true});
+window.__officeFloorAudit=()=>({floorCount:1,activeFloor:1,teamCount:officeTeams.length,deskCount:officeDeskSlots.length,avatarCount:avatars.length,visibleOffice:true});
 function officeSign(label,x,z){
  wallTeamSign(label,x,z);
 }

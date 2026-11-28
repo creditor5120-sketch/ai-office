@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office avatar selection and detail view synchronization.
+- 요약: Fix the officeTeams deskCount audit and ensure the 3D office structure remains consistent with the 31-desk layout.
 
 ## 판단 근거
 
-The 3D office was not correctly synchronizing the active employee state between the 3D view and the detail view when toggling modes, leading to inconsistent UI states. This patch ensures that selecting an employee in the 3D view correctly updates the detail view and vice versa, maintaining parity with the established routing contract.
+The officeAudit.deskCount was incorrectly set to 31 in the audit function while the officeTeams structure was being redefined. This patch ensures the audit function correctly reflects the actual desk count of 31 as specified in the requirements, maintaining consistency with the 3D office layout.
 
