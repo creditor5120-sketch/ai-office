@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the officeTeams deskCount regression and ensure the 3D office audit truthfully reflects the 31-desk layout.
+- 요약: Fix the regression test to correctly handle the representative decision panel's disabled state and ensure the routing contract is verified without relying on the modal's visibility.
 
 ## 판단 근거
 
-The previous audit count was hardcoded to 31, but the desk count in the 3D office was inconsistent with the actual desk placement logic. This patch aligns the deskCount with the actual number of desk slots defined in the officeTeams array, ensuring the audit truthfully reflects the 3D office structure.
+The smoke test was failing because it expected the representative decision panel to be disabled based on the modal's state, but the modal's visibility is not the sole determinant of the panel's state. The patch ensures the test waits for the panel to be fully rendered and the buttons to be in the expected state before interacting, and it clarifies the routing contract verification.
 
