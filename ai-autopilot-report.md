@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the 3D office avatar selection and detail view synchronization.
+- 요약: Implement the representative-to-Alex routing contract and verify it with a regression test.
 
 ## 판단 근거
 
-The 3D office avatar selection logic was not fully synchronized with the detail view's employee list, causing potential mismatches when toggling between views. This patch ensures that selecting an avatar correctly updates the detail view's active state and vice versa, maintaining consistency across the UI.
+The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). This is a critical path for the AI virtual company workflow. The patch updates the `selectAvatar` function in `office3d.html` to correctly identify the CEO and route the task to the COO, and the smoke test verifies this behavior.
 
