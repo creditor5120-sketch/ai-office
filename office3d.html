@@ -187,7 +187,7 @@ const officeTeams=[
 const officeDeskSlots=officeTeams.flatMap(t=>t.slots);
 // 단층은 TEAM.AI.ID 레퍼런스처럼 여러 독립 팀실이 중앙 복도를 둘러싸는 구조로 재구성한다.
 
-for(const t of businessTeams){
+for(const t of businessTeams.slice(0, 0)){
  // 낮은 유리 파티션으로 팀 구역만 구분
  if(t.name!=='경영관리팀')cube(.1,1.15,10,M.glass,t.x-2,-0.0,-9.5);
  // 3D에서는 각 팀 구역의 왼쪽 벽면에 팀명 표시
