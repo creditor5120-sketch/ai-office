@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the routing contract regression in the 3D office and ensure the representative CEO selection correctly routes to COO 알렉스.
+- 요약: Fix the approval gate logic to correctly handle the 'PARTIAL_COMPLETED' status and ensure the representative decision panel correctly reflects the gate status.
 
 ## 판단 근거
 
-The previous implementation had a potential mismatch in the routing contract where the CEO selection might not have consistently mapped to the COO (알렉스) ID and name. This patch ensures the routing logic is explicitly handled in the `selectAvatar` function, maintaining parity with the agreed-upon contract and passing the regression tests.
+The approval gate logic in `evaluateRepresentativeRelease` was missing an explicit check for the 'PARTIAL_COMPLETED' status, which should be treated as incomplete for final release. Additionally, the UI logic for the decision panel needed to ensure that the 'PARTIAL_COMPLETED' status correctly triggers the blocker message, preventing premature approval.
 
