@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the regression test to correctly handle the representative decision panel's disabled state and ensure the routing contract is verified without relying on the modal's visibility.
+- 요약: Fix the 3D office staff card rendering and detail view synchronization.
 
 ## 판단 근거
 
-The smoke test was failing because it expected the representative decision panel to be disabled based on the modal's state, but the modal's visibility is not the sole determinant of the panel's state. The patch ensures the test waits for the panel to be fully rendered and the buttons to be in the expected state before interacting, and it clarifies the routing contract verification.
+The staff card rendering logic in `office3d.html` was missing the `department` property mapping for the detail view, causing inconsistencies between the 3D office and the detail view. This patch ensures the `department` and `jobTitle` are correctly mapped and displayed, maintaining parity with the 3D office's staff list.
 
