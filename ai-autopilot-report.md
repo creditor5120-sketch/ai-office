@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the representative approval gate logic to correctly handle partial completion states.
+- 요약: Implement the representative-to-COO routing contract and verify it with a regression test.
 
 ## 판단 근거
 
-The `evaluateRepresentativeRelease` function in `office3d.html` was missing a check for `PARTIAL_COMPLETED` status, which could allow a representative to approve an incomplete workflow. This patch adds the necessary check to ensure only fully completed tasks can be approved.
+The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The current implementation was missing this specific routing logic in the `submitSelectedTask` function. This patch ensures that if the selected employee is the CEO, the task is automatically assigned to the COO, while preserving the original employee ID for all other staff. A regression test is included to enforce this contract.
 
