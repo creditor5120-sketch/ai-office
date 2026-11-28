@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). This patch updates the `submitSelectedTask` function in `office3d.html` to correctly identify the COO when the CEO is selected, ensuring the payload reflects the correct employee ID and name. A regression test is included in `tests/office3d-smoke.mjs` to enforce this routing behavior.
+The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The current implementation was missing the explicit mapping in the `submitSelectedTask` function. This patch ensures that if the selected employee is the CEO, the payload is correctly routed to the COO, while preserving the original employee ID for all other staff. A regression test is included to verify this behavior.
 
