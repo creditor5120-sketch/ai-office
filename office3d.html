@@ -494,7 +494,6 @@ async function submitSelectedTask(value,resumeRecord=null){
  if(!token){appendChat('시스템','서버 접속 인증값을 먼저 입력해 주세요.');return}
  if(taskSubmissionInProgress){appendChat('시스템','현재 업무가 처리 중입니다. 중복 실행을 막기 위해 완료 또는 중단 후 다시 시도해 주세요.');return}
  taskSubmissionInProgress=true;
- const history=document.getElementById('chatHistory');
  if(!resumeRecord){appendChat('나',task);document.getElementById('taskInput').value=''}
  const taskId=resumeRecord?.taskId||crypto.randomUUID();
  savePendingTask({task,taskId,employeeId:p.id,employeeName,status:'PROCESSING',savedAt:resumeRecord?.savedAt||new Date().toISOString()});

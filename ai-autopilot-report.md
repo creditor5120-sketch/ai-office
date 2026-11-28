@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement the representative-to-Alex routing contract and verify it with a regression test.
+- 요약: Implement a robust idempotent task resume mechanism and fix the routing contract regression.
 
 ## 판단 근거
 
-The routing contract requires that selecting the CEO (단테) in the 3D office must route the task to the COO (알렉스). The current implementation was missing the explicit routing logic in the `submitSelectedTask` function, which was causing CEO tasks to be incorrectly assigned to the CEO ID instead of the COO ID. This patch ensures that if the selected employee is the CEO, the task is routed to the COO (알렉스), and it adds a regression test to verify this behavior.
+The current implementation of task resumption and routing needs to be strictly idempotent to prevent duplicate AI calls. The patch ensures that when a task is resumed, the original taskId and idempotencyKey are preserved, and the routing logic correctly identifies the CEO-to-COO path while maintaining individual employee routing for others. This addresses the priority of idempotent retry/resume and truthful progress.
 
