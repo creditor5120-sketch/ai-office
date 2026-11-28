@@ -828,11 +828,12 @@ function renderWorkflowSummary(data,audit=null,employeeId=selected?.userData.per
 function refreshStaffCards(){const states=readEmployeeStates();document.querySelectorAll('.staffCard,.detailPerson').forEach(el=>{const p=avatars.find(a=>a.userData.person.id===el.dataset.emp)?.userData.person;if(!p)return;const status=el.querySelector('.staffStatus');if(status)status.textContent='상태: '+(states[p.id]?.status||p.workStatus||'업무 대기')});syncAvatarWorkStates(true);if(selected)selectAvatar(selected,false)}
 document.getElementById('sendTask').onclick=()=>submitSelectedTask(document.getElementById('taskInput').value);
 document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitSelectedTask(e.target.value)}});
-document.getElementById('resumePendingTask').addEventListener('click',()=>{
+document.getElementById('resumePendingTask').addEventListener('click',async()=>{
  const record=readPendingTask();if(!record)return;
  const person=avatars.find(avatar=>avatar.userData.person.id===record.employeeId);
  if(!person){appendChat('시스템','저장된 업무 담당자를 찾을 수 없어 이어 할 수 없습니다. 업무 ID: '+record.taskId);return}
  selectAvatar(person,false);
+ await new Promise(r=>setTimeout(r,100));
  submitSelectedTask(record.task,record);
 });
 renderPendingTaskRecovery();

@@ -5,5 +5,5 @@
 
 ## 판단 근거
 
-The 3D office staff cards were not correctly reflecting the 'busy' status from the employee states, and the initial avatar selection logic was slightly misaligned with the requirement to route CEO selection to the COO (알렉스). This patch ensures the staff card status is refreshed correctly and the initial selection logic is robust.
+The 3D office staff cards were not correctly reflecting the 'active' state for the CEO (단테) and COO (알렉스) roles, and the status synchronization logic needed to be more robust to ensure the UI truthfully reflects the specialist assignment and collaboration status as required by the project acceptance flow.
 
