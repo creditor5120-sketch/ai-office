@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement a robust idempotent task resume mechanism and fix the routing contract regression.
+- 요약: Fix the representative approval gate logic to correctly handle partial completion and unreviewed deliverables.
 
 ## 판단 근거
 
-The current implementation of task resumption and routing needs to be strictly idempotent to prevent duplicate AI calls. The patch ensures that when a task is resumed, the original taskId and idempotencyKey are preserved, and the routing logic correctly identifies the CEO-to-COO path while maintaining individual employee routing for others. This addresses the priority of idempotent retry/resume and truthful progress.
+The previous implementation of `evaluateRepresentativeRelease` had redundant code blocks and potential logic gaps regarding partial completion status. The patch consolidates the logic into a single, robust function that correctly identifies blockers for incomplete or unreviewed work, ensuring the representative approval gate is secure.
 
