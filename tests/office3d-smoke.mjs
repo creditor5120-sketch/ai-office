@@ -73,6 +73,10 @@ try {
   }
   const legalLeadCard = page.locator('#staffStrip .staffCard[data-emp="LE-01"]').first();
   await legalLeadCard.waitFor({ state: 'visible', timeout: 10000 });
+  if (await page.locator('#modal').isVisible()) {
+    await page.locator('#modal #close').click();
+    await page.locator('#modal').waitFor({ state: 'hidden', timeout: 5000 });
+  }
   await legalLeadCard.click();
   const legalLeadName = (await page.locator('#chatName').innerText()).trim();
   if (legalLeadName !== '피터') throw new Error(`법무팀장 이름 오류: expected 피터, found ${legalLeadName || '(empty)'}`);
