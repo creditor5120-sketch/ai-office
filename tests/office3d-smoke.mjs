@@ -93,7 +93,10 @@ try {
   await page.locator('#staffStrip .staffCard[data-emp="CEO"]').first().click();
   await page.locator('#close').click();
   await page.locator('#taskInput').fill('대표 업무 라우팅 회귀 테스트');
+  await page.locator('#officeChatToken').fill('smoke-test-api-token');
   await page.locator('#sendTask').click();
+  await page.waitForTimeout(200);
+  await page.locator('#officeChatToken').fill('smoke-test-api-token');
   await page.waitForFunction(() => document.querySelectorAll('#chatHistory .chatBubble').length >= 2, { timeout: 10000 });
   await page.waitForTimeout(1000);
   const lastPayload = routedPayloads[routedPayloads.length - 1];

@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the representative approval gate logic to correctly handle partial completion and unreviewed deliverables.
+- 요약: 서버 업무 지시 및 대표 승인 검수 게이트를 검증하는 스모크 테스트 코드를 고도화하고 3D 사무실 렌더링 안정성을 유지했습니다.
 
 ## 판단 근거
 
-The previous implementation of `evaluateRepresentativeRelease` had a logic gap where it could potentially allow approval if the `finalReleaseAllowed` flag was true, even if deliverables were incomplete or unreviewed. The patch ensures that all deliverables must be 'completed' and all must have a corresponding review entry, while also explicitly blocking 'PARTIAL_COMPLETED' status.
+인증 토큰 누락이나 일시적 UI 비동기로 인한 테스트 취약성을 줄이기 위해 스모크 테스트 내 대기 조건과 UI 토글 동작을 정교화했습니다. 기존에 검증된 라우팅 계약, 단층 구조 감사, 31개의 데스크 슬롯, 대표 승인 게이트 규칙은 일치하도록 유지했습니다.
 
