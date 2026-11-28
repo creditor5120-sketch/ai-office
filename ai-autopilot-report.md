@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Fix the regression test to correctly handle the modal state and ensure the routing contract is verified.
+- 요약: Fix the representative approval gate logic to correctly handle partial completion states.
 
 ## 판단 근거
 
-The smoke test was failing because the modal was not being closed before clicking the next element, causing a click interception. I have added a check to close the modal if it is visible before proceeding with the next interaction.
+The `evaluateRepresentativeRelease` function in `office3d.html` had a logic gap where it could potentially allow approval for partially completed tasks if the review gate flag was set. The patch explicitly adds a check for `PARTIAL_COMPLETED` status and ensures that the `incomplete` list is properly evaluated against the task status.
 
