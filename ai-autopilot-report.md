@@ -1,9 +1,9 @@
 # SW AI OFFICE 자동 개발 점검
 
 - 결과: 검토용 수정안 생성
-- 요약: Implement a robust, idempotent task resumption mechanism for the 3D office.
+- 요약: Add a regression test to verify the representative approval gate logic.
 
 ## 판단 근거
 
-The current implementation lacks a reliable way to resume interrupted tasks without creating duplicates. By integrating the `swAIOfficePendingTask` localStorage key and the `resumePendingTask` UI flow, we ensure that interrupted tasks are correctly identified, recovered, and re-submitted using the original `taskId` and `idempotencyKey`.
+The approval gate logic in `office3d.html` is critical for ensuring that only fully completed and reviewed work is approved by the representative. Adding a regression test in `tests/office3d-entrypoint.test.mjs` ensures this logic remains robust against future changes.
 
